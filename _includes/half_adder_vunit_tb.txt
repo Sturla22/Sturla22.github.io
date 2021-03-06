@@ -1,0 +1,20 @@
+Re-compile not needed
+
+Starting lib.half_adder_vunit_tb.Check defaults on output ports
+Output file: _work/test_output/lib.half_adder_vunit_tb.Check_defaults_on_output_ports_336a2cb7ee267b208b614de42eed2a4b9949c923/output.txt
+pass (P=1 S=0 F=0 T=2) lib.half_adder_vunit_tb.Check defaults on output ports (0.3 seconds)
+
+Starting lib.half_adder_vunit_tb.Check logic
+Output file: _work/test_output/lib.half_adder_vunit_tb.Check_logic_7ddb38ea572a991ed5ded09272ba849b214af8aa/output.txt
+pass (P=2 S=0 F=0 T=2) lib.half_adder_vunit_tb.Check logic (0.4 seconds)
+
+==== Summary ==================================================================
+pass lib.half_adder_vunit_tb.Check defaults on output ports (0.3 seconds)
+pass lib.half_adder_vunit_tb.Check logic                    (0.4 seconds)
+===============================================================================
+pass 2 of 2
+===============================================================================
+Total time was 0.7 seconds
+Elapsed time was 0.7 seconds
+===============================================================================
+All passed!

@@ -1,0 +1,16 @@
+
+Test 1: Check defaults on output ports (0 fs)
+Done with test 1: Check defaults on output ports (0 fs)
+
+Test 2: Check logic (0 fs)
+Done with test 2: Check logic (50000000 fs)
+
+--- END OF SIMULATION ---
+Note: the results presented below are based on the PlTbUtil's check() procedure calls.
+      The design may contain more errors, for which there are no check() calls.
+         50 ns
+          2 Tests
+          0 Skipped tests
+         10 Checks
+          0 Errors
+*** SUCCESS ***

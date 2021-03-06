@@ -1,0 +1,14 @@
+Start Simulation of TB for half adder
+Check defaults on output ports
+(1): sum should be zero with no input
+(2): carry should be zero with no input
+Check logic
+(3): sum is '0' with inputs '0' and '0'
+(4): carry is '0' with inputs '0' and '0'
+(5): sum is '1' with inputs '0' and '1'
+(6): carry is '0' with inputs '0' and '1'
+(7): sum is '1' with inputs '1' and '0'
+(8): carry is '0' with inputs '1' and '0'
+(9): sum is '0' with inputs '1' and '1'
+(10): carry is '1' with inputs '1' and '1'
+SIMULATION COMPLETED

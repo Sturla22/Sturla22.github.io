@@ -1,8 +1,14 @@
-title: sturla22.gitHub.io
-description: Hello, I am Sturla Lange.
-google_analytics: 
-show_downloads: false
-theme: jekyll-theme-midnight
+# To reload this you need to restart the jekyll serve command
+title: "Sturla's Blog"
+description: "I'm an Embedded Electronics Engineer with an interest in all technology."
 
-gems:
-  - jekyll-mentions
+author: Sturla Lange
+github_username: Sturla22
+linkedin_username: sturla-lange
+
+theme: minima
+show_excerpts: true
+header_pages:
+  - about.md
+  - tags.md
+
