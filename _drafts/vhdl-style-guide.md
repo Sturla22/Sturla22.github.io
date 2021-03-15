@@ -1,30 +1,29 @@
 ---
 layout: post
-title: VHDL Style Guide
+title: VHDL Style Guide (VSG)
 tags:
     - VHDL
-    - HDL
-    - FPGA
     - Tools
 ---
 
-Similar to clang-tidy or black, but for VHDL.
+VHDL Style Guide describes it self as a tool that "provides coding style guide enforcement for VHDL code". It is similar to [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) or [Black](https://black.readthedocs.io/en/stable/) in that it can fix your code to follow a coding styleguide.
 
-Docs: [https://vhdl-style-guide.readthedocs.io/en/latest](https://vhdl-style-guide.readthedocs.io/en/latest)
+This post is a quick overview of VSG to help you get started using it.
 
-Repository: [https://github.com/jeremiah-c-leary/vhdl-style-guide](https://github.com/jeremiah-c-leary/vhdl-style-guide)
+The docs are [here](https://vhdl-style-guide.readthedocs.io/en/latest) and the repository is [here](https://github.com/jeremiah-c-leary/vhdl-style-guide).
 
-Install: `pip install vsg`
+Install with: `pip install vsg`
 
-Running on the half adder from [VHDL Test Libraries and Methodologies](vhdl_test_methodologies.html):
+To showcase the basic features of VSG be running it on the half adder posted on [nandland](https://www.nandland.com/vhdl/modules/module-half-adder.html), but with some mistakes injected to make this a bit more interesting. The code looks like this:
+```vhdl
+{% include half_adder_original.vhd %}
+```
 
-`vsg -f half_adder.vhd`
-
-Output:
+The command to run VSG on the file is: `vsg -f half_adder_original.vhd`, which gives the output:
 
 ```
 ================================================================================
-File:  half_adder.vhd
+File:  half_adder_original.vhd
 ================================================================================
 Phase 1 of 7... Reporting
 Total Rules Checked: 76
@@ -41,18 +40,12 @@ Total Violations:    4
 ----------------------------+------------+------------+--------------------------------------
 NOTE: Refer to online documentation at https://vhdl-style-guide.readthedocs.io/en/latest/index.html for more information.
 ```
-The file, for reference:
-```vhdl
-{% include half_adder.vhd %}
-```
 
-Run: `vsg --fix -f half_adder_fixed.vhd`
+Four errors and three different rules that have been broken; the first two errors are due to ports being initialized, the third and fourth error are due to a missing keyword along with the end keyword (entity and architecture respectively).
 
-```vhdl
-{% include half_adder_fixed.vhd.bak %}
-```
+Now we want VSG to fix all these errors it caught, but first I've copied the original file and renamed it `half_adder_fixed.vhd` so I can look at the changes, VSG also has the `-b/--backup` option for this purpose, but I don't like how it works (copying the file to another file with a `.bak` appended to the filename and overwriting the original).
 
-Output:
+To have VSG fix the file, we run: `vsg --fix -f half_adder_fixed.vhd` and get the output:
 
 ```
 ================================================================================
@@ -72,19 +65,19 @@ Total Violations:    2
 NOTE: Refer to online documentation at https://vhdl-style-guide.readthedocs.io/en/latest/index.html for more information.
 ```
 
-The remaining errors can be fixed by hand or you should be able to do:
+The `port_012` rule is set to not be [fixable by default](https://vhdl-style-guide.readthedocs.io/en/latest/port_rules.html#port-012), it can be fixed by hand or for a little extra work you should be able to make VSG fix it by following these steps:
 
-`vsg -rc port_012 > config.json`
+ 1. Run: `vsg -rc port_012 > config.json`
 
-and edit the file to have `"fixable": true` like shown below
+ 2. Edit the json file to have `"fixable": true` like shown below:
 
-```json
-{% include config.json %}
-```
+    ```json
+    {% include config.json %}
+    ```
 
-and then run: `vsg --fix -c config.json -f half_adder_fixed.vhd`
+ 3. Run: `vsg --fix -c config.json -f half_adder_fixed.vhd`
 
-but this doesn't work for this rule it seems:
+However, this doesn't seem to work for this rule:
 
 ```
 Traceback (most recent call last):
@@ -99,7 +92,7 @@ Traceback (most recent call last):
 AttributeError: 'rule_012' object has no attribute '_fix_violations'
 ```
 
-Alright, let's fix by hand and run again:
+Alright, let's fix the file by hand and run VSG again:
 
 ```
 ================================================================================
@@ -112,7 +105,7 @@ Total Violations:    0
   Warning :     0
 ```
 
-The diff of the start file vs the fixed file is:
+The diff of the file we started with vs. the final file is:
 
 ```diff
 4,5c4,5
@@ -147,3 +140,12 @@ The diff of the start file vs the fixed file is:
 >
 > end architecture rtl;
 ```
+Besides fixing the errors, VSG has also changed indenting in accordance with it's [default rules](https://vhdl-style-guide.readthedocs.io/en/latest/rules.html). The rules for error detection and indenting are highly [configurable](https://vhdl-style-guide.readthedocs.io/en/latest/configuring.html).
+
+The final result is this beautifully formatted file:
+
+```vhdl
+{% include half_adder_fixed.vhd %}
+```
+
+In the end we get a nice clean file, with in theory no manual labor. In practice, even if the tool may not be able to fix certain errors, at least it points them out for you and fixes some of them.
