@@ -2,10 +2,10 @@
 layout: post
 title: VHDL Style Guide (VSG)
 tags:
-    - VHDL
-    - Tools
+- VHDL
+- Tools
+date: 2021-03-15 22:40 +0100
 ---
-
 VHDL Style Guide describes it self as a tool that "provides coding style guide enforcement for VHDL code". It is similar to [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) or [Black](https://black.readthedocs.io/en/stable/) in that it can fix your code to follow a coding styleguide.
 
 This post is a quick overview of VSG to help you get started using it.
