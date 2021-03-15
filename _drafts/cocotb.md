@@ -1,9 +1,14 @@
 ---
 layout: post
 title: cocotb
+tags:
+    - VHDL
+    - HDL
+    - FPGA
+    - simulation
+    - cocotb
 ---
 
-Apparently [GHDL support is preliminary](https://docs.cocotb.org/en/stable/simulator_support.html#ghdl).
 
 [Installing](https://docs.cocotb.org/en/stable/install.html) can be done with `pip install cocotb`
 
@@ -30,5 +35,7 @@ results in
 ```
 {% include half_adder_cocotb_tb.txt %}
 ```
+
+Apparently [GHDL support is preliminary](https://docs.cocotb.org/en/stable/simulator_support.html#ghdl), but that did not affect running this very simple example at least.
 
 [Back to VHDL Test Methodologies](vhdl_test_methodologies.html#osvvm)

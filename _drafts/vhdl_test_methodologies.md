@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "VHDL Test Methodologies"
+title: "VHDL Test Libraries and methodologies"
 tags:
     - VHDL
     - HDL
@@ -13,11 +13,11 @@ tags:
     - cocotb
 ---
 
-I'll be exploring several VHDL test methodologies in the coming posts. This post is an overview in preparation for the upcoming posts.
+I'll be exploring several VHDL test libraries and methodologies in several posts. This post is an overview of those posts.
 
 {% include toc.html %}
 
-These methodologies are:
+These libraries and methodologies are:
 
 - PlTbUtils
 - UVVM
@@ -29,29 +29,34 @@ My goal is to create an unbiased comparison and evaluation of the overlapping of
 
 ## Design Example
 
-The comparison will be made for testing a simple entity, a half adder posted on [https://www.nandland.com/vhdl/modules/module-half-adder.html](https://www.nandland.com/vhdl/modules/module-half-adder.html)
+The initial comparison will be made for testing a simple entity, a Half Adder posted on [https://www.nandland.com/vhdl/modules/module-half-adder.html](https://www.nandland.com/vhdl/modules/module-half-adder.html)
 
-[Wikipedia](https://en.wikipedia.org/wiki/Adder_(electronics)#Half_adder) section on half adders.
-
-A more advanced entity might be interesting to compare in the future.
 
 ```vhdl
 {% include half_adder.vhd %}
 ```
 
+[Wikipedia](https://en.wikipedia.org/wiki/Adder_(electronics)#Half_adder) section on half adders.
+
+## Environment
+
+The environment that I run the following examples in is a linux box running PopOS!, I write a bash script to build and run each example.
+
+To compile and simulate I use [GHDL](vhdl-ghdl.html) 1.0 (compiled with GNAT 9.3) with the mcode generator unless otherwise is noted. I use GHDL mainly because it is free, but the fact that it is open source is appealing too.
+
 ## Classic Testbench
 
-The test bench provided by nandland looks like this:
+The test bench provided by nandland for the Half Adder looks like this:
 
 ```vhdl
 {% include half_adder_tb.vhd %}
 ```
 
-Note that I had to add the last wait to make the simulation stop when running in GHDL.
+Note that I had to add the last wait to make the simulation stop when running in GHDL, otherwise it is as posted on nandland.
 
 You can play around with the code at: [https://www.edaplayground.com/x/RiYQ](https://www.edaplayground.com/x/RiYQ)
 
-Saving this code in the files `half_adder.vhd` and `half_adder_tb.vhd`, we can compile and simulate with [GHDL](vhdl-ghdl.html):
+Saving this code in the files `half_adder.vhd` and `half_adder_tb.vhd`, we can compile and simulate with GHDL:
 
 ```bash
 {% include build_tb.sh %}
@@ -98,6 +103,8 @@ See [the post on PlTbUtils](pltbutils_basic.html).
 
 PlTbUtils is a pure VHDL library with convenience components.
 
+Licensed with LGPL.
+
 ## UVVM
 
 [UVVM](https://uvvm.org/), which stands for Universal VHDL Verification Methodology is "a free and Open Source Methodology and Library for making very structured VHDL-based testbenches."
@@ -106,6 +113,8 @@ See [the post on UVVM](uvvm.html).
 
 UVVM is a pure VHDL library with convenience components and .
 **TODO(sl)**: describe UVVM succinctly.
+
+Licensed with Apache 2.0.
 
 ## OSVVM
 
@@ -116,13 +125,17 @@ See [the post on OSVVM](osvvm.html).
 OSVVM is a pure VHDL library with convenience components and .
 **TODO(sl)**: describe OSVVM succinctly.
 
+Licensed with Apache 2.0.
+
 ## VUnit
 
 [VUnit](https://vunit.github.io/index.html) "features the functionality needed to realize continuous and automated testing" of HDL code.
 
 See [the post on VUnit](vunit.html).
 
-VUnit takes care of building, running tests (via a simulator like GHDL) and evaluating the results. It also offers VHDL convenience components and Verification Components (VCs).
+VUnit takes care of building, running tests (via a simulator like GHDL) and evaluating the results. It also offers VHDL convenience components and Verification Components ([VCs](glossary.html#vc)).
+
+Licensed with Mozilla Public License, v. 2.0.
 
 ## cocotb
 
@@ -130,6 +143,16 @@ VUnit takes care of building, running tests (via a simulator like GHDL) and eval
 
 See [the post on cocotb](cocotb.html).
 
+cocotb takes care of building and running tests but testbenches are written in Python instead of VHDL.
+
+Licensed with Revised BSD License.
+
 ## First Impressions
 
+None of the libraries exclude the other, they could be used with each other if a designer feels the need to. However, there is also a lot of overlap and similarities, which is to be expected with several solutions to the same problem.
+
+
+## Further Work
+
+A more advanced entity might be interesting to compare in the future. This could delve into the more advanced usages of the different libraries and methodologies, such as VCs.
 

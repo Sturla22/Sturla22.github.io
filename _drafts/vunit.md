@@ -1,6 +1,12 @@
 ---
 layout: post
 title: VUnit
+tags:
+    - VHDL
+    - HDL
+    - FPGA
+    - simulation
+    - VUnit
 ---
 
 [Installing](https://vunit.github.io/installing.html) can be done with `pip instal vunit_hdl`
@@ -12,6 +18,7 @@ Implementing a testbench for the [half adder](vhdl_test_methodologies.html#desig
 ```
 
 VUnit requires that we write a python script to run the tests:
+
 ```python
 {% include run_vunit.py %}
 ```
