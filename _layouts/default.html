@@ -4,7 +4,6 @@
   {%- include head.html -%}
 
   <body>
-
     {%- include header.html -%}
 
     <main class="page-content" aria-label="Content">
@@ -15,7 +14,14 @@
 
     {%- include footer.html -%}
 
-    {% include cookie-consent.html %}
+    <div id="cookie-notice">
+        <span>I would like to use third party cookies and scripts to improve the functionality of this website.</span>
+        <a id="cookie-notice-accept">Approve</a>
+        <a href="/about.html#privacy-policy">More info</a>
+    </div>
+    {%- if jekyll.environment == 'production' and site.google_analytics -%}
+      {%- include google-analytics.html -%}
+    {%- endif -%}
   </body>
 
 </html>

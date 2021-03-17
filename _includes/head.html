@@ -5,10 +5,15 @@
   {%- seo -%}
 
   <link rel="stylesheet" href="{{ "/assets/main.css" | relative_url }}">
+  <style>
+    #cookie-notice {padding: 0.5rem 1rem; display: none; text-align: center; position: fixed; top: 0; width: calc(100% - 2rem); background: #222; color: rgba(255,255,255,1);}
+    #cookie-notice a {display: inline-block; cursor: pointer; margin-left: 0.5rem;}
+    @media (max-width: 767px) {
+        #cookie-notice span {display: block; padding-top: 3px; margin-bottom: 1rem;}
+        #cookie-notice a {position: relative; bottom: 4px;}
+    }
+  </style>
   {%- feed_meta -%}
-  {%- if jekyll.environment == 'production' and site.google_analytics -%}
-    {%- include google-analytics.html -%}
-  {%- endif -%}
 
   {%- include custom-head.html -%}
 
