@@ -15,9 +15,9 @@ test:
   artifacts:
     paths:
       - test
-  except:
-    variables:
-      - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+#  except:
+#    variables:
+#      - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 #pages:
 #  stage: deploy
