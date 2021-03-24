@@ -4,9 +4,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.txt_util.all;
-use work.pltbutils_func_pkg.all;
-use work.pltbutils_comp_pkg.all;
+library pltbutils;
+use pltbutils.txt_util.all;
+use pltbutils.pltbutils_func_pkg.all;
+use pltbutils.pltbutils_comp_pkg.all;
 
 -- Test case entity
 entity half_adder_pltb_tb is

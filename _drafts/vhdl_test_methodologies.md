@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "VHDL Test Libraries and methodologies"
+title: "VHDL Test Utility Libraries"
 tags:
     - VHDL
     - HDL
@@ -14,7 +14,6 @@ tags:
 ---
 
 I'll be exploring several VHDL test libraries and methodologies in several posts. This post is an overview of those posts.
-
 {% include toc.html %}
 
 These libraries and methodologies are:

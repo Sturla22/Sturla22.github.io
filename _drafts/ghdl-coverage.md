@@ -2,8 +2,8 @@
 layout: post
 title: GHDL Code Coverage
 tags:
-    - GHDL
     - VHDL
+    - Tools
     - HDL
     - FPGA
     - simulation
