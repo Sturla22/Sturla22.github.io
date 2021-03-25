@@ -2,11 +2,12 @@
 layout: post
 title: Doxygen for VHDL
 tags:
-- VHDL
-- Tools
-date: 2021-03-24 22:11 +0100
+    - VHDL
+    - Tools
 ---
+
 Doxygen is the industry standard in SW development for auto-generating documentation from code. It works pretty well for VHDL, I'll cover the basics, share some tips and tricks and provide a few warnings in this post.
+
 {% include toc.html %}
 
 ## Basics

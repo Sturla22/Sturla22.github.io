@@ -61,7 +61,7 @@ Due to the `set -ex` statement, the output of the script is:
 {% include buildlib.sh %}
 ```
 
-Remember to set executable permissions `chmod +x buildlib.sh` and then to build [PlTbUtils](https://opencores.org/projects/pltbutils) for example, run:
+Remember to set executable permissions `chmod +x buildlib.sh` and then to build [PlTbUtils](https://opencores.org/projects/pltbutils) (which I have downloaded to `~/Dev/hdl/pltbutils`) for example, run:
 
 `./buildlib.sh pltbutils ~/Dev/hdl/pltbutils/trunk/src/vhdl/*.vhd`
 
@@ -70,3 +70,7 @@ Remember to set executable permissions `chmod +x buildlib.sh` and then to build 
 ```bash
 {% include build.sh %}
 ```
+
+## Vendor Primitives Libraries
+
+<https://ghdl.readthedocs.io/en/latest/getting/PrecompileVendorPrimitives.html>
