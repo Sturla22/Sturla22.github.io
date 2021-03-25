@@ -73,7 +73,7 @@ Click on 'Expand Doxyfile diff' below for an example of the changes I made to th
 <p>
 
 {% highlight diff %}
-{% include doxyfile_diff.txt %}
+{% include_relative includes/doxygen-for-vhdl/doxyfile_diff.txt %}
 {% endhighlight %}
 
 </p>

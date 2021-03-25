@@ -16,7 +16,7 @@ Install with: `pip install vsg`
 
 To showcase the basic features of VSG we will be running it on the half adder posted on [nandland](https://www.nandland.com/vhdl/modules/module-half-adder.html), but with some mistakes injected to make this a bit more interesting. The code looks like this:
 ```vhdl
-{% include half_adder_original.vhd %}
+{% include_relative includes/vhdl-style-guide/half_adder_original.vhd %}
 ```
 
 The command to run VSG on the file is: `vsg -f half_adder_original.vhd`, which gives the output:
@@ -72,7 +72,7 @@ The `port_012` rule is set to not be [fixable by default](https://vhdl-style-gui
  2. Edit the json file to have `"fixable": true` like shown below:
 
     ```json
-    {% include config.json %}
+    {% include_relative includes/vhdl-style-guide/config.json %}
     ```
 
  3. Run: `vsg --fix -c config.json -f half_adder_fixed.vhd`
@@ -145,7 +145,7 @@ Besides fixing the errors, VSG has also changed indenting in accordance with it'
 The final result is this beautifully formatted file:
 
 ```vhdl
-{% include half_adder_fixed.vhd %}
+{% include_relative includes/vhdl-style-guide/half_adder_fixed.vhd %}
 ```
 
 In the end we get a nice clean file, with in theory no manual labor. In practice, even if the tool may not be able to fix certain errors, at least it points them out for you and fixes some of them.

@@ -7,9 +7,12 @@ if [[ $# -lt 1 || $# -gt 1 ]]; then
 fi
 
 design=$*
-testbench=${design}_pltb_tb
+testbench=${design}_tb
 workdir=_work
 options="-P$workdir --workdir=$workdir"
+
+# Make sure workdir exists
+mkdir -p $workdir
 
 set -ex
 

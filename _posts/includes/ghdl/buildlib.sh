@@ -16,6 +16,9 @@ else
   done
 fi
 
+# Make sure workdir exists
+mkdir -p $workdir
+
 set -ex
 
 ghdl -i --workdir=$workdir -P$workdir --work=$lib_name $lib_src

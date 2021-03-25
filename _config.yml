@@ -2,6 +2,9 @@
 title: "Sturla's Blog"
 description: "I'm an Embedded Electronics Engineer with an interest in all technology."
 
+exclude: 
+  - includes
+
 author: Sturla Lange
 github_username: Sturla22
 linkedin_username: sturla-lange
