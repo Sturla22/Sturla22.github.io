@@ -1,0 +1,31 @@
+Re-compile not needed
+
+Starting lib.half_adder_tb.output_port_defaults
+Output file: _work/test_output/lib.half_adder_tb.output_port_defaults_71fd68b0f08bfd958330c6ab9385261009020fcd/output.txt
+pass (P=1 S=0 F=0 T=3) lib.half_adder_tb.output_port_defaults (0.4 seconds)
+
+Starting lib.half_adder_tb.default.logic
+Output file: _work/test_output/lib.half_adder_tb.default.logic_7362646f53747f514f8519c7c0ef9e207eb7940f/output.txt
+pass (P=2 S=0 F=0 T=3) lib.half_adder_tb.default.logic (0.3 seconds)
+
+Starting lib.half_adder_tb.fail.logic
+Output file: _work/test_output/lib.half_adder_tb.fail.logic_50ea30667ba22f8479e89f8a9eb166b63ba2e489/output.txt
+/home/sturlalange/Dev/sturla22.github.io/_posts/includes/vunit/half_adder_tb.vhd:106:9:@40ns:(assertion error): carry should be '1' with inputs '1' and '1'
+/usr/local/bin/ghdl:error: assertion failed
+in process .half_adder_tb(test).main
+  from: lib.half_adder_tb(test).main.test_logic at half_adder_tb.vhd:106
+/usr/local/bin/ghdl:error: simulation failed
+fail (P=2 S=0 F=1 T=3) lib.half_adder_tb.fail.logic (0.3 seconds)
+
+==== Summary ==================================================
+pass lib.half_adder_tb.output_port_defaults (0.4 seconds)
+pass lib.half_adder_tb.default.logic        (0.3 seconds)
+fail lib.half_adder_tb.fail.logic           (0.3 seconds)
+===============================================================
+pass 2 of 3
+fail 1 of 3
+===============================================================
+Total time was 1.0 seconds
+Elapsed time was 1.1 seconds
+===============================================================
+Some failed!
