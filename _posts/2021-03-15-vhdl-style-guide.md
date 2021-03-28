@@ -6,18 +6,21 @@ tags:
     - Tools
 ---
 
-VHDL Style Guide describes it self as a tool that "provides coding style guide enforcement for VHDL code". It is similar to [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) or [Black](https://black.readthedocs.io/en/stable/) in that it can fix your code to follow a coding styleguide.
+VHDL Style Guide describes it self as a tool that "provides coding style guide enforcement for VHDL code". It is similar to [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) or [Black](https://black.readthedocs.io/en/stable/) in that it can fix your code to follow a coding styleguide. This post is a quick overview of VSG to help you get started using it.
 
-This post is a quick overview of VSG to help you get started using it.
 
-The docs are [here](https://vhdl-style-guide.readthedocs.io/en/latest) and the repository is [here](https://github.com/jeremiah-c-leary/vhdl-style-guide).
-
-Install with: `pip install vsg`
+The docs are [here](https://vhdl-style-guide.readthedocs.io/en/latest) and the repository is [here](https://github.com/jeremiah-c-leary/vhdl-style-guide). Install with: `pip install vsg`
 
 To showcase the basic features of VSG we will be running it on the half adder posted on [nandland](https://www.nandland.com/vhdl/modules/module-half-adder.html), but with some mistakes injected to make this a bit more interesting. The code looks like this:
-```vhdl
-{% include_relative includes/vhdl-style-guide/half_adder_original.vhd %}
-```
+
+<!-- {% increment listing_num %} -->
+{%
+  include vhdl_code_snippet.html
+  listing_num=listing_num
+  description="Original Half Adder design"
+  dir="includes/vhdl-style-guide/"
+  file="half_adder_original.vhd"
+%}
 
 The command to run VSG on the file is: `vsg -f half_adder_original.vhd`, which gives the output:
 
@@ -144,8 +147,13 @@ Besides fixing the errors, VSG has also changed indenting in accordance with it'
 
 The final result is this beautifully formatted file:
 
-```vhdl
-{% include_relative includes/vhdl-style-guide/half_adder_fixed.vhd %}
-```
+<!-- {% increment listing_num %} -->
+{%
+  include vhdl_code_snippet.html
+  listing_num=listing_num
+  description="Styled Half Adder design"
+  dir="includes/vhdl-style-guide/"
+  file="half_adder_fixed.vhd"
+%}
 
 In the end we get a nice clean file, with in theory no manual labor. In practice, even if the tool may not be able to fix certain errors, at least it points them out for you and fixes some of them.
