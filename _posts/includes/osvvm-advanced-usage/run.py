@@ -2,7 +2,7 @@
 """!
 @file: run.py
 
-Based on https://vunit.github.io/user_guide.html#introduction
+Based on http://sturla22.github.io/2021/03/27/vunit.html#configuring-compilation-and-tests
 """
 import vunit
 import pathlib

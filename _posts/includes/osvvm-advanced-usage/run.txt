@@ -1,0 +1,29 @@
+Re-compile not needed
+
+Starting lib.half_adder_tb.default
+Output file: _work/test_output/lib.half_adder_tb.default_3c7519093f975ed680b0a74cca42c13b71bec81e/output.txt
+pass (P=1 S=0 F=0 T=2) lib.half_adder_tb.default (0.5 seconds)
+
+Starting lib.half_adder_tb.fail
+Output file: _work/test_output/lib.half_adder_tb.fail_7d70474258bbabbb9b41639b986575e6b326e139/output.txt
+%% Alert ERROR   (intentional fail) Carry should be one, was '1' at 4 ns
+%% DONE  FAILED  half_adder_tb_test_case_1  Total Error(s) = 1  Failures: 0  Errors: 1  Warnings: 0  Affirmations Checked: 8  at 4 ns
+         4000000 fs - check                -   ERROR - OSVVM detected errors
+/home/sturlalange/.local/lib/python3.8/site-packages/vunit/vhdl/core/src/core_pkg.vhd:84:7:@4ns:(report failure): Stop simulation on log level error
+/usr/local/bin/ghdl:error: report failed
+in process .half_adder_tb(test_harness).test_controller_1@test_controller(test_case_1).control_process
+  from: vunit_lib.core_pkg.core_failure at core_pkg.vhd:84
+/usr/local/bin/ghdl:error: simulation failed
+fail (P=1 S=0 F=1 T=2) lib.half_adder_tb.fail (0.5 seconds)
+
+==== Summary =====================================
+pass lib.half_adder_tb.default (0.5 seconds)
+fail lib.half_adder_tb.fail    (0.5 seconds)
+==================================================
+pass 1 of 2
+fail 1 of 2
+==================================================
+Total time was 1.1 seconds
+Elapsed time was 1.1 seconds
+==================================================
+Some failed!
