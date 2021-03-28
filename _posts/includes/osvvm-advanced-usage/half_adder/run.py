@@ -1,10 +1,13 @@
 #!/bin/env python
 """!
-@file: run_vunit.py
+@file: run.py
 
 Based on https://vunit.github.io/user_guide.html#introduction
 """
 import vunit
+import pathlib
+
+project_dir = pathlib.Path(__file__).parent
 
 
 class Library:
@@ -12,10 +15,11 @@ class Library:
         """
         Create the VUnit library.
         """
+        vu.add_osvvm()
         # Note that the library name 'work' is not allowed.
         self.lib = vu.add_library("lib")
         self.ghdl_common_flags = ["--std=08"]
-        self.sources = ["half_adder.vhd", "half_adder_tb.vhd"]
+        self.sources = [project_dir / "half_adder" / "*.vhd"]
 
     def setup(self):
         """
@@ -30,7 +34,10 @@ class Library:
         Point VUnit to the source files.
         """
         for s in self.sources:
-            self.lib.add_source_file(s)
+            if "*" in str(s.as_posix()):
+                self.lib.add_source_files(s)
+            else:
+                self.lib.add_source_file(s)
 
     def configure_compile(self):
         """
@@ -45,14 +52,13 @@ class Library:
         self.lib.set_sim_option("ghdl.elab_flags", self.ghdl_common_flags)
         # Find test bench in lib
         tb = self.lib.test_bench("half_adder_tb")
-        # Find test in test bench
-        test = tb.test("logic")
+        tb.set_attribute(".run", True)
         # We'll be overwriting the default configuration,
         # so need to add it explicitly.
-        test.add_config("default")
+        tb.add_config("default")
         # Add a configuration with generic "fail" set to true
         # to demonstrate test failure.
-        test.add_config("fail", generics={"fail": True})
+        tb.add_config("fail", generics={"fail": True})
 
 
 def main():
