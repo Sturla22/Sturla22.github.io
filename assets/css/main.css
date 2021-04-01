@@ -134,7 +134,10 @@ table td { /*! border: 1px solid #e8e8e8; */ }
 
 /** Syntax highlighting styles */
 .highlight { background: #fff; }
-.highlighter-rouge .highlight { /*! background: #eef; */ /*! border: 1px solid #ccc; */}
+.highlighter-rouge .highlight {margin-bottom: 1em;border-left: solid 1px #ccc;}
+.language-plaintext.highlighter-rouge {
+    background-color: #eee;
+}
 .highlight .c { color: #998; font-style: italic; }
 .highlight .err { color: #a61717; background-color: #e3d2d2; }
 .highlight .k { font-weight: bold; }

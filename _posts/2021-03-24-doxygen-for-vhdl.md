@@ -5,6 +5,7 @@ tags:
     - VHDL
     - Tools
 ---
+{% assign listing_num = 1 %}
 
 Doxygen is the industry standard in SW development for auto-generating documentation from code. It works pretty well for VHDL, I'll cover the basics, share some tips and tricks and provide a few warnings in this post.
 
@@ -29,7 +30,9 @@ An index of Doxygen's `\commands` (which can also be `@commands`) can be found [
 
 Here is an example from <https://github.com/Sturla22/pltbutils/tree/doxygen>:
 
-```vhdl
+<figure class="image" id="{{ "doxygen-example" | slugify }}">
+  <figcaption style="text-align: right;"><a style="color: inherit; text-decoration: underline;" href="#{{ "doxygen-example" | slugify }}">doxygen-example</a></figcaption>
+{% highlight vhdl linenos %}
 --! \overload
 --!
 --! \param num               Test number. Optional, default is to increment
@@ -54,7 +57,9 @@ procedure starttest(
   variable pltbv              : inout pltbv_t;
   signal   pltbs              : out   pltbs_t
 );
-```
+{% endhighlight %}
+  <figcaption style="padding: 0.5rem 10px; font-size: unset;"><strong>Listing {{ listing_num }}</strong>: Doxygen Example</figcaption>
+</figure>
 
 The result is [this](https://sturla22.github.io/pltbutils/classpltbutils__func__pkg.html#a1792f8d6957cc29f2bdf372166bcce67) representation of the procedure starttest:
 

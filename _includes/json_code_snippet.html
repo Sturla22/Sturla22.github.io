@@ -1,0 +1,13 @@
+<div>
+<figure class="image" id="{{ include.file | slugify }}">
+<figcaption style="text-align: right;">
+<a style="color: inherit; text-decoration: underline;" href="#{{ include.file | slugify }}">
+{{ include.file }}
+</a>
+</figcaption>
+{% highlight json linenos %}
+{% include_relative {{ include.dir }}{{ include.file }} %}
+{% endhighlight %}
+<figcaption style="padding: 0.5rem 10px; font-size: unset;"><strong>Listing {{ include.listing_num }}</strong>: {{ include.description }}</figcaption>
+</figure>
+</div>

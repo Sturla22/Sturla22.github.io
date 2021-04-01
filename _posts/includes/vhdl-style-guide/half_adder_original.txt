@@ -1,0 +1,17 @@
+================================================================================
+File:  half_adder_original.vhd
+================================================================================
+Phase 1 of 7... Reporting
+Total Rules Checked: 76
+Total Violations:    4
+  Error   :     4
+  Warning :     0
+----------------------------+------------+------------+--------------------------------------
+  Rule                      |  severity  |  line(s)   | Solution
+----------------------------+------------+------------+--------------------------------------
+  port_012                  | Error      |         12 | Remove default assignment in port declaration
+  port_012                  | Error      |         13 | Remove default assignment in port declaration
+  entity_015                | Error      |         15 | The "end" keyword, "entity" keyword and entity name need to be on the same line.
+  architecture_010          | Error      |         21 | Add "architecture" keyword after "end" keyword.
+----------------------------+------------+------------+--------------------------------------
+NOTE: Refer to online documentation at https://vhdl-style-guide.readthedocs.io/en/latest/index.html for more information.

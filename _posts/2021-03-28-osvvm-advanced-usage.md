@@ -5,6 +5,7 @@ tags:
     - VHDL
     - "VHDL Libraries"
     - OSVVM
+published: false
 ---
 
 Chapter 5 of [OSVVM's Test Writer's User Guide](https://github.com/OSVVM/Documentation/blob/master/OSVVM_test_writers_user_guide.pdf) explains how their testbench framework consists of a test sequencer, TestCtrl, and a top level testbench which they call a test harness. However, no examples are given on how to create this setup. I resorted to digging around in OSVVM's own testbenches to find out how to do that. This post will cover how to create your own setup of the testbench framework.
