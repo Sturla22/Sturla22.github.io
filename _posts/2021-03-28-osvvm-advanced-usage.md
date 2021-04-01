@@ -7,8 +7,10 @@ tags:
     - OSVVM
 published: false
 ---
-
 Chapter 5 of [OSVVM's Test Writer's User Guide](https://github.com/OSVVM/Documentation/blob/master/OSVVM_test_writers_user_guide.pdf) explains how their testbench framework consists of a test sequencer, TestCtrl, and a top level testbench which they call a test harness. However, no examples are given on how to create this setup. I resorted to digging around in OSVVM's own testbenches to find out how to do that. This post will cover how to create your own setup of the testbench framework.
+
+{% assign figure_num = 1 %}
+{% assign listing_num = 1 %}
 
 {% include toc.html %}
 
@@ -16,15 +18,27 @@ This setup is entirely overkill for simple designs, but perhaps appropriate for 
 
 The architecture of test benches tends towards something like the following image:
 
-<!-- {% increment figure_num %} -->
-{% include image.html dir="/assets/img/" file="Classic_Testbench.png" figure_num=figure_num description="Classic testbench" %}
+{%
+  include image.html
+  dir="/assets/img/"
+  file="Classic_Testbench.png"
+  figure_num=figure_num
+  description="Classic testbench"
+%}
+{% assign figure_num = figure_num | plus: 1 %}
 
 Here I've used 'Unit' to describe the combination of an Entity and Architecture, there are probably more correct terms out there (module?).
 
 With OSVVM's approach of using a Test Controller to separate the test harness and the test cases we get a clear interface to the design under test (DUT).
 
-<!-- {% increment figure_num %} -->
-{% include image.html dir="/assets/img/" file="Test_Controller.png" figure_num=figure_num description="Test Controller" %}
+{%
+  include image.html
+  dir="/assets/img/"
+  file="Test_Controller.png"
+  figure_num=figure_num
+  description="Test Controller"
+%}
+{% assign figure_num = figure_num | plus: 1 %}
 
 
 ## Template

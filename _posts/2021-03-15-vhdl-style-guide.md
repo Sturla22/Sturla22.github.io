@@ -5,10 +5,9 @@ tags:
     - VHDL
     - Tools
 ---
-{% assign listing_num = 1 %}
-
 VHDL Style Guide describes it self as a tool that "provides coding style guide enforcement for VHDL code". It is similar to [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) or [Black](https://black.readthedocs.io/en/stable/) in that it can fix your code to follow a coding styleguide. This post is a quick overview of VSG to help you get started using it.
 
+{% assign listing_num = 1 %}
 
 The docs are [here](https://vhdl-style-guide.readthedocs.io/en/latest) and the repository is [here](https://github.com/jeremiah-c-leary/vhdl-style-guide). Install with: `pip install vsg`
 
