@@ -1,0 +1,8 @@
+<testsuite name="testsuite" errors="0" failures="1" skipped="0" tests="3" hostname="katla"><testcase classname="lib.half_adder_tb" name="output_port_defaults" time="0.4"><system-out>simulation stopped @10ns with status 0
+</system-out></testcase><testcase classname="lib.half_adder_tb.default" name="logic" time="0.3"><system-out>simulation stopped @40ns with status 0
+</system-out></testcase><testcase classname="lib.half_adder_tb.fail" name="logic" time="0.4"><system-out>/home/sturlalange/Dev/sturla22.github.io/_posts/includes/vunit/half_adder_tb.vhd:106:9:@40ns:(assertion error): carry should be '1' with inputs '1' and '1'
+/usr/local/bin/ghdl:error: assertion failed
+in process .half_adder_tb(test).main
+  from: lib.half_adder_tb(test).main.test_logic at half_adder_tb.vhd:106
+/usr/local/bin/ghdl:error: simulation failed
+</system-out><failure message="Failed" /></testcase></testsuite>

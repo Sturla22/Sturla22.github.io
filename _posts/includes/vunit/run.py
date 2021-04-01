@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python3
 """!
 @file run.py
 Based on https://vunit.github.io/user_guide.html#introduction

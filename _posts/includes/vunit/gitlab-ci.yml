@@ -1,0 +1,10 @@
+# file: .gitlab-ci.yml
+
+image: ghdl/vunit:gcc
+
+test:
+  script:
+    - ./run_vunit.py -o build -x build/test_results/results.xml
+  artifacts:
+    reports:
+      junit: build/test_results/results.xml
