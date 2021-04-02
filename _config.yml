@@ -9,16 +9,37 @@ plugins:
 exclude: 
   - includes
 
-author: Sturla Lange
-github_username: Sturla22
-linkedin_username: sturla-lange
-
 theme: minima
 show_excerpts: true
 header_pages:
-  - about.md
-  - tags.md
-google_analytics: G-4WPTQHW2DS
-repository: Sturla22/Sturla22.github.io
-url: sturla22.github.io
-logo: /assets/img/SturlasBlog.jpg
+  - "about.md"
+  - "tags.md"
+
+timezone: "Europe/Stockholm"
+repository: "Sturla22/Sturla22.github.io"
+url: "https://sturla22.github.io"
+logo: "/assets/img/SturlasBlog.jpg"
+author: "Sturla Lange"
+github_username: "Sturla22"
+linkedin_username: "sturla-lange"
+google_analytics: "G-4WPTQHW2DS"
+
+defaults:
+  - 
+    scope:
+      path: ""
+    values:
+      layout: "post"
+      image: "/assets/img/SturlasBlog.jpg"
+      author: "Sturla Lange"
+
+jekyll_compose:
+  post_default_front_matter:
+    last_modified_at:
+    permalink:
+    description:
+    image:
+    published: true
+    sitemap: true
+    tags:
+      - "Example Tag"

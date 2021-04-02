@@ -8,7 +8,7 @@
 
     <main class="page-content" aria-label="Content">
       <div class="wrapper">
-        {{ content }}
+        {{ content | extlinks }}
       </div>
     </main>
 
@@ -22,6 +22,18 @@
     {%- if jekyll.environment == 'production' and site.google_analytics -%}
       {%- include google-analytics.html -%}
     {%- endif -%}
+    <script>
+        // any link that is not part of the current domain is modified for seo
+        (function() {
+          var links = document.links;
+          for (var i = 0, linksLength = links.length; i < linksLength; i++) {
+            if (links[i].hostname != window.location.hostname) {
+              links[i].target = '_blank';
+              links[i].rel = "nofollow noopener";
+            }
+          }
+        })();
+    </script>
   </body>
 
 </html>

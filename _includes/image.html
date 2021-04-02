@@ -3,7 +3,7 @@
     {% else %}
     <figcaption style="text-align: right;" id="{{ include.file | slugify }}"><a style="color: inherit; text-decoration: underline;" href="#{{ include.file | slugify }}">{{ include.file }}</a></figcaption>
     {% endif %}
-  <img src="{{ include.dir }}{{ include.file }}" alt="{{ include.description }}">
+  <img width="{{ include.width }}" src="{{ include.dir }}{{ include.file }}" alt="{{ include.description }}">
   {% if include.figure_num %}
   <figcaption style="padding: 0.5rem 2rem;"><strong>Figure {{ include.figure_num }}</strong>: {{ include.description }}</figcaption>
   {% else %}

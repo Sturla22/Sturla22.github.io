@@ -9,4 +9,5 @@ layout: home
   figure_num=figure_num
   description=site.description
   no_link=true
+  width="70%"
 %}
