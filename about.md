@@ -3,7 +3,26 @@ title: About
 layout: page
 ---
 
-{{ site.description }}
+{%
+  include image.html
+  dir="/assets/img/"
+  file="SturlasBlog.jpg"
+  figure_num=figure_num
+  description=site.description
+  no_link=true
+%}
+
+## Experience
+I have professional embedded systems HW/FW/SW experience for industrial, automotive and rail applications. There is detailed information on
+<a rel="me" href="https://www.linkedin.com/in/sturla-lange" title="sturla-lange">LinkedIn</a>.
+
+## Site information
+
+This blog serves mostly as a learning platform for myself, I find describing the concepts I'm learning is helpful. Hopefully, through this I can give back to the community I rely on for learning.
+
+### Technical Details
+
+The site is generated with Jekyll and hosted by Github through their Pages feature, so all the sources for the blog is openly available at <https://github.com/sturla22/sturla22.github.io>
 
 ### Privacy Policy
 _This privacy policy is based on the policy suggested [here](https://www.kevel.co/blog/gdpr-google-analytics/)._
