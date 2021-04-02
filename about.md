@@ -6,7 +6,7 @@ layout: page
 {%
   include image.html
   dir="/assets/img/"
-  file="SturlasBlog.jpg"
+  file="SturlasBlog.webp"
   figure_num=figure_num
   description=site.description
   no_link=true

@@ -18,7 +18,7 @@ header_pages:
 timezone: "Europe/Stockholm"
 repository: "Sturla22/Sturla22.github.io"
 url: "https://sturla22.github.io"
-logo: "/assets/img/SturlasBlog.jpg"
+logo: "/assets/img/SturlasBlog.webp"
 author: "Sturla Lange"
 github_username: "Sturla22"
 linkedin_username: "sturla-lange"
@@ -30,7 +30,7 @@ defaults:
       path: ""
     values:
       layout: "post"
-      image: "/assets/img/SturlasBlog.jpg"
+      image: "/assets/img/SturlasBlog.webp"
       author: "Sturla Lange"
 
 jekyll_compose:
