@@ -34,12 +34,13 @@ defaults:
       author: "Sturla Lange"
 
 jekyll_compose:
-  post_default_front_matter:
-    last_modified_at:
-    permalink:
-    description:
-    image:
-    published: true
-    sitemap: true
-    tags:
-      - "Example Tag"
+  default_front_matter:
+    posts:
+      last_modified_at:
+      permalink:
+      description:
+      image:
+      published: true
+      sitemap: true
+      tags:
+        - "Example Tag"

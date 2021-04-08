@@ -1,0 +1,5 @@
+{% if include.table_num %}
+<figcaption style="padding: 0.5rem 2rem;"><strong>Table {{ include.table_num }}</strong>: {{ include.description }}</figcaption>
+{% else %}
+<figcaption style="text-align: center">{{ include.description }}</figcaption>
+{% endif %}
