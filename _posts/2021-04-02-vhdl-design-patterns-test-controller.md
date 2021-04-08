@@ -5,6 +5,7 @@ tags:
     - VHDL
     - VHDL Libraries
     - OSVVM
+last_modified_at: 2021-04-08
 ---
 Chapter 5 of [OSVVM's Test Writer's User Guide](https://github.com/OSVVM/Documentation/blob/master/OSVVM_test_writers_user_guide.pdf) explains how their testbench framework consists of a test sequencer, TestCtrl, and a top level testbench which they call a test harness. However, no examples are given on how to create this setup. I resorted to digging around in OSVVM's own testbenches to find out how to do that. This post will cover how to create your own setup of the testbench framework with a test controller.
 
@@ -139,7 +140,7 @@ The test case file is where the manual labor stops and you need to start thinkin
 
 ### Running
 
-Since VUnit detects that the `test_controller` has a `runner_cfg` generic we need to decorate the testbench with an attribute and then run the python script below with `./run.py --with-attributes .run`, I've also used VUnit's `add_osvvm` method to get the library. I could just as well have added the library like any other source in the python script.
+I've used VUnit's `add_osvvm` method to get the library. I could just as well have added the library as a separate library to `lib` in the python script.
 
 {%
   include python_code_snippet.html
@@ -167,3 +168,7 @@ OSVVM's output is on lines 9 and 10 above, showing that there was an alert at 4 
 
 This approach is not entirely dependent on OSVVM, it is a design pattern. But OSVVM pushes this design pattern and their synchronization methods make the implementation a lot easier than implementing these yourself. The design pattern itself is a clever way to get around either copy-pasting a lot of setup code for different tests of the same integration, or keeping the setup and all of the test cases in a single, _enormous_, file.
 
+## Change Log
+
+### 2021-04-08
+I've updated the VUnit run-script to align with VUnit's [Distributed Testbenches](https://vunit.github.io/run/user_guide.html#distributed-testbenches) example instead of hacking around with attributes.

@@ -23,7 +23,7 @@ architecture test_harness of half_adder_tb is
   component test_controller is
     generic(
       -- Template: Generics.
-      runner_cfg: string;
+      nested_runner_cfg: string;
       fail: boolean := false
     );
     port(
@@ -60,7 +60,7 @@ begin
   test_controller_1: component test_controller
     generic map(
       -- Template: Generics.
-      runner_cfg => runner_cfg,
+      nested_runner_cfg => runner_cfg,
       fail => fail
     )
     port map(

@@ -43,16 +43,14 @@ class Library:
         """
         Configure how VUnit builds the design and tests.
         """
-        self.lib.add_compile_option("ghdl.a_flags", self.ghdl_common_flags)
+        pass
 
     def configure_run(self):
         """
         Configure how VUnit runs the tests.
         """
-        self.lib.set_sim_option("ghdl.elab_flags", self.ghdl_common_flags)
         # Find test bench in lib
         tb = self.lib.test_bench("half_adder_tb")
-        tb.set_attribute(".run", True)
         # We'll be overwriting the default configuration,
         # so need to add it explicitly.
         tb.add_config("default")

@@ -11,7 +11,7 @@ library OSVVM;
 entity test_controller is
   generic(
     -- Template: Generics that you want to be able to configure.
-    runner_cfg: string;
+    nested_runner_cfg: string;
     fail: boolean := false
   );
   port(

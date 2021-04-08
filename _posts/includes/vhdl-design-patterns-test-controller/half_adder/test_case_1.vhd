@@ -14,12 +14,12 @@ begin
   control_process: process is
     constant TIMEOUT: time := 10 ms;
   begin
-    test_runner_setup(runner, runner_cfg);
+    test_runner_setup(runner, nested_runner_cfg);
     -- Init logs.
     SetAlertLogName("half_adder_tb_test_case_1");
 
     -- Wait for testbench init.
-    wait for 0 ns;  wait for 0 ns; -- TODO(sl): why twice?
+    wait for 0 ns;
 
     -- Template: Wait for design to init, e.g. wait until reset = '0'.
     WaitForBarrier(setup_done);
