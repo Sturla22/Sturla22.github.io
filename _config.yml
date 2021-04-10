@@ -45,3 +45,7 @@ jekyll_compose:
       sitemap: true
       tags:
         - "Example Tag"
+
+feed:
+  excerpt_only: true
+  posts_limit: 100

@@ -4,6 +4,7 @@ title: "VHDL Testbench Library Comparison"
 tags:
     - VHDL
     - "VHDL Libraries"
+last_modified_at: 2021-04-10
 ---
 
 This post is an overview of testbench utility libraries, verification components will be covered in a separate post. The intention is to help with selecting which library to use, since I haven't found a neutral comparison of them anywhere.
@@ -18,6 +19,8 @@ The libraries I'll be exploring in this post are:
 - PlTbUtils
 - UVVM
 - VUnit
+
+I'll be deferring the discussion of cocotb to another post, since it is not implemented in VHDL.
 
 ## High-Level Comparison
 
@@ -34,6 +37,7 @@ Let's take a look at some of the most common features offered by the libraries.
 | **Text Utils**        | Yes                  | Yes            | Yes                            |                               |
 | **Random**            | Yes                  |                | Yes                            |                               |
 | **License**           | Apache 2.0           | LGPL           | Apache 2.0                     | Mozilla Public License, v.2.0 |
+
 {%
   include table.html
   description="Library comparison"
@@ -81,6 +85,10 @@ These are documented in OSVVM's documentation repository: <https://github.com/OS
 {% endcapture %}
 {% include details.html details=details summary="Example testbench code" %}
 
+### Simulator Support
+
+OSVVM's documentation states which simulators are supported in their documentation: `Aldec` (`Active-HDL`/`RivieraPRO`), `Mentor` (`Questa`/`ModelSim`) and `GHDL`. `GHDL` officially supports OSVVM and runs [scheduled testsi](https://github.com/ghdl/extended-tests) to check that it works.
+
 
 ## PlTbUtils
 
@@ -105,6 +113,10 @@ I have created Doxygen documentation for PlTbUtils, which is hosted here: <https
 {% assign listing_num = listing_num | plus: 1 %}
 {% endcapture %}
 {% include details.html details=details summary="Example testbench code" %}
+
+### Simulator Support
+
+The officially supported simulators ([according to the docs](https://sturla22.github.io/pltbutils/index.html#autotoc_md55)) are `ModelSim`, and `ISim`/`XSim`. I've also had good results with `GHDL`. PlTbUtils does not rely on any language features in VHDL-2008+ which makes it likely to work with many simulators.
 
 ## UVVM Utility Library
 
@@ -135,6 +147,12 @@ The [Utility Library Quick Reference](https://github.com/UVVM/UVVM_Light/blob/ma
 {% endcapture %}
 {% include details.html details=details summary="Example testbench code" %}
 
+### Simulator Support
+
+`GHDL` officially supports UVVM and runs [scheduled tests](https://github.com/ghdl/extended-tests) to check that it works.
+
+According to the invitation to the Bitvis course, "Advanced VHDL Verification - Made Simple", at the very least the following simulators are supported: `Questa`/`ModelSim`, and `Active-HDL`/`Riviera-PRO`.
+
 ## VUnit VHDL Libraries
 
 [VUnit](https://vunit.github.io/index.html) "features the functionality needed to realize continuous and automated testing" of HDL code and includes several VHDL libraries for convenience but also for integration with their python based run/check system. VUnit provides four utility libraries:
@@ -161,6 +179,40 @@ VUnit also provides two datastructures:
 {% assign listing_num = listing_num | plus: 1 %}
 {% endcapture %}
 {% include details.html details=details summary="Example testbench code" %}
+
+### Simulator Support
+
+VUnit supports [several simulators](https://vunit.github.io/cli.html#simulator-selection) for their build/run environment, it is safe to assume that their utility libraries work in those as well.
+
+The officially supported simulators are `Active-HDL`/`Riviera-PRO`, `GHDL`, and `ModelSim`.
+
+## Simulator Support Matrix
+
+The difference in simulator support comes down to the language features used by the libraries vs. the language features implemented by the simulator.
+
+I've based the following matrix on the documentation I've found, issues on github and [this list of VHDL simulators](https://en.wikipedia.org/wiki/List_of_HDL_simulators) on Wikipedia.
+
+|                            | OSVVM                                                   | PlTbUtils  | UVVM  | VUnit                                                     |
+|---------------------------:|:-------------------------------------------------------:|:----------:|:-----:|:---------------------------------------------------------:|
+| **Active-HDL/Riviera-PRO** | Yes                                                     |            | Yes   | Yes                                                       |
+| **GHDL**                   | Yes                                                     | Unofficial | Yes   | Yes                                                       |
+| **Incisive**               | [No](https://github.com/OSVVM/OSVVM/issues/7)           |            |       | [In Progress?](https://github.com/VUnit/vunit/issues/504) |
+| **ModelSim/Questa**        | Yes                                                     | Yes        | Yes   | Yes                                                       |
+| **NVC**                    |                                                         |            |       | [In Progress?](https://github.com/VUnit/vunit/issues/44)  |
+| **SynaptiCAD**             |                                                         |            |       | [No](https://github.com/VUnit/vunit/issues/261)           |
+| **VCS**                    |                                                         |            |       | [In Progress?](https://github.com/VUnit/vunit/issues/134) |
+| **ISim/XSim**              |                                                         | Yes        |       | [In Progress?](https://github.com/VUnit/vunit/issues/209) |
+| **Xcelium**                | [In Progress?](https://github.com/OSVVM/OSVVM/issues/7) |            |       | [In Progress?](https://github.com/VUnit/vunit/issues/325) |
+| **NCSim**                  |                                                         |            |       | [Experimental?](https://github.com/VUnit/vunit/issues/92) |
+{%
+  include table.html
+  description="Simulator Support Matrix"
+  table_num=2
+%}
+
+It's hard to keep a list like this up to date, so when this has aged like milk [let me know](https://github.com/Sturla22/Sturla22.github.io/discussions/categories/general) and I'll update it.
+
+
 ## Conclusion
 
 It is left up to the reader to pick the libraries that best suit their needs, indeed there is nothing stopping us from using several (or all) of these libraries together. When doing so, be prepared for some naming clashes, for example, VUnit's and PlTbUtils' check procedures.
@@ -168,3 +220,10 @@ It is left up to the reader to pick the libraries that best suit their needs, in
 Personally, I believe the best approach for me will be to rely on VUnit as a base and then add the other libraries as their functionalities are needed, VUnit makes adding OSVVM especially easy as I showed in my post on the [Test Controller]({% post_url 2021-04-02-vhdl-design-patterns-test-controller %}#running) design pattern.
 
 I'll be diving into the Verification Components soon, which is a big part of some of the frameworks mentioned here.
+
+## Changelog
+
+### 2021-04-10
+
+ - Mention cocotb
+ - Add information on simulator support after request from [u/threespeedlogic](https://www.reddit.com/r/FPGA/comments/mmz4h5/vhdl_testbench_library_comparison/gtuy115?utm_source=share&utm_medium=web2x&context=3)
