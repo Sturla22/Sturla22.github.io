@@ -48,9 +48,9 @@ Here is an example from <https://github.com/Sturla22/pltbutils/tree/doxygen>:
 --! in the testbench code, though.
 --!
 --! **Examples**
---! ```vhdl
+--! \`\`\`vhdl
 --! starttest(1, "Reset test", pltbv, pltbs);
---! ```
+--! \`\`\`
 procedure starttest(
   constant num                : in    integer := -1;
   constant name               : in    string;
@@ -86,7 +86,7 @@ Click on 'Expand Doxyfile diff' below for an example of the changes I made to th
 
 ## Issues related to documenting VHDL with Doxygen
 
-- Since VHDL does not have multiline comments one needs to be careful about including a `!` after every `--` in the documentation blocks that Doxygen is supposed to parse, otherwise the documentation blocks will be split and the results will not match your intention.
+- Since before VHDL-2008 there are no multiline comments available one needs to be careful about including a `!` after every `--` in the documentation blocks that Doxygen is supposed to parse, otherwise the documentation blocks will be split and the results will not match your intention.
 - Problem with procedures that have file interface parameters: <https://github.com/doxygen/doxygen/issues/8450>
 - The `\code` and `\endcode` seem to cause the entire documentation block to disappear: <https://github.com/doxygen/doxygen/issues/8231>
 
@@ -100,7 +100,35 @@ Click on 'Expand Doxyfile diff' below for an example of the changes I made to th
 
 If you run into other issues, take a look at [Doxygen's issue tracker](https://github.com/doxygen/doxygen/issues?q=is%3Aissue+is%3Aopen+label%3AVHDL+) in case there are known workarounds.
 
+## Continuous Integration
+
+You can get GitLab to build your documentation (pdf or html) with its CI features:
+
+```yaml
+doxygen:
+  image: ubuntu:latest
+  stage: deploy
+  before_script:
+    - export DEBIAN_FRONTEND=noninteractive TZ=Europe/Stockholm
+    - apt update && apt install -y graphviz build-essential texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra texlive-font-utils doxygen
+  script:
+    - doxygen Doxyfile && cd doc/latex && make
+  artifacts:
+    paths:
+      - doc/latex/refman.pdf
+      - doc/html
+    expire_in: 1 week
+```
+
+This will give you access to the pdf and html representations of your documentation through the job artifact browser in GitLab. If you are only interested in the html output then you can remove most of the packages installed in the `before_script`, only `doxygen` is needed, that way your jobs will be much faster.
 
 ## Conclusion
 
 Doxygen is a useful tool in the VHDL toolbox, even though there are some issues at the moment, but that is the beauty of open source software: we can influence the development of these applications and in case we don't get the response we hoped for we can take matters into our own hands!
+
+## Changelog
+
+### 2021-04-24
+
+- Added information about CI.
+- Corrected wrong statement about no multiline comments in VHDL, they were added in VHDL-2008.
