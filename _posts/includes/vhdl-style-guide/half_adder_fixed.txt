@@ -2,14 +2,14 @@
 File:  half_adder_fixed.vhd
 ================================================================================
 Phase 1 of 7... Reporting
-Total Rules Checked: 76
+Total Rules Checked: 82
 Total Violations:    2
   Error   :     2
   Warning :     0
 ----------------------------+------------+------------+--------------------------------------
   Rule                      |  severity  |  line(s)   | Solution
 ----------------------------+------------+------------+--------------------------------------
-  port_012                  | Error      |         12 | Remove default assignment in port declaration
-  port_012                  | Error      |         13 | Remove default assignment in port declaration
+  port_012                  | Error      |         10 | Remove assignment
+  port_012                  | Error      |         11 | Remove assignment
 ----------------------------+------------+------------+--------------------------------------
 NOTE: Refer to online documentation at https://vhdl-style-guide.readthedocs.io/en/latest/index.html for more information.

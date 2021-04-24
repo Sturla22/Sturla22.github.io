@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<testsuite errors="0" hostname="katla" failures="1" timestamp="2021-04-24T11:44:26" tests="1" time="0" name="vhdl-style-guide">
+  <properties>
+  </properties>
+  <testcase name="half_adder_*.vhd" time="0" classname="failure">
+    <failure type="Failure">
+      source_file_001: 0 : No such file or directory
+    </failure>
+  </testcase>
+  <system-out>
+  </system-out>
+  <system-err>
+  </system-err>
+</testsuite>

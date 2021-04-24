@@ -7,8 +7,8 @@ entity half_adder is
     i_bit1 : in    std_logic;
     i_bit2 : in    std_logic;
     --
-    o_sum   : out   std_logic := '0';
-    o_carry : out   std_logic := '0'
+    o_sum   : out   std_logic;
+    o_carry : out   std_logic
   );
 end entity half_adder;
 

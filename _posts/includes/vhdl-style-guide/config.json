@@ -1,11 +1,7 @@
 {
   "rule": {
     "port_012": {
-      "indentSize": 2,
-      "phase": 1,
-      "disable": false,
-      "fixable": true,
-      "severity": "Error"
+      "fixable": true
     }
   }
 }
