@@ -1,2 +1,0 @@
-%% DONE  PASSED  half_adder_tb  Passed: 10  Affirmations Checked: 10  at 42 ns
-simulation stopped @42ns
