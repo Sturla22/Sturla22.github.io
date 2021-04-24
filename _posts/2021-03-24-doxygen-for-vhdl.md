@@ -97,6 +97,7 @@ Click on 'Expand Doxyfile diff' below for an example of the changes I made to th
   --! ```
   ````
   You can replace vhdl in that snippet with another language like python or tcl.
+- Types declared in a procedure preceding another procedure will be assumed to be the return type of the second procedure: <https://github.com/doxygen/doxygen/issues/8517>
 
 If you run into other issues, take a look at [Doxygen's issue tracker](https://github.com/doxygen/doxygen/issues?q=is%3Aissue+is%3Aopen+label%3AVHDL+) in case there are known workarounds.
 
@@ -130,5 +131,6 @@ Doxygen is a useful tool in the VHDL toolbox, even though there are some issues 
 
 ### 2021-04-24
 
-- Added information about CI.
-- Corrected wrong statement about no multiline comments in VHDL, they were added in VHDL-2008.
+- Add information about CI.
+- Correct wrong statement about no multiline comments in VHDL, they were added in VHDL-2008.
+- Add a new Doxygen for VHDL issue.
