@@ -14,7 +14,7 @@ Chapter 5 of [OSVVM's Test Writer's User Guide](https://github.com/OSVVM/Documen
 
 {% include toc.html %}
 
-This setup is entirely overkill for simple designs, but perhaps appropriate for board- or system-level testbenches i.e. testbenches going beyond the Affirm/Check/Asserts of self checking testbenches and into testbenches that can get up to tens of thousands of lines and are checking the integration of several components for example.
+This setup is entirely overkill for simple designs, but perhaps appropriate for board- or system-level testbenches i.e. testbenches going beyond the Affirm/Check/Asserts of self checking testbenches but rather testbenches that can get up to tens of thousands of lines and are checking the integration of several components for example.
 
 The architecture of testbenches tends towards something like the following image:
 
@@ -26,8 +26,6 @@ The architecture of testbenches tends towards something like the following image
   description="Classic testbench"
 %}
 {% assign figure_num = figure_num | plus: 1 %}
-
-Here I've used 'Unit' to describe the combination of an Entity and Architecture, there are probably more correct terms out there (module?).
 
 With OSVVM's approach of using a Test Controller to separate the test harness and the test cases we get a clear interface to the design under test (DUT).
 
@@ -138,37 +136,54 @@ The test case file is where the manual labor stops and you need to start thinkin
 %}
 {% assign listing_num = listing_num | plus: 1 %}
 
-### Running
-
-I've used VUnit's `add_osvvm` method to get the library. I could just as well have added the library as a separate library to `lib` in the python script.
-
 {%
-  include python_code_snippet.html
+  include vhdl_code_snippet.html
   listing_num=listing_num
-  description="Example VUnit run script"
-  dir="includes/vhdl-design-patterns-test-controller/"
-  file="run.py"
+  description="Example test case"
+  dir="includes/vhdl-design-patterns-test-controller/half_adder/"
+  file="test_case_2.vhd"
 %}
 {% assign listing_num = listing_num | plus: 1 %}
 
-The output is:
+### Running
+
+OSVVM provides scripts to run testbenches. Follow their documentation at [github](https://github.com/OSVVM/Documentation/blob/master/Script_user_guide.pdf).
+
+`tclsh` will open the tcl shell. Running `source Scripts/StartUp.tcl` from within the [OsvvmLibraries repository](https://github.com/OSVVM/OsvvmLibraries) will set up an environment for running testbenches.
+
+Create a `sim` directory and `cd` into it. Build the osvvm core library with `build ../osvvm/osvvm.pro`. Then `cd` into a directory containing the example and run `build half_adder`.
+This will run the `half_adder.pro` file shown in the listing {{ listing_num | plus: 1 }}:
 
 {%
   include code_snippet.html
   listing_num=listing_num
-  description="Output from running VUnit"
-  dir="includes/vhdl-design-patterns-test-controller/"
-  file="run.txt"
+  description="OSVVM Project File"
+  dir="includes/vhdl-design-patterns-test-controller/half_adder/"
+  file="half_adder.pro"
 %}
 {% assign listing_num = listing_num | plus: 1 %}
 
-OSVVM's output is on lines 9 and 10 above, showing that there was an alert at 4 ns and that there was one error.
+Running `half_adder.pro` will result in
+
+{%
+  include code_snippet.html
+  listing_num=listing_num
+  description="Example test case"
+  dir="includes/vhdl-design-patterns-test-controller/half_adder/logs/GHDL-1.0.0/"
+  file="vhdl-design-patterns-test-controller_half_adder.log"
+%}
+{% assign listing_num = listing_num | plus: 1 %}
+
+OSVVM's output is on lines 7, 10 and 11 above, showing that there was an alert at 2 ns and that there was one error in the second test case.
 
 ## Conclusion
 
 This approach is not entirely dependent on OSVVM, it is a design pattern. But OSVVM pushes this design pattern and their synchronization methods make the implementation a lot easier than implementing these yourself. The design pattern itself is a clever way to get around either copy-pasting a lot of setup code for different tests of the same integration, or keeping the setup and all of the test cases in a single, _enormous_, file.
 
 ## Change Log
+
+### 2021-09-13
+Finally got around to fixing this post, which originally showed a non working VUnit run script since [VUnit does not support configurations](https://github.com/VUnit/vunit/issues/179).
 
 ### 2021-04-08
 I've updated the VUnit run-script to align with VUnit's [Distributed Testbenches](https://vunit.github.io/run/user_guide.html#distributed-testbenches) example instead of hacking around with attributes.

@@ -9,8 +9,7 @@ library OSVVM;
 --! \brief Test harness for 'half_adder'.
 entity half_adder_tb is
   generic(
-    runner_cfg: string;
-    fail: boolean := false
+    fail: boolean := true
   );
 end entity half_adder_tb;
 
@@ -23,8 +22,7 @@ architecture test_harness of half_adder_tb is
   component test_controller is
     generic(
       -- Template: Generics.
-      nested_runner_cfg: string;
-      fail: boolean := false
+      fail: boolean
     );
     port(
       -- Template: DUT Interface Signals.
@@ -60,7 +58,6 @@ begin
   test_controller_1: component test_controller
     generic map(
       -- Template: Generics.
-      nested_runner_cfg => runner_cfg,
       fail => fail
     )
     port map(

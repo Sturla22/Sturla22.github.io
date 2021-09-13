@@ -1,0 +1,12 @@
+Start Time 20:19:15
+ghdl -a --std=08 -Wno-hide --work=default --workdir=/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0/default/v08 -P/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0 /home/sturla/Dev/Sturla22/_posts/includes/vhdl-design-patterns-test-controller/half_adder/half_adder.vhd
+ghdl -a --std=08 -Wno-hide --work=default --workdir=/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0/default/v08 -P/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0 /home/sturla/Dev/Sturla22/_posts/includes/vhdl-design-patterns-test-controller/half_adder/test_harness.vhd
+ghdl -a --std=08 -Wno-hide --work=default --workdir=/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0/default/v08 -P/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0 /home/sturla/Dev/Sturla22/_posts/includes/vhdl-design-patterns-test-controller/half_adder/test_controller.vhd
+ghdl -a --std=08 -Wno-hide --work=default --workdir=/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0/default/v08 -P/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0 /home/sturla/Dev/Sturla22/_posts/includes/vhdl-design-patterns-test-controller/half_adder/test_case_1.vhd
+ghdl --elab-run --std=08 --syn-binding --work=default --workdir=/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0/default/v08 -P/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0 half_adder_tb_test_case_1
+%% DONE  PASSED  half_adder_tb_test_case_1  Passed: 4  Affirmations Checked: 4  at 2 ns
+ghdl -a --std=08 -Wno-hide --work=default --workdir=/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0/default/v08 -P/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0 /home/sturla/Dev/Sturla22/_posts/includes/vhdl-design-patterns-test-controller/half_adder/test_case_2.vhd
+ghdl --elab-run --std=08 --syn-binding --work=default --workdir=/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0/default/v08 -P/home/sturla/Dev/vhdl/OsvvmLibraries/sim/VHDL_LIBS/GHDL-1.0.0 half_adder_tb_test_case_2
+%% Alert ERROR   (intentional fail) Carry should be one, was '1' at 2 ns
+%% DONE  FAILED  half_adder_tb_test_case_2  Total Error(s) = 1  Failures: 0  Errors: 1  Warnings: 0  Passed: 3  Affirmations Checked: 4  at 2 ns
+Stop Time 20:19:16
