@@ -11,8 +11,6 @@ library OSVVM;
 entity test_controller is
   generic(
     -- Template: Generics that you want to be able to configure.
-    --           runner_cfg for VUnit included by default.
-    --           runner_cfg: string
   );
   port(
     -- Template: DUT Interface Signals, i.e. the ports you want to use to access your design under test.

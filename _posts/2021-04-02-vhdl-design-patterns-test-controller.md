@@ -152,7 +152,7 @@ OSVVM provides scripts to run testbenches. Follow their documentation at [github
 `tclsh` will open the tcl shell. Running `source Scripts/StartUp.tcl` from within the [OsvvmLibraries repository](https://github.com/OSVVM/OsvvmLibraries) will set up an environment for running testbenches.
 
 Create a `sim` directory and `cd` into it. Build the osvvm core library with `build ../osvvm/osvvm.pro`. Then `cd` into a directory containing the example and run `build half_adder`.
-This will run the `half_adder.pro` file shown in the listing {{ listing_num | plus: 1 }}:
+This will run the `half_adder.pro` file shown in listing {{ listing_num }}:
 
 {%
   include code_snippet.html

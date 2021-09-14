@@ -1,9 +1,5 @@
 --! \file test_case_1.vhd
 
--- Template: Add the two lines below to run with VUnit.
---           library vunit_lib;
---             context vunit_lib.vunit_context;
-
 --! \brief Test that thing we need to test.
 --! \test First test of many.
 architecture test_case_1 of test_controller is
@@ -15,9 +11,6 @@ begin
   control_process: process is
     constant TIMEOUT: time := 10 ms;
   begin
-    -- Template: Add the line below to run with VUnit.
-    --           test_runner_setup(runner, runner_cfg);
-
     -- Init logs.
     SetAlertLogName("example_tb_test_case_1");
 
@@ -34,11 +27,6 @@ begin
     AlertIf(GetAffirmCount < 1, "Test is not Self-Checking");
 
     ReportAlerts;
-    -- Template: Add the line below to make the test fail when running with VUnit.
-    --           check(GetAlertCount = 0, "OSVVM detected errors");
-
-    -- Template: Add the line below to run with VUnit.
-    --           test_runner_cleanup(runner);
   end process control_process;
 
   --! \brief Executes tests.

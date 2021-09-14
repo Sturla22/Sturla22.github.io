@@ -9,7 +9,7 @@ library OSVVM;
 --! \brief Test harness for 'example'.
 entity example_tb is
   generic(
-    -- Template: runner_cfg: string
+    -- Template: Generics.
   );
 end entity example_tb;
 
@@ -22,7 +22,6 @@ architecture test_harness of example_tb is
   component test_controller is
     generic(
       -- Template: Generics.
-      --           runner_cfg: string
     );
     port(
       -- Template: DUT Interface Signals.
@@ -48,7 +47,6 @@ begin
   test_controller_1: component test_controller
     generic map(
       -- Template: Generics.
-      --           runner_cfg => runner_cfg
     )
     port map(
       -- Template: DUT Interface Signals.
