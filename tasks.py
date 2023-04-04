@@ -10,3 +10,8 @@ def publish(ctx, post):
 @invoke.task
 def hide(ctx, post):
     ctx.run(f"mv _posts/*{post}.md _drafts/{post}.md")
+
+
+@invoke.task
+def serve(ctx):
+    ctx.run("bundle exec jekyll serve -D")
