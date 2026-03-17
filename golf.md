@@ -47,17 +47,16 @@ sitemap: true
 
   /* Form */
   .gt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .gt-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 0.75rem;
   }
-
-  @media (max-width: 600px) {
-    .gt-form { grid-template-columns: 1fr; }
-    .gt-form .full-width { grid-column: 1; }
-  }
-
-  .gt-form .full-width { grid-column: 1 / -1; }
 
   .gt-field {
     display: flex;
@@ -66,35 +65,81 @@ sitemap: true
   }
 
   .gt-field label {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.8rem;
+    font-weight: 700;
     color: #444;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
   }
 
   .gt-field input,
   .gt-field select,
   .gt-field textarea {
-    padding: 0.5rem 0.6rem;
+    padding: 0.6rem 0.7rem;
     border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 0.95rem;
+    border-radius: 6px;
+    font-size: 1rem;
     width: 100%;
     box-sizing: border-box;
     background: #fff;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
-  .gt-field textarea { resize: vertical; min-height: 70px; }
+  .gt-field textarea { resize: vertical; min-height: 60px; }
+
+  /* Stepper for hole number */
+  .gt-num-input {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .gt-num-input input {
+    flex: 1;
+    border: none;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 0.55rem 0;
+    min-width: 0;
+    background: #fff;
+    -moz-appearance: textfield;
+  }
+
+  .gt-num-input input::-webkit-outer-spin-button,
+  .gt-num-input input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .gt-num-btn {
+    background: #f0f0f0;
+    border: none;
+    padding: 0;
+    width: 48px;
+    flex-shrink: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+  }
+
+  .gt-num-btn:active { background: #d8d8d8; }
 
   .gt-btn {
-    padding: 0.55rem 1.2rem;
+    padding: 0.65rem 1.2rem;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     transition: opacity 0.15s;
+    touch-action: manipulation;
+    min-height: 44px;
   }
 
   .gt-btn:hover { opacity: 0.85; }
@@ -106,7 +151,6 @@ sitemap: true
   .gt-actions {
     display: flex;
     gap: 0.75rem;
-    flex-wrap: wrap;
     margin-top: 1rem;
   }
 
@@ -114,22 +158,71 @@ sitemap: true
   .gt-pills {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
+    gap: 0.45rem;
   }
 
   .gt-pill {
-    padding: 0.35rem 0.8rem;
+    padding: 0.55rem 0.9rem;
     border: 1px solid #ccc;
-    border-radius: 20px;
+    border-radius: 22px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     background: #f9f9f9;
     transition: all 0.15s;
     user-select: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    touch-action: manipulation;
+    box-sizing: border-box;
   }
 
   .gt-pill:hover { border-color: #888; background: #eee; }
   .gt-pill.selected { background: #2a7a2a; border-color: #2a7a2a; color: #fff; }
+
+  /* Club grid */
+  .gt-club-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+  }
+
+  .gt-club-pill {
+    padding: 0.5rem 0.2rem;
+    font-size: 0.88rem;
+    min-height: 42px;
+    border-radius: 8px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Section sub-header */
+  .gt-section-sub {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #2a7a2a;
+    padding: 0.4rem 0 0.1rem;
+    border-top: 2px solid #d4ecd4;
+    margin-top: 0.1rem;
+  }
+
+  /* "Add details" toggle */
+  .gt-more-toggle {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    font-size: 0.88rem;
+    color: #555;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    touch-action: manipulation;
+  }
+
+  .gt-more-toggle:active { background: #eee; }
 
   /* Table */
   .gt-table-wrap { overflow-x: auto; }
@@ -386,59 +479,48 @@ sitemap: true
     <form id="gt-shot-form" onsubmit="gtSaveShot(event)">
       <div class="gt-form">
 
-        <div class="gt-field">
-          <label>Date</label>
-          <input type="date" id="gt-date" required>
+        <!-- Hole + Distance -->
+        <div class="gt-row">
+          <div class="gt-field">
+            <label>Hole</label>
+            <div class="gt-num-input">
+              <button type="button" class="gt-num-btn" onclick="gtAdjNum('gt-hole',-1,1,18)">−</button>
+              <input type="number" id="gt-hole" min="1" max="18" placeholder="?" inputmode="numeric">
+              <button type="button" class="gt-num-btn" onclick="gtAdjNum('gt-hole',1,1,18)">+</button>
+            </div>
+          </div>
+          <div class="gt-field">
+            <label>Distance (m)</label>
+            <input type="number" id="gt-distance" min="0" step="1" placeholder="e.g. 150" inputmode="decimal">
+          </div>
         </div>
 
-        <div class="gt-field">
-          <label>Hole</label>
-          <input type="number" id="gt-hole" min="1" max="18" placeholder="1–18">
-        </div>
-
-        <div class="gt-field">
-          <label>Distance from hole (m)</label>
-          <input type="number" id="gt-distance" min="0" step="0.5" placeholder="e.g. 150">
-        </div>
-
+        <!-- Club -->
         <div class="gt-field">
           <label>Club</label>
-          <select id="gt-club">
-            <option value="">— select —</option>
-            <optgroup label="Woods">
-              <option>Driver</option>
-              <option>3-Wood</option>
-              <option>5-Wood</option>
-              <option>7-Wood</option>
-            </optgroup>
-            <optgroup label="Hybrids / Long Irons">
-              <option>Hybrid / Rescue</option>
-              <option>2-Iron</option>
-              <option>3-Iron</option>
-              <option>4-Iron</option>
-            </optgroup>
-            <optgroup label="Mid Irons">
-              <option>5-Iron</option>
-              <option>6-Iron</option>
-              <option>7-Iron</option>
-            </optgroup>
-            <optgroup label="Short Irons">
-              <option>8-Iron</option>
-              <option>9-Iron</option>
-            </optgroup>
-            <optgroup label="Wedges">
-              <option>Pitching Wedge (PW)</option>
-              <option>Gap Wedge (GW)</option>
-              <option>Sand Wedge (SW)</option>
-              <option>Lob Wedge (LW)</option>
-            </optgroup>
-            <optgroup label="Putter">
-              <option>Putter</option>
-            </optgroup>
-          </select>
+          <div class="gt-club-grid" id="gt-club-pills">
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">Driver</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">3W</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">5W</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">7W</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">H</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">4I</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">5I</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">6I</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">7I</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">8I</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">9I</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">PW</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">GW</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">SW</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">LW</span>
+            <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">Putter</span>
+          </div>
+          <input type="hidden" id="gt-club">
         </div>
 
-        <div class="gt-field full-width">
+        <!-- Lie -->
+        <div class="gt-field">
           <label>Lie</label>
           <div class="gt-pills" id="gt-lie-pills">
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Tee</span>
@@ -446,122 +528,101 @@ sitemap: true
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Deep Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Sand</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Hardpan</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Fringe</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Green</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Divot</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Uphill</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Downhill</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Sidehill</span>
           </div>
           <input type="hidden" id="gt-lie">
         </div>
 
-        <div class="gt-field full-width">
-          <label>Result (where it landed relative to target)</label>
-          <div class="gt-pills" id="gt-result-pills">
-            <span class="gt-pill" onclick="gtTogglePill(this,'result')">On Target</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'result')">Short</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'result')">Long</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'result')">Left</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'result')">Right</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'result')">Short Left</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'result')">Short Right</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'result')">Long Left</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'result')">Long Right</span>
+        <!-- Ball finish -->
+        <div class="gt-section-sub">Where did it finish?</div>
+
+        <div class="gt-row">
+          <div class="gt-field">
+            <label>End distance (m)</label>
+            <input type="number" id="gt-end-distance" min="0" step="0.5" placeholder="0 = holed" inputmode="decimal">
           </div>
-          <input type="hidden" id="gt-result">
-        </div>
-
-        <div class="gt-field full-width">
-          <label>Strike</label>
-          <div class="gt-pills" id="gt-strike-pills">
-            <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Pure / Solid</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Thin</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Fat / Chunked</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Toe</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Heel</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Shank</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Top</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Pop-up</span>
+          <div class="gt-field" style="align-self:flex-end;">
+            <button type="button" class="gt-btn" style="background:#e8f5e9;border:1px solid #2a7a2a;color:#2a7a2a;width:100%;" onclick="gtHoledOut()">⛳ Holed</button>
           </div>
-          <input type="hidden" id="gt-strike">
         </div>
 
         <div class="gt-field">
-          <label>Shot shape</label>
-          <select id="gt-shape">
-            <option value="">— select —</option>
-            <option>Straight</option>
-            <option>Draw</option>
-            <option>Fade</option>
-            <option>Hook</option>
-            <option>Slice</option>
-            <option>Push</option>
-            <option>Pull</option>
-            <option>Punch</option>
-            <option>Flop</option>
-            <option>Chip</option>
-          </select>
-        </div>
-
-        <div class="gt-field">
-          <label>Outcome</label>
-          <select id="gt-outcome">
-            <option value="">— select —</option>
-            <option>On the green</option>
-            <option>GIR (flagstick)</option>
-            <option>Birdie putt ≤ 5 m</option>
-            <option>Par putt</option>
-            <option>Missed green</option>
-            <option>In bunker</option>
-            <option>OB / Lost ball</option>
-            <option>Water hazard</option>
-          </select>
-        </div>
-
-        <div class="gt-field full-width" style="border-top:1px solid #eee;padding-top:0.75rem;margin-top:0.25rem;">
-          <label style="color:#2a7a2a;">Strokes Gained — where did the ball finish?</label>
-          <p style="font-size:0.8rem;color:#888;margin:0.2rem 0 0.5rem;">Fill in end position to enable Strokes Gained calculation. Leave blank to skip.</p>
-        </div>
-
-        <div class="gt-field">
-          <label>End distance from hole (m)</label>
-          <input type="number" id="gt-end-distance" min="0" step="0.1" placeholder="0 = holed out">
-        </div>
-
-        <div class="gt-field" style="align-self:flex-end;">
-          <label style="visibility:hidden">.</label>
-          <button type="button" class="gt-btn" style="background:#e8f5e9;border:1px solid #2a7a2a;color:#2a7a2a;font-size:0.9rem;" onclick="gtHoledOut()">⛳ Holed out</button>
-        </div>
-
-        <div class="gt-field full-width">
-          <label>End lie (where ball came to rest)</label>
+          <label>End lie</label>
           <div class="gt-pills" id="gt-end-lie-pills">
-            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Holed</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Tee</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Fairway</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Deep Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Sand</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Hardpan</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Fringe</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Green</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">OB / Lost</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Water</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Holed</span>
           </div>
           <input type="hidden" id="gt-endLie">
         </div>
 
-        <div class="gt-field full-width">
-          <label>Notes</label>
-          <textarea id="gt-notes" placeholder="Wind, slope, intent, swing thoughts…"></textarea>
+        <!-- Collapsible extra details -->
+        <button type="button" class="gt-more-toggle" id="gt-more-btn" onclick="gtToggleMore()">▸ Add details — result, strike, shape, notes</button>
+        <div id="gt-more-section" style="display:none;">
+          <div class="gt-form" style="margin-top:0.75rem;">
+
+            <div class="gt-field">
+              <label>Result</label>
+              <div class="gt-pills" id="gt-result-pills">
+                <span class="gt-pill" onclick="gtTogglePill(this,'result')">On Target</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'result')">Short</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'result')">Long</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'result')">Left</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'result')">Right</span>
+              </div>
+              <input type="hidden" id="gt-result">
+            </div>
+
+            <div class="gt-field">
+              <label>Strike</label>
+              <div class="gt-pills" id="gt-strike-pills">
+                <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Pure / Solid</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Thin</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Fat / Chunked</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Shank</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'strike')">Mis-hit</span>
+              </div>
+              <input type="hidden" id="gt-strike">
+            </div>
+
+            <div class="gt-field">
+              <label>Shape</label>
+              <div class="gt-pills" id="gt-shape-pills">
+                <span class="gt-pill" onclick="gtTogglePill(this,'shape')">Straight</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'shape')">Draw</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'shape')">Fade</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'shape')">Hook</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'shape')">Slice</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'shape')">Punch</span>
+                <span class="gt-pill" onclick="gtTogglePill(this,'shape')">Flop</span>
+              </div>
+              <input type="hidden" id="gt-shape">
+            </div>
+
+            <div class="gt-field">
+              <label>Notes</label>
+              <textarea id="gt-notes" placeholder="Wind, slope, swing thoughts…"></textarea>
+            </div>
+
+            <div class="gt-field">
+              <label>Date</label>
+              <input type="date" id="gt-date">
+            </div>
+
+          </div>
         </div>
 
       </div><!-- gt-form -->
 
       <div class="gt-actions">
-        <button type="submit" class="gt-btn gt-btn-primary">Save Shot</button>
+        <button type="submit" class="gt-btn gt-btn-primary" style="flex:1;">Save Shot</button>
         <button type="button" class="gt-btn gt-btn-outline" onclick="gtResetForm()">Clear</button>
       </div>
 
@@ -759,7 +820,7 @@ sitemap: true
   var shots = load();
   var sortKey = 'date';
   var sortDir = -1; // -1 = desc, 1 = asc
-  var pillState = { lie: '', result: '', strike: '', endLie: '' };
+  var pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '' };
 
   // ─── Init ────────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
@@ -767,6 +828,20 @@ sitemap: true
     populateClubFilter();
     gtRenderHistory();
   });
+
+  window.gtAdjNum = function (id, delta, min, max) {
+    var el = document.getElementById(id);
+    var val = parseInt(el.value) || (delta > 0 ? min - 1 : max + 1);
+    el.value = Math.max(min, Math.min(max, val + delta));
+  };
+
+  window.gtToggleMore = function () {
+    var sec = document.getElementById('gt-more-section');
+    var btn = document.getElementById('gt-more-btn');
+    var open = sec.style.display !== 'none';
+    sec.style.display = open ? 'none' : 'block';
+    btn.textContent = open ? '▸ Add details — result, strike, shape, notes' : '▾ Hide details';
+  };
 
   function today() {
     var d = new Date();
@@ -802,15 +877,14 @@ sitemap: true
     var endDistRaw = v('gt-end-distance');
     var shot = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      date: v('gt-date'),
+      date: v('gt-date') || today(),
       hole: v('gt-hole') ? parseInt(v('gt-hole')) : null,
       distance: v('gt-distance') ? parseFloat(v('gt-distance')) : null,
-      club: v('gt-club'),
+      club: pillState.club,
       lie: pillState.lie,
       result: pillState.result,
       strike: pillState.strike,
-      shape: v('gt-shape'),
-      outcome: v('gt-outcome'),
+      shape: pillState.shape,
       end_distance: endDistRaw !== '' ? parseFloat(endDistRaw) : null,
       end_lie: pillState.endLie,
       notes: v('gt-notes'),
@@ -828,7 +902,7 @@ sitemap: true
   function clearForm() {
     document.getElementById('gt-shot-form').reset();
     document.querySelectorAll('.gt-pill.selected').forEach(function (p) { p.classList.remove('selected'); });
-    pillState = { lie: '', result: '', strike: '', endLie: '' };
+    pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '' };
   }
 
   // Called by the Clear button — wipes everything
@@ -836,6 +910,9 @@ sitemap: true
     clearForm();
     document.getElementById('gt-date').value = today();
     document.getElementById('gt-shot-status').style.display = 'none';
+    // Collapse "More" section
+    document.getElementById('gt-more-section').style.display = 'none';
+    document.getElementById('gt-more-btn').textContent = '▸ Add details — result, strike, shape, notes';
   };
 
   // Called after a save — resets then pre-fills from the shot just saved
@@ -869,7 +946,7 @@ sitemap: true
 
       // Auto-select Putter when arriving on green
       if (shot.end_lie === 'Green') {
-        document.getElementById('gt-club').value = 'Putter';
+        selectPill('gt-club-pills', 'club', 'Putter');
       }
 
       var holeShots = shots.filter(function (s) { return s.date === shot.date && s.hole === shot.hole; }).length;
