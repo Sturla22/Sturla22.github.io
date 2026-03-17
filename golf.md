@@ -666,14 +666,13 @@ sitemap: true
             <th onclick="gtSort('result')" id="gt-th-result">Result</th>
             <th onclick="gtSort('strike')" id="gt-th-strike">Strike</th>
             <th>Shape</th>
-            <th>Outcome</th>
             <th onclick="gtSort('sg')" id="gt-th-sg">SG</th>
             <th>Notes</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="gt-history-body">
-          <tr><td colspan="12" class="gt-empty">No shots logged yet.</td></tr>
+          <tr><td colspan="11" class="gt-empty">No shots logged yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1013,7 +1012,7 @@ sitemap: true
 
     var tbody = document.getElementById('gt-history-body');
     if (filteredShots.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="12" class="gt-empty">No shots match the filters.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="gt-empty">No shots match the filters.</td></tr>';
       document.getElementById('gt-history-count').textContent = '';
       return;
     }
@@ -1029,7 +1028,6 @@ sitemap: true
         '<td>' + esc(s.result) + '</td>' +
         '<td>' + esc(s.strike) + '</td>' +
         '<td>' + esc(s.shape) + '</td>' +
-        '<td>' + esc(s.outcome) + '</td>' +
         '<td style="white-space:nowrap">' + fmtSG(sg) + '</td>' +
         '<td style="max-width:180px;word-break:break-word">' + esc(s.notes) + '</td>' +
         '<td><button class="gt-delete-btn" onclick="gtDeleteShot(\'' + s.id + '\')" title="Delete">✕</button></td>' +
@@ -1199,7 +1197,7 @@ sitemap: true
   };
 
   window.gtExportCSV = function () {
-    var cols = ['date', 'hole', 'club', 'distance', 'lie', 'end_distance', 'end_lie', 'result', 'strike', 'shape', 'outcome', 'sg', 'notes'];
+    var cols = ['date', 'hole', 'club', 'distance', 'lie', 'end_distance', 'end_lie', 'result', 'strike', 'shape', 'sg', 'notes'];
     var rows = [cols.join(',')].concat(shots.map(function (s) {
       return cols.map(function (c) {
         var val = s[c] == null ? '' : String(s[c]);
