@@ -538,14 +538,9 @@ sitemap: true
         <!-- Ball finish -->
         <div class="gt-section-sub">Where did it finish?</div>
 
-        <div class="gt-row">
-          <div class="gt-field">
-            <label>End distance (m)</label>
-            <input type="number" id="gt-end-distance" min="0" step="0.5" placeholder="0 = holed" inputmode="decimal">
-          </div>
-          <div class="gt-field" style="align-self:flex-end;">
-            <button type="button" class="gt-btn" style="background:#e8f5e9;border:1px solid #2a7a2a;color:#2a7a2a;width:100%;" onclick="gtHoledOut()">⛳ Holed</button>
-          </div>
+        <div class="gt-field">
+          <label>End distance (m)</label>
+          <input type="number" id="gt-end-distance" min="0" step="0.5" placeholder="0 = holed" inputmode="decimal">
         </div>
 
         <div class="gt-field">
@@ -1057,15 +1052,6 @@ sitemap: true
     bar.style.display = 'block';
   }
 
-  // Quick-fill "Holed out" end position
-  window.gtHoledOut = function () {
-    document.getElementById('gt-end-distance').value = '0';
-    // Deselect any current endLie pill then select Holed
-    var container = document.getElementById('gt-end-lie-pills');
-    container.querySelectorAll('.gt-pill').forEach(function (p) { p.classList.remove('selected'); });
-    pillState.endLie = '';
-    selectPill('gt-end-lie-pills', 'endLie', 'Holed');
-  };
 
   // ─── History ─────────────────────────────────────────────────────────────────
   var filteredShots = [];
