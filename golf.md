@@ -471,6 +471,7 @@ sitemap: true
     <div class="gt-tab" onclick="gtShowTab('history')">History</div>
     <div class="gt-tab" onclick="gtShowTab('stats')">Stats</div>
     <div class="gt-tab" onclick="gtShowTab('io')">Import / Export</div>
+    <div class="gt-tab" onclick="gtShowTab('settings')">Settings</div>
   </div>
 
   <!-- LOG SHOT -->
@@ -712,6 +713,43 @@ sitemap: true
     <button class="gt-btn gt-btn-danger" onclick="gtClearAll()">Delete all shots</button>
   </div>
 
+  <!-- SETTINGS -->
+  <div id="gt-panel-settings" class="gt-panel">
+
+    <p class="gt-section-title">Player</p>
+    <div class="gt-field" style="max-width:220px;">
+      <label>Handicap Index</label>
+      <input type="number" id="gt-hcp" min="0" max="54" step="0.1" placeholder="e.g. 18.4" inputmode="decimal">
+    </div>
+
+    <p class="gt-section-title" style="margin-top:1.5rem;">Your Bag</p>
+    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Tap to toggle clubs you carry. Only selected clubs appear in the shot logger.</p>
+    <div class="gt-club-grid" id="gt-bag-pills" style="max-width:420px;">
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">Driver</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">3W</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">5W</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">7W</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">H</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">4I</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">5I</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">6I</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">7I</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">8I</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">9I</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">PW</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">GW</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">SW</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">LW</span>
+      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">Putter</span>
+    </div>
+
+    <div class="gt-actions">
+      <button class="gt-btn gt-btn-primary" onclick="gtSaveSettings()">Save Settings</button>
+    </div>
+    <p id="gt-settings-notice" style="display:none;font-size:0.85rem;color:#2a7a2a;margin-top:0.5rem;"></p>
+
+  </div>
+
 </div><!-- golf-tracker -->
 
 <script>
@@ -805,6 +843,8 @@ sitemap: true
 
   // ─── Storage ────────────────────────────────────────────────────────────────
   var STORE_KEY = 'gt_shots_v1';
+  var SETTINGS_KEY = 'gt_settings_v1';
+  var ALL_CLUBS = ['Driver','3W','5W','7W','H','4I','5I','6I','7I','8I','9I','PW','GW','SW','LW','Putter'];
 
   function load() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
@@ -814,6 +854,38 @@ sitemap: true
   function save(shots) {
     localStorage.setItem(STORE_KEY, JSON.stringify(shots));
   }
+
+  function loadSettings() {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null') || { hcp: null, bag: ALL_CLUBS.slice() }; }
+    catch (e) { return { hcp: null, bag: ALL_CLUBS.slice() }; }
+  }
+
+  function saveSettings(settings) {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  }
+
+  // Show only bag clubs in the shot-logger club grid
+  function applyBag(bag) {
+    document.querySelectorAll('#gt-club-pills .gt-pill').forEach(function (p) {
+      p.style.display = bag.indexOf(p.textContent.trim()) !== -1 ? '' : 'none';
+    });
+  }
+
+  window.gtSaveSettings = function () {
+    var hcpVal = document.getElementById('gt-hcp').value;
+    var bag = [];
+    document.querySelectorAll('#gt-bag-pills .gt-pill.selected').forEach(function (p) {
+      bag.push(p.textContent.trim());
+    });
+    if (bag.length === 0) bag = ALL_CLUBS.slice(); // if nothing selected keep all
+    var settings = { hcp: hcpVal !== '' ? parseFloat(hcpVal) : null, bag: bag };
+    saveSettings(settings);
+    applyBag(bag);
+    var notice = document.getElementById('gt-settings-notice');
+    notice.textContent = 'Settings saved.';
+    notice.style.display = 'block';
+    setTimeout(function () { notice.style.display = 'none'; }, 2500);
+  };
 
   // ─── State ───────────────────────────────────────────────────────────────────
   var shots = load();
@@ -826,6 +898,15 @@ sitemap: true
     document.getElementById('gt-date').value = today();
     populateClubFilter();
     gtRenderHistory();
+
+    // Apply saved settings
+    var settings = loadSettings();
+    if (settings.hcp != null) document.getElementById('gt-hcp').value = settings.hcp;
+    // Mark bag pills as selected
+    document.querySelectorAll('#gt-bag-pills .gt-pill').forEach(function (p) {
+      if (settings.bag.indexOf(p.textContent.trim()) !== -1) p.classList.add('selected');
+    });
+    applyBag(settings.bag);
   });
 
   window.gtAdjNum = function (id, delta, min, max) {
