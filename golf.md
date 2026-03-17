@@ -563,6 +563,8 @@ sitemap: true
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Deep Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Sand</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Fringe</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Hardpan</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Divot</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Green</span>
           </div>
           <input type="hidden" id="gt-lie">
@@ -584,6 +586,8 @@ sitemap: true
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Deep Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Sand</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Fringe</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Hardpan</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Divot</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Green</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">OB / Lost</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Water</span>
