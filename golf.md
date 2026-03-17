@@ -382,6 +382,7 @@ sitemap: true
 
   <!-- LOG SHOT -->
   <div id="gt-panel-log" class="gt-panel active">
+    <div id="gt-shot-status" style="display:none;font-size:0.85rem;color:#444;background:#f0f7f0;border:1px solid #b6d9b6;border-radius:4px;padding:0.5rem 0.8rem;margin-bottom:0.8rem;"></div>
     <form id="gt-shot-form" onsubmit="gtSaveShot(event)">
       <div class="gt-form">
 
@@ -529,6 +530,11 @@ sitemap: true
           <input type="number" id="gt-end-distance" min="0" step="0.1" placeholder="0 = holed out">
         </div>
 
+        <div class="gt-field" style="align-self:flex-end;">
+          <label style="visibility:hidden">.</label>
+          <button type="button" class="gt-btn" style="background:#e8f5e9;border:1px solid #2a7a2a;color:#2a7a2a;font-size:0.9rem;" onclick="gtHoledOut()">⛳ Holed out</button>
+        </div>
+
         <div class="gt-field full-width">
           <label>End lie (where ball came to rest)</label>
           <div class="gt-pills" id="gt-end-lie-pills">
@@ -544,7 +550,7 @@ sitemap: true
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">OB / Lost</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Water</span>
           </div>
-          <input type="hidden" id="gt-end-lie">
+          <input type="hidden" id="gt-endLie">
         </div>
 
         <div class="gt-field full-width">
@@ -814,16 +820,94 @@ sitemap: true
     save(shots);
     populateClubFilter();
     gtNotice('Shot saved!', 'success');
-    gtResetForm();
+    gtPrefillNext(shot);
   };
 
   function v(id) { return document.getElementById(id).value.trim(); }
 
-  window.gtResetForm = function () {
+  function clearForm() {
     document.getElementById('gt-shot-form').reset();
-    document.getElementById('gt-date').value = today();
     document.querySelectorAll('.gt-pill.selected').forEach(function (p) { p.classList.remove('selected'); });
     pillState = { lie: '', result: '', strike: '', endLie: '' };
+  }
+
+  // Called by the Clear button — wipes everything
+  window.gtResetForm = function () {
+    clearForm();
+    document.getElementById('gt-date').value = today();
+    document.getElementById('gt-shot-status').style.display = 'none';
+  };
+
+  // Called after a save — resets then pre-fills from the shot just saved
+  function gtPrefillNext(shot) {
+    clearForm();
+
+    var holed = shot.end_lie === 'Holed' || shot.end_distance === 0;
+
+    // Always keep the date sticky
+    document.getElementById('gt-date').value = shot.date || today();
+
+    if (holed) {
+      // Advance to next hole
+      if (shot.hole != null && shot.hole < 18) {
+        document.getElementById('gt-hole').value = shot.hole + 1;
+      }
+      var holeShots = shots.filter(function (s) { return s.date === shot.date && s.hole === shot.hole; }).length;
+      updateShotStatus(null, 'Hole ' + shot.hole + ' complete in ' + holeShots + ' shot' + (holeShots !== 1 ? 's' : '') +
+        (shot.hole < 18 ? ' — moving to hole ' + (shot.hole + 1) : ' — round done!'));
+    } else {
+      // Keep same hole
+      if (shot.hole != null) document.getElementById('gt-hole').value = shot.hole;
+
+      // Pre-fill start position from previous end position
+      if (shot.end_distance != null) {
+        document.getElementById('gt-distance').value = shot.end_distance;
+      }
+      if (shot.end_lie) {
+        selectPill('gt-lie-pills', 'lie', shot.end_lie);
+      }
+
+      // Auto-select Putter when arriving on green
+      if (shot.end_lie === 'Green') {
+        document.getElementById('gt-club').value = 'Putter';
+      }
+
+      var holeShots = shots.filter(function (s) { return s.date === shot.date && s.hole === shot.hole; }).length;
+      var ctx = shot.end_distance != null
+        ? 'from ' + shot.end_distance + 'm' + (shot.end_lie ? ' (' + shot.end_lie + ')' : '')
+        : '';
+      updateShotStatus(null, 'Hole ' + (shot.hole || '?') + ' · Shot ' + (holeShots + 1) +
+        (ctx ? ' — ' + ctx : '') + (shot.end_lie === 'Green' ? ' · Putter selected' : ''));
+    }
+  }
+
+  // Programmatically select a pill and update pillState
+  function selectPill(containerId, group, value) {
+    var container = document.getElementById(containerId);
+    if (!container || !value) return;
+    container.querySelectorAll('.gt-pill').forEach(function (p) {
+      if (p.textContent.trim() === value) {
+        p.classList.add('selected');
+        pillState[group] = value;
+      }
+    });
+  }
+
+  function updateShotStatus(el, msg) {
+    var bar = document.getElementById('gt-shot-status');
+    if (!msg) { bar.style.display = 'none'; return; }
+    bar.textContent = msg;
+    bar.style.display = 'block';
+  }
+
+  // Quick-fill "Holed out" end position
+  window.gtHoledOut = function () {
+    document.getElementById('gt-end-distance').value = '0';
+    // Deselect any current endLie pill then select Holed
+    var container = document.getElementById('gt-end-lie-pills');
+    container.querySelectorAll('.gt-pill').forEach(function (p) { p.classList.remove('selected'); });
+    pillState.endLie = '';
+    selectPill('gt-end-lie-pills', 'endLie', 'Holed');
   };
 
   // ─── History ─────────────────────────────────────────────────────────────────
