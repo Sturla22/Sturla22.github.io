@@ -224,6 +224,39 @@ sitemap: true
 
   .gt-more-toggle:active { background: #eee; }
 
+  /* Directional result pad */
+  .gt-dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    max-width: 240px;
+  }
+
+  .gt-dpad-btn {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #f9f9f9;
+    cursor: pointer;
+    padding: 0.45rem 0.2rem;
+    min-height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    touch-action: manipulation;
+    user-select: none;
+    transition: background 0.1s, border-color 0.1s;
+  }
+
+  .gt-dpad-btn:active { background: #e0e0e0; }
+  .gt-dpad-btn.selected { background: #2a7a2a; border-color: #2a7a2a; color: #fff; }
+  .gt-dpad-arrow { font-size: 1.25rem; line-height: 1; }
+  .gt-dpad-label { font-size: 0.6rem; color: #888; line-height: 1.2; text-align: center; }
+  .gt-dpad-btn.selected .gt-dpad-label { color: rgba(255,255,255,0.8); }
+  .gt-dpad-center { background: #f0f7f0; border-color: #b6d9b6; }
+  .gt-dpad-center.selected { background: #2a7a2a; border-color: #2a7a2a; }
+
   /* Table */
   .gt-table-wrap { overflow-x: auto; }
 
@@ -566,12 +599,16 @@ sitemap: true
 
             <div class="gt-field">
               <label>Result</label>
-              <div class="gt-pills" id="gt-result-pills">
-                <span class="gt-pill" onclick="gtTogglePill(this,'result')">On Target</span>
-                <span class="gt-pill" onclick="gtTogglePill(this,'result')">Short</span>
-                <span class="gt-pill" onclick="gtTogglePill(this,'result')">Long</span>
-                <span class="gt-pill" onclick="gtTogglePill(this,'result')">Left</span>
-                <span class="gt-pill" onclick="gtTogglePill(this,'result')">Right</span>
+              <div class="gt-dpad">
+                <button type="button" class="gt-dpad-btn" data-value="Long Left"  onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↖</span><span class="gt-dpad-label">Long Left</span></button>
+                <button type="button" class="gt-dpad-btn" data-value="Long"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↑</span><span class="gt-dpad-label">Long</span></button>
+                <button type="button" class="gt-dpad-btn" data-value="Long Right" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↗</span><span class="gt-dpad-label">Long Right</span></button>
+                <button type="button" class="gt-dpad-btn" data-value="Left"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">←</span><span class="gt-dpad-label">Left</span></button>
+                <button type="button" class="gt-dpad-btn gt-dpad-center" data-value="On Target" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">●</span><span class="gt-dpad-label">On Target</span></button>
+                <button type="button" class="gt-dpad-btn" data-value="Right"      onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">→</span><span class="gt-dpad-label">Right</span></button>
+                <button type="button" class="gt-dpad-btn" data-value="Short Left" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↙</span><span class="gt-dpad-label">Short Left</span></button>
+                <button type="button" class="gt-dpad-btn" data-value="Short"      onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↓</span><span class="gt-dpad-label">Short</span></button>
+                <button type="button" class="gt-dpad-btn" data-value="Short Right" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↘</span><span class="gt-dpad-label">Short Right</span></button>
               </div>
               <input type="hidden" id="gt-result">
             </div>
@@ -910,6 +947,18 @@ sitemap: true
     el.value = Math.max(min, Math.min(max, val + delta));
   };
 
+  window.gtToggleDpad = function (el, group) {
+    el.closest('.gt-dpad').querySelectorAll('.gt-dpad-btn').forEach(function (b) { b.classList.remove('selected'); });
+    var val = el.dataset.value;
+    if (pillState[group] === val) {
+      pillState[group] = '';
+    } else {
+      pillState[group] = val;
+      el.classList.add('selected');
+    }
+    document.getElementById('gt-' + group).value = pillState[group];
+  };
+
   window.gtToggleMore = function () {
     var sec = document.getElementById('gt-more-section');
     var btn = document.getElementById('gt-more-btn');
@@ -976,7 +1025,7 @@ sitemap: true
 
   function clearForm() {
     document.getElementById('gt-shot-form').reset();
-    document.querySelectorAll('.gt-pill.selected').forEach(function (p) { p.classList.remove('selected'); });
+    document.querySelectorAll('.gt-pill.selected, .gt-dpad-btn.selected').forEach(function (p) { p.classList.remove('selected'); });
     pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '' };
   }
 
