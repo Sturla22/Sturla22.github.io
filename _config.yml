@@ -15,6 +15,7 @@ show_excerpts: true
 header_pages:
   - "about.md"
   - "tags.md"
+  - "golf.md"
 
 timezone: "Europe/Stockholm"
 repository: "Sturla22/Sturla22.github.io"
