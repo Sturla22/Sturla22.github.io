@@ -296,6 +296,77 @@ sitemap: true
     border-radius: 4px;
     font-size: 0.85rem;
   }
+
+  /* Strokes Gained */
+  .sg-pos { color: #2a7a2a; font-weight: 600; }
+  .sg-neg { color: #c0392b; font-weight: 600; }
+  .sg-zero { color: #888; }
+
+  .gt-sg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .gt-sg-card {
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  .gt-sg-card h4 {
+    margin: 0 0 0.4rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #666;
+  }
+
+  .gt-sg-val {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .gt-sg-sub { font-size: 0.78rem; color: #888; margin-top: 0.2rem; }
+
+  /* Wider bar labels for club names */
+  .gt-bar-label-wide { width: 140px; flex-shrink: 0; text-align: right; color: #555; font-size: 0.85rem; }
+
+  .gt-sg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin-top: 0.5rem;
+  }
+
+  .gt-sg-table th {
+    background: #f0f0f0;
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+    border-bottom: 2px solid #ccc;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .gt-sg-table td {
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .gt-sg-table tr:hover td { background: #fafafa; }
+
+  .gt-info {
+    font-size: 0.82rem;
+    color: #777;
+    background: #f9f9f9;
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 1rem;
+  }
 </style>
 
 <div class="golf-tracker">
@@ -448,6 +519,34 @@ sitemap: true
           </select>
         </div>
 
+        <div class="gt-field full-width" style="border-top:1px solid #eee;padding-top:0.75rem;margin-top:0.25rem;">
+          <label style="color:#2a7a2a;">Strokes Gained — where did the ball finish?</label>
+          <p style="font-size:0.8rem;color:#888;margin:0.2rem 0 0.5rem;">Fill in end position to enable Strokes Gained calculation. Leave blank to skip.</p>
+        </div>
+
+        <div class="gt-field">
+          <label>End distance from hole (m)</label>
+          <input type="number" id="gt-end-distance" min="0" step="0.1" placeholder="0 = holed out">
+        </div>
+
+        <div class="gt-field full-width">
+          <label>End lie (where ball came to rest)</label>
+          <div class="gt-pills" id="gt-end-lie-pills">
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Holed</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Tee</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Fairway</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Rough</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Deep Rough</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Sand</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Hardpan</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Fringe</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Green</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">OB / Lost</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Water</span>
+          </div>
+          <input type="hidden" id="gt-end-lie">
+        </div>
+
         <div class="gt-field full-width">
           <label>Notes</label>
           <textarea id="gt-notes" placeholder="Wind, slope, intent, swing thoughts…"></textarea>
@@ -501,12 +600,13 @@ sitemap: true
             <th onclick="gtSort('strike')" id="gt-th-strike">Strike</th>
             <th>Shape</th>
             <th>Outcome</th>
+            <th onclick="gtSort('sg')" id="gt-th-sg">SG</th>
             <th>Notes</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="gt-history-body">
-          <tr><td colspan="11" class="gt-empty">No shots logged yet.</td></tr>
+          <tr><td colspan="12" class="gt-empty">No shots logged yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -550,6 +650,93 @@ sitemap: true
 
 <script>
 (function () {
+  // ─── Strokes Gained baseline tables ─────────────────────────────────────────
+  // Expected strokes to hole out. Based on scratch-golfer reference (Broadie).
+  // Format: [distance_metres, expected_strokes]. dist=0 always → 0 strokes.
+  var SG_GREEN = [
+    [0,0],[0.3,1.00],[0.6,1.00],[0.9,1.01],[1.2,1.03],[1.5,1.05],
+    [1.8,1.08],[2.5,1.13],[3,1.20],[4.5,1.30],[6,1.40],[7.5,1.48],
+    [9,1.55],[12,1.63],[15,1.69],[18,1.74],[23,1.79],[30,1.86]
+  ];
+  var SG_FAIRWAY = [
+    [0,0],[1,1.20],[5,2.40],[10,2.50],[20,2.60],[30,2.65],
+    [50,2.72],[75,2.78],[100,2.84],[125,2.91],[150,2.98],
+    [175,3.06],[200,3.14],[250,3.27],[300,3.38],[350,3.50],[400,3.62]
+  ];
+  // Penalty lies relative to fairway
+  var SG_OFFSETS = {
+    'Tee':        0,      // tee shot advantage ≈ same as fairway
+    'Fairway':    0,
+    'Fringe':     0.05,
+    'Hardpan':    0.10,
+    'Rough':      0.18,
+    'Divot':      0.20,
+    'Deep Rough': 0.32,
+    'Sand':       0.38,
+    'Uphill':     0.08,
+    'Downhill':   0.08,
+    'Sidehill':   0.10,
+    'Green':      null,   // use SG_GREEN table
+    'Holed':      null,   // always 0
+    'OB / Lost':  2.0,    // stroke + distance penalty approximation
+    'Water':      1.5
+  };
+
+  function lerp(table, dist) {
+    if (dist <= 0) return 0;
+    if (dist <= table[0][0]) return table[0][1];
+    if (dist >= table[table.length - 1][0]) {
+      // Extrapolate linearly beyond the last point
+      var n = table.length;
+      var d0 = table[n-2][0], v0 = table[n-2][1];
+      var d1 = table[n-1][0], v1 = table[n-1][1];
+      return v1 + (dist - d1) * (v1 - v0) / (d1 - d0);
+    }
+    for (var i = 1; i < table.length; i++) {
+      if (dist <= table[i][0]) {
+        var t = (dist - table[i-1][0]) / (table[i][0] - table[i-1][0]);
+        return table[i-1][1] + t * (table[i][1] - table[i-1][1]);
+      }
+    }
+    return table[table.length-1][1];
+  }
+
+  function sgExpected(dist, lie) {
+    if (dist == null || dist < 0) return null;
+    if (dist === 0 || lie === 'Holed') return 0;
+    if (lie === 'Green') return lerp(SG_GREEN, dist);
+    var offset = (SG_OFFSETS[lie] != null) ? SG_OFFSETS[lie] : 0.15; // unknown lie → rough approx
+    if (lie === 'OB / Lost') return lerp(SG_FAIRWAY, dist) + 2.0;
+    if (lie === 'Water')     return lerp(SG_FAIRWAY, dist) + 1.5;
+    return lerp(SG_FAIRWAY, dist) + offset;
+  }
+
+  function calcSG(shot) {
+    if (shot.distance == null || shot.end_distance == null) return null;
+    var exp_start = sgExpected(shot.distance, shot.lie || 'Fairway');
+    var exp_end   = sgExpected(shot.end_distance, shot.end_lie || 'Fairway');
+    if (exp_start == null || exp_end == null) return null;
+    return exp_start - exp_end - 1;
+  }
+
+  function sgCategory(shot) {
+    var lie  = shot.lie || '';
+    var dist = shot.distance;
+    var club = shot.club || '';
+    if (lie === 'Green' || club === 'Putter') return 'Putting';
+    if (lie === 'Tee' && dist != null && dist >= 100) return 'Off the Tee';
+    if (dist != null && dist < 30) return 'Around the Green';
+    return 'Approach';
+  }
+
+  function fmtSG(val, decimals) {
+    if (val == null) return '<span class="sg-zero">—</span>';
+    var d = decimals != null ? decimals : 2;
+    var s = (val >= 0 ? '+' : '') + val.toFixed(d);
+    var cls = val > 0.01 ? 'sg-pos' : val < -0.01 ? 'sg-neg' : 'sg-zero';
+    return '<span class="' + cls + '">' + s + '</span>';
+  }
+
   // ─── Storage ────────────────────────────────────────────────────────────────
   var STORE_KEY = 'gt_shots_v1';
 
@@ -566,7 +753,7 @@ sitemap: true
   var shots = load();
   var sortKey = 'date';
   var sortDir = -1; // -1 = desc, 1 = asc
-  var pillState = { lie: '', result: '', strike: '' };
+  var pillState = { lie: '', result: '', strike: '', endLie: '' };
 
   // ─── Init ────────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
@@ -606,6 +793,7 @@ sitemap: true
   // ─── Save shot ───────────────────────────────────────────────────────────────
   window.gtSaveShot = function (e) {
     e.preventDefault();
+    var endDistRaw = v('gt-end-distance');
     var shot = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       date: v('gt-date'),
@@ -617,8 +805,11 @@ sitemap: true
       strike: pillState.strike,
       shape: v('gt-shape'),
       outcome: v('gt-outcome'),
+      end_distance: endDistRaw !== '' ? parseFloat(endDistRaw) : null,
+      end_lie: pillState.endLie,
       notes: v('gt-notes'),
     };
+    shot.sg = calcSG(shot);
     shots.push(shot);
     save(shots);
     populateClubFilter();
@@ -632,7 +823,7 @@ sitemap: true
     document.getElementById('gt-shot-form').reset();
     document.getElementById('gt-date').value = today();
     document.querySelectorAll('.gt-pill.selected').forEach(function (p) { p.classList.remove('selected'); });
-    pillState = { lie: '', result: '', strike: '' };
+    pillState = { lie: '', result: '', strike: '', endLie: '' };
   };
 
   // ─── History ─────────────────────────────────────────────────────────────────
@@ -661,12 +852,13 @@ sitemap: true
 
     var tbody = document.getElementById('gt-history-body');
     if (filteredShots.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="11" class="gt-empty">No shots match the filters.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" class="gt-empty">No shots match the filters.</td></tr>';
       document.getElementById('gt-history-count').textContent = '';
       return;
     }
 
-    tbody.innerHTML = filteredShots.map(function (s, i) {
+    tbody.innerHTML = filteredShots.map(function (s) {
+      var sg = s.sg != null ? s.sg : calcSG(s);
       return '<tr>' +
         '<td>' + (s.date || '') + '</td>' +
         '<td>' + (s.hole != null ? s.hole : '') + '</td>' +
@@ -677,6 +869,7 @@ sitemap: true
         '<td>' + esc(s.strike) + '</td>' +
         '<td>' + esc(s.shape) + '</td>' +
         '<td>' + esc(s.outcome) + '</td>' +
+        '<td style="white-space:nowrap">' + fmtSG(sg) + '</td>' +
         '<td style="max-width:180px;word-break:break-word">' + esc(s.notes) + '</td>' +
         '<td><button class="gt-delete-btn" onclick="gtDeleteShot(\'' + s.id + '\')" title="Delete">✕</button></td>' +
         '</tr>';
@@ -732,6 +925,53 @@ sitemap: true
     var onTarget = shots.filter(function (s) { return s.result === 'On Target'; }).length;
     var onTargetRate = shots.length ? Math.round(onTarget / shots.length * 100) : 0;
 
+    // ── Strokes Gained computation ─────────────────────────────────────────────
+    var CATS = ['Off the Tee', 'Approach', 'Around the Green', 'Putting'];
+    var sgByCat = {}; CATS.forEach(function(c){ sgByCat[c] = {sum:0, n:0}; });
+    var sgByClub = {};
+    var sgTotal = 0, sgN = 0;
+
+    shots.forEach(function (s) {
+      var sg = s.sg != null ? s.sg : calcSG(s);
+      if (sg == null) return;
+      sgTotal += sg; sgN++;
+      var cat = sgCategory(s);
+      sgByCat[cat].sum += sg; sgByCat[cat].n++;
+      var club = s.club || '(no club)';
+      if (!sgByClub[club]) sgByClub[club] = {sum:0, n:0};
+      sgByClub[club].sum += sg; sgByClub[club].n++;
+    });
+
+    var sgCards = CATS.map(function (cat) {
+      var d = sgByCat[cat];
+      if (d.n === 0) return sgCard(cat, null, 0);
+      return sgCard(cat, d.sum / d.n, d.n);
+    }).join('');
+
+    var sgClubRows = Object.keys(sgByClub).sort().map(function (club) {
+      var d = sgByClub[club];
+      var avg = d.sum / d.n;
+      return '<tr><td>' + esc(club) + '</td>' +
+        '<td>' + fmtSG(avg) + '</td>' +
+        '<td style="color:#888">' + d.n + '</td>' +
+        '<td>' + fmtSG(d.sum, 2) + '</td></tr>';
+    }).join('');
+
+    var sgSummaryCard = '<div class="gt-sg-card" style="border-color:' +
+      (sgN > 0 && sgTotal/sgN >= 0 ? '#2a7a2a' : '#c0392b') + '">' +
+      '<h4>Total SG (avg / shot)</h4>' +
+      '<div class="gt-sg-val">' + (sgN > 0 ? fmtSG(sgTotal/sgN) : '<span class="sg-zero">—</span>') + '</div>' +
+      '<div class="gt-sg-sub">' + sgN + ' shot' + (sgN !== 1 ? 's' : '') + ' with end position logged</div></div>';
+
+    var sgSection = sgN === 0
+      ? '<div class="gt-info">Strokes Gained requires <strong>End distance</strong> and <strong>End lie</strong> to be filled in when logging shots. Log a few shots with end positions to see SG stats.</div>'
+      : '<div class="gt-sg-grid">' + sgSummaryCard + sgCards + '</div>' +
+        '<p class="gt-section-title">SG by Club (avg per shot)</p>' +
+        '<div class="gt-table-wrap"><table class="gt-sg-table">' +
+        '<thead><tr><th>Club</th><th>SG avg</th><th>Shots</th><th>SG total</th></tr></thead>' +
+        '<tbody>' + sgClubRows + '</tbody></table></div>' +
+        '<p class="gt-info" style="margin-top:0.75rem;">Baseline: scratch golfer reference. Positive = gained strokes vs baseline; negative = lost strokes.</p>';
+
     el.innerHTML =
       '<div class="gt-stats-grid">' +
         stat('Total shots', shots.length, '') +
@@ -739,6 +979,8 @@ sitemap: true
         stat('Solid strike', pureRate + '%', pure + ' shots') +
         stat('On target', onTargetRate + '%', onTarget + ' shots') +
       '</div>' +
+      '<p class="gt-section-title">Strokes Gained</p>' +
+      sgSection +
       barChart('Result distribution', 'result') +
       barChart('Strike distribution', 'strike') +
       barChart('Club usage', 'club') +
@@ -749,6 +991,15 @@ sitemap: true
     return '<div class="gt-stat-card"><h4>' + label + '</h4>' +
       '<div class="gt-stat-val">' + val + '</div>' +
       '<div class="gt-stat-sub">' + sub + '</div></div>';
+  }
+
+  function sgCard(label, avg, n) {
+    var valHtml = avg != null
+      ? fmtSG(avg)
+      : '<span class="sg-zero">—</span>';
+    return '<div class="gt-sg-card"><h4>' + label + '</h4>' +
+      '<div class="gt-sg-val">' + valHtml + '</div>' +
+      '<div class="gt-sg-sub">' + (n > 0 ? n + ' shot' + (n !== 1 ? 's' : '') : 'no data') + '</div></div>';
   }
 
   function barChart(title, field) {
@@ -787,7 +1038,7 @@ sitemap: true
   };
 
   window.gtExportCSV = function () {
-    var cols = ['date', 'hole', 'club', 'distance', 'lie', 'result', 'strike', 'shape', 'outcome', 'notes'];
+    var cols = ['date', 'hole', 'club', 'distance', 'lie', 'end_distance', 'end_lie', 'result', 'strike', 'shape', 'outcome', 'sg', 'notes'];
     var rows = [cols.join(',')].concat(shots.map(function (s) {
       return cols.map(function (c) {
         var val = s[c] == null ? '' : String(s[c]);
