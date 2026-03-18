@@ -218,6 +218,26 @@ test.describe('Golf tracker', () => {
       await expect(page.locator('#gt-notice')).toContainText('Last shot removed.');
       await expect(page.locator('#gt-history-body')).toContainText('No shots match the filters.');
     });
+
+    test('scrolls back to the current-shot context after saving', async ({ page }) => {
+      await openGolf(page);
+
+      await page.locator('#gt-more-btn').scrollIntoViewIfNeeded();
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      const before = await page.evaluate(() => window.scrollY);
+
+      await setHole(page, 1);
+      await page.locator('#gt-par').fill('4');
+      await page.locator('#gt-hole-length').fill('380');
+      await clickPill(page, '#gt-club-pills', 'Driver');
+      await page.locator('#gt-end-distance').fill('140');
+      await clickPill(page, '#gt-end-lie-pills', 'Fairway');
+      await page.getByRole('button', { name: 'Save Shot' }).click();
+
+      await expect(page.locator('#gt-shot-progress-card')).toBeInViewport();
+      const after = await page.evaluate(() => window.scrollY);
+      expect(after).toBeLessThan(before);
+    });
   });
 
   test.describe('Round creation and progression', () => {

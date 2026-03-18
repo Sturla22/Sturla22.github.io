@@ -950,6 +950,8 @@
       updateShotStatus(null, 'Hole ' + (shot.hole || '?') + ' · Shot ' + (holeShots + 1) +
         (ctx ? ' — ' + ctx : '') + (shot.end_lie === 'Green' ? ' · Putter selected' : ''));
     }
+
+    gtScrollLoggerContextIntoView();
   }
 
   // Programmatically select a pill and update pillState
@@ -977,6 +979,14 @@
     bar.textContent = msg;
     setVisible(bar, true, 'block');
     gtUpdateShotProgress();
+  }
+
+  function gtScrollLoggerContextIntoView() {
+    var card = document.getElementById('gt-shot-progress-card');
+    if (!card) return;
+    requestAnimationFrame(function () {
+      card.scrollIntoView({ block: 'start', inline: 'nearest' });
+    });
   }
 
 
