@@ -984,9 +984,12 @@
   function gtScrollLoggerContextIntoView() {
     var card = document.getElementById('gt-shot-progress-card');
     if (!card) return;
-    requestAnimationFrame(function () {
-      card.scrollIntoView({ block: 'start', inline: 'nearest' });
-    });
+    function scrollNow() {
+      var top = card.getBoundingClientRect().top + window.scrollY - 12;
+      window.scrollTo(0, Math.max(0, top));
+    }
+    requestAnimationFrame(scrollNow);
+    setTimeout(scrollNow, 80);
   }
 
 
