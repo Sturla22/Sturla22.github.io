@@ -848,7 +848,7 @@ sitemap: true
           </div>
           <div class="gt-field">
             <label>Distance (m)</label>
-            <input type="number" id="gt-distance" min="0" step="1" placeholder="e.g. 150" inputmode="decimal" oninput="gtAutoSelectClub(this.value)">
+            <input type="number" id="gt-distance" min="0" step="1" placeholder="e.g. 150" inputmode="decimal" onchange="gtAutoSelectClub(this.value)">
             <div class="gt-dist-hint" id="gt-dist-hint"></div>
           </div>
         </div>
@@ -1680,9 +1680,17 @@ sitemap: true
 
     if (!best) { if (hint) hint.textContent = ''; return; }
 
-    // Only auto-select if within 20 % of club distance (avoids wild suggestions)
+    // Only auto-select if within 25% of club distance (avoids wild suggestions)
     var refDist = best.swing ? cd[best.club][best.swing] : cd[best.club];
-    if (refDist && bestDiff / refDist > 0.25) { if (hint) hint.textContent = ''; return; }
+    if (refDist && bestDiff / refDist > 0.25) {
+      if (hint) hint.textContent = '';
+      // Clear any stale auto-selection so a bad intermediate value doesn't stick
+      document.querySelectorAll('#gt-club-pills .gt-pill.selected').forEach(function (p) {
+        p.classList.remove('selected');
+      });
+      pillState.club = '';
+      return;
+    }
 
     // Apply selection
     selectPill('gt-club-pills', 'club', best.club);
