@@ -1609,6 +1609,15 @@ sitemap: true
     if (par != null) document.getElementById('gt-par').value = par;
     var hl = document.getElementById('gt-hole-length');
     if (hl) hl.value = length != null ? length : '';
+
+    // Default lie to Tee when no shots have been logged for this hole yet
+    var roundShots = shots.filter(function (s) {
+      return s.hole === holeNum && !s.synthetic &&
+             (activeRoundId ? s.roundId === activeRoundId : s.date === (document.getElementById('gt-date').value || today()));
+    });
+    if (roundShots.length === 0 && !pillState.lie) {
+      selectPill('gt-lie-pills', 'lie', 'Tee');
+    }
   };
 
   window.gtToggleDpad = function (el, group) {
@@ -1906,6 +1915,7 @@ sitemap: true
       if (shot.hole != null && shot.hole < 18) {
         document.getElementById('gt-hole').value = shot.hole + 1;
         gtHoleChanged();
+        selectPill('gt-lie-pills', 'lie', 'Tee');
       }
       var holeShots = shots.filter(function (s) { return s.date === shot.date && s.hole === shot.hole; }).length;
       updateShotStatus(null, 'Hole ' + shot.hole + ' complete in ' + holeShots + ' shot' + (holeShots !== 1 ? 's' : '') +
