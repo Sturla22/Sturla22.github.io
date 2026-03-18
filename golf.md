@@ -29,6 +29,10 @@ sitemap: true
     font-size: 0.95rem;
     color: #555;
     transition: background 0.15s;
+    white-space: nowrap;
+  }
+  @media (max-width: 480px) {
+    .gt-tab { padding: 0.55rem 0.65rem; font-size: 0.82rem; }
   }
 
   .gt-tab:hover { background: #e8e8e8; }
@@ -806,7 +810,7 @@ sitemap: true
   <div id="gt-notice" class="gt-notice"></div>
 
   <div class="gt-tabs">
-    <div class="gt-tab active" onclick="gtShowTab('log')">Log Shot</div>
+    <div class="gt-tab active" onclick="gtShowTab('log')">Log</div>
     <div class="gt-tab" onclick="gtShowTab('rounds')">Rounds</div>
     <div class="gt-tab" onclick="gtShowTab('history')">History</div>
     <div class="gt-tab" onclick="gtShowTab('stats')">Stats</div>
