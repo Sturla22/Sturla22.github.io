@@ -147,6 +147,9 @@ sitemap: true
   .gt-btn-secondary { background: #555; color: #fff; }
   .gt-btn-danger { background: #c0392b; color: #fff; }
   .gt-btn-outline { background: transparent; border: 1px solid #555; color: #555; }
+  .gt-stats-filter-btn.active { background: #2a7a2a; border-color: #2a7a2a; color: #fff; }
+  .gt-indoor-btn { font-size: 0.8rem; padding: 0.25rem 0.65rem; border-radius: 4px; cursor: pointer; border: 1px solid #888; background: #f0f0f0; color: #555; white-space: nowrap; }
+  .gt-indoor-btn.indoor { background: #1a5fa8; border-color: #1a5fa8; color: #fff; }
 
   .gt-actions {
     display: flex;
@@ -818,6 +821,7 @@ sitemap: true
       </select>
       <input type="text" id="gt-new-course-inline" placeholder="New course name…" style="display:none;flex:1;min-width:140px;padding:0.3rem 0.5rem;border:1px solid #2a7a2a;border-radius:4px;font-size:0.88rem;">
       <span id="gt-round-ctx-label" style="font-size:0.8rem;color:#666;white-space:nowrap;"></span>
+      <button type="button" id="gt-indoor-toggle" class="gt-indoor-btn" onclick="gtToggleIndoor(this)" title="Toggle indoor/outdoor round">Outdoor</button>
     </div>
 
     <div id="gt-shot-status" style="display:none;font-size:0.85rem;color:#444;background:#f0f7f0;border:1px solid #b6d9b6;border-radius:4px;padding:0.5rem 0.8rem;margin-bottom:0.8rem;"></div>
@@ -923,6 +927,13 @@ sitemap: true
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Holed</span>
           </div>
           <input type="hidden" id="gt-endLie">
+        </div>
+
+        <!-- Fixed putting: proximity input (shown for indoor rounds with fixed putting enabled) -->
+        <div class="gt-field" id="gt-proximity-row" style="display:none;">
+          <label>Proximity to hole (m) <span style="font-weight:400;font-size:0.78rem;color:#888;">— fixed putting</span></label>
+          <input type="number" id="gt-proximity" min="0" step="0.5" placeholder="e.g. 8.5 → 2 putts" inputmode="decimal" oninput="gtProximityHint(this.value)">
+          <span id="gt-proximity-hint" style="font-size:0.78rem;color:#2a7a2a;margin-top:0.15rem;font-style:italic;"></span>
         </div>
 
         <!-- Result (direction) -->
@@ -1074,6 +1085,11 @@ sitemap: true
 
   <!-- STATS -->
   <div id="gt-panel-stats" class="gt-panel">
+    <div style="display:flex;gap:0.4rem;margin-bottom:1rem;flex-wrap:wrap;">
+      <button class="gt-btn gt-btn-outline gt-stats-filter-btn active" onclick="gtSetStatsFilter('all',this)">All rounds</button>
+      <button class="gt-btn gt-btn-outline gt-stats-filter-btn" onclick="gtSetStatsFilter('outdoor',this)">Outdoor</button>
+      <button class="gt-btn gt-btn-outline gt-stats-filter-btn" onclick="gtSetStatsFilter('indoor',this)">Indoor</button>
+    </div>
     <div id="gt-stats-content">
       <p class="gt-empty">Log some shots to see statistics.</p>
     </div>
@@ -1094,6 +1110,25 @@ sitemap: true
         <input type="number" id="gt-target-hcp" min="0" max="54" step="0.1" placeholder="e.g. 10.0" inputmode="decimal">
         <span style="font-size:0.75rem;color:#888;margin-top:0.2rem;">SG benchmarks in Stats will show what you need to reach this goal.</span>
       </div>
+    </div>
+
+    <p class="gt-section-title" style="margin-top:1.5rem;">Indoor / Simulator</p>
+    <div class="gt-row" style="max-width:460px;">
+      <div class="gt-field">
+        <label>Indoor HCP</label>
+        <input type="number" id="gt-hcp-indoor" min="0" max="54" step="0.1" placeholder="e.g. 12.0" inputmode="decimal">
+      </div>
+      <div class="gt-field">
+        <label>Indoor Target HCP</label>
+        <input type="number" id="gt-target-hcp-indoor" min="0" max="54" step="0.1" placeholder="e.g. 8.0" inputmode="decimal">
+      </div>
+    </div>
+    <div style="margin-top:0.6rem;max-width:460px;">
+      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+        <input type="checkbox" id="gt-fixed-putting" style="width:auto;">
+        <span style="font-size:0.9rem;font-weight:600;color:#444;">Fixed putting (simulator)</span>
+      </label>
+      <p style="font-size:0.78rem;color:#888;margin:0.3rem 0 0;">When enabled: after hitting the green, enter your proximity and putts are auto-assigned (≤ 3 m → 1 putt; 3–20 m → 2 putts; &gt; 20 m → 3 putts). Fixed putts count toward your score but are excluded from putting SG stats.</p>
     </div>
 
     <p class="gt-section-title" style="margin-top:1.5rem;">Your Bag</p>
@@ -1334,9 +1369,9 @@ sitemap: true
   function loadSettings() {
     try {
       var s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-      return s || { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice(), clubDistances: {} };
+      return s || { hcp: null, targetHcp: null, hcpIndoor: null, targetHcpIndoor: null, fixedPutting: false, bag: ALL_CLUBS.slice(), clubDistances: {} };
     }
-    catch (e) { return { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice(), clubDistances: {} }; }
+    catch (e) { return { hcp: null, targetHcp: null, hcpIndoor: null, targetHcpIndoor: null, fixedPutting: false, bag: ALL_CLUBS.slice(), clubDistances: {} }; }
   }
 
   function saveSettings(settings) {
@@ -1417,8 +1452,11 @@ sitemap: true
   }
 
   window.gtSaveSettings = function () {
-    var hcpVal = document.getElementById('gt-hcp').value;
-    var targetHcpVal = document.getElementById('gt-target-hcp').value;
+    var hcpVal           = document.getElementById('gt-hcp').value;
+    var targetHcpVal     = document.getElementById('gt-target-hcp').value;
+    var hcpIndoorVal     = document.getElementById('gt-hcp-indoor').value;
+    var targetHcpIndoorVal = document.getElementById('gt-target-hcp-indoor').value;
+    var fixedPutting     = document.getElementById('gt-fixed-putting').checked;
     var bag = [];
     document.querySelectorAll('#gt-bag-pills .gt-pill.selected').forEach(function (p) {
       bag.push(p.textContent.trim());
@@ -1450,10 +1488,13 @@ sitemap: true
     });
 
     var settings = {
-      hcp:           hcpVal      !== '' ? parseFloat(hcpVal)      : null,
-      targetHcp:     targetHcpVal !== '' ? parseFloat(targetHcpVal) : null,
-      bag:           bag,
-      clubDistances: cd
+      hcp:             hcpVal             !== '' ? parseFloat(hcpVal)             : null,
+      targetHcp:       targetHcpVal       !== '' ? parseFloat(targetHcpVal)       : null,
+      hcpIndoor:       hcpIndoorVal       !== '' ? parseFloat(hcpIndoorVal)       : null,
+      targetHcpIndoor: targetHcpIndoorVal !== '' ? parseFloat(targetHcpIndoorVal) : null,
+      fixedPutting:    fixedPutting,
+      bag:             bag,
+      clubDistances:   cd
     };
     saveSettings(settings);
     applyBag(bag);
@@ -1469,6 +1510,8 @@ sitemap: true
   var rounds = loadRounds();
   var courses = loadCourses();
   var activeRoundId = null; // set when a round is started
+  var activeRoundType = 'outdoor'; // 'outdoor' | 'indoor'
+  var statsFilter = 'all'; // 'all' | 'outdoor' | 'indoor'
   var sortKey = 'date';
   var sortDir = -1; // -1 = desc, 1 = asc
   var pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
@@ -1485,6 +1528,9 @@ sitemap: true
     var settings = loadSettings();
     if (settings.hcp != null) document.getElementById('gt-hcp').value = settings.hcp;
     if (settings.targetHcp != null) document.getElementById('gt-target-hcp').value = settings.targetHcp;
+    if (settings.hcpIndoor != null) document.getElementById('gt-hcp-indoor').value = settings.hcpIndoor;
+    if (settings.targetHcpIndoor != null) document.getElementById('gt-target-hcp-indoor').value = settings.targetHcpIndoor;
+    if (settings.fixedPutting) document.getElementById('gt-fixed-putting').checked = true;
     // Mark bag pills as selected
     document.querySelectorAll('#gt-bag-pills .gt-pill').forEach(function (p) {
       if (settings.bag.indexOf(p.textContent.trim()) !== -1) p.classList.add('selected');
@@ -1664,19 +1710,25 @@ sitemap: true
       var existingRound = rounds.find(function (r) { return r.date === shotDate && r.courseId === courseId; });
       if (existingRound) {
         activeRoundId = existingRound.id;
+        activeRoundType = existingRound.type || 'outdoor';
+        gtUpdateIndoorToggle();
       } else {
-        var newRound = gtAutoCreateRound(courseId, shotDate);
-        gtNotice('Round started at ' + (courses.find(function(c){return c.id===courseId;})||{name:'?'}).name + '!', 'success');
+        var newRound = gtAutoCreateRound(courseId, shotDate, activeRoundType);
+        gtNotice('Round started at ' + (courses.find(function(c){return c.id===courseId;})||{name:'?'}).name +
+          (activeRoundType === 'indoor' ? ' (indoor)' : '') + '!', 'success');
       }
     } else if (holeNum === 1 && courseId === null) {
       // Hole 1, no course selected → still create a round (no course)
       var existingRound = rounds.find(function (r) { return r.date === shotDate && r.courseId === null; });
       if (!existingRound) {
-        gtAutoCreateRound(null, shotDate);
+        gtAutoCreateRound(null, shotDate, activeRoundType);
       } else {
         activeRoundId = existingRound.id;
+        activeRoundType = existingRound.type || 'outdoor';
+        gtUpdateIndoorToggle();
       }
     }
+    gtUpdateProximityRow();
 
     var endDistRaw = v('gt-end-distance');
     var shot = {
@@ -1700,6 +1752,44 @@ sitemap: true
     save(shots);
     populateClubFilter();
     gtUpdateRoundCtxLabel();
+
+    // ── Fixed putting (indoor / simulator) ───────────────────────────────────
+    var activeRound = rounds.find(function (r) { return r.id === activeRoundId; });
+    if (activeRound && (activeRound.type === 'indoor') && shot.end_lie === 'Green') {
+      var settings = loadSettings();
+      if (settings.fixedPutting) {
+        var proxRaw = document.getElementById('gt-proximity').value.trim();
+        var prox    = proxRaw !== '' ? parseFloat(proxRaw) : null;
+        if (prox != null && !isNaN(prox)) {
+          var fp = prox <= 3 ? 1 : prox <= 20 ? 2 : 3;
+          var synShot = {
+            id:           Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+            date:         shotDate,
+            hole:         holeNum,
+            distance:     prox,
+            club:         'Putter',
+            swing:        null,
+            lie:          'Green',
+            result:       null,
+            strike:       null,
+            shape:        null,
+            end_distance: 0,
+            end_lie:      'Holed',
+            notes:        fp + ' fixed putt' + (fp !== 1 ? 's' : '') + ' (' + prox + ' m)',
+            roundId:      activeRoundId || null,
+            synthetic:    true,
+            fixedPutts:   fp
+          };
+          synShot.sg = null;
+          shots.push(synShot);
+          save(shots);
+          gtNotice(fp + ' putt' + (fp !== 1 ? 's' : '') + ' assigned (' + prox + ' m proximity).', 'success');
+          gtPrefillNext(synShot);
+          return;
+        }
+      }
+    }
+
     gtNotice('Shot saved!', 'success');
     gtPrefillNext(shot);
   };
@@ -1712,6 +1802,8 @@ sitemap: true
     pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
     gtOnClubSelected(''); // hide swing row
     document.getElementById('gt-dist-hint').textContent = '';
+    document.getElementById('gt-proximity').value = '';
+    document.getElementById('gt-proximity-hint').textContent = '';
   }
 
   // Called by the Clear button — wipes everything
@@ -1869,23 +1961,47 @@ sitemap: true
   };
 
   // ─── Stats ───────────────────────────────────────────────────────────────────
+  window.gtSetStatsFilter = function (filter, btn) {
+    statsFilter = filter;
+    document.querySelectorAll('.gt-stats-filter-btn').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    gtRenderStats();
+  };
+
   window.gtRenderStats = function () {
     var el = document.getElementById('gt-stats-content');
-    if (shots.length === 0) {
-      el.innerHTML = '<p class="gt-empty">Log some shots to see statistics.</p>';
+
+    // Filter shots: exclude synthetic, apply indoor/outdoor filter
+    var filteredShots;
+    if (statsFilter === 'all') {
+      filteredShots = shots.filter(function (s) { return !s.synthetic; });
+    } else {
+      var typeRoundIds = rounds
+        .filter(function (r) {
+          var t = r.type || 'outdoor';
+          return t === statsFilter;
+        })
+        .map(function (r) { return r.id; });
+      filteredShots = shots.filter(function (s) {
+        return !s.synthetic && typeRoundIds.indexOf(s.roundId) !== -1;
+      });
+    }
+
+    if (filteredShots.length === 0) {
+      el.innerHTML = '<p class="gt-empty">No shots for this filter. Log some shots to see statistics.</p>';
       return;
     }
 
-    var withDist = shots.filter(function (s) { return s.distance != null; });
+    var withDist = filteredShots.filter(function (s) { return s.distance != null; });
     var avgDist = withDist.length
       ? (withDist.reduce(function (a, s) { return a + s.distance; }, 0) / withDist.length).toFixed(1)
       : '—';
 
-    var pure = shots.filter(function (s) { return s.strike === 'Pure / Solid'; }).length;
-    var pureRate = shots.length ? Math.round(pure / shots.length * 100) : 0;
+    var pure = filteredShots.filter(function (s) { return s.strike === 'Pure / Solid'; }).length;
+    var pureRate = filteredShots.length ? Math.round(pure / filteredShots.length * 100) : 0;
 
-    var onTarget = shots.filter(function (s) { return s.result === 'On Target'; }).length;
-    var onTargetRate = shots.length ? Math.round(onTarget / shots.length * 100) : 0;
+    var onTarget = filteredShots.filter(function (s) { return s.result === 'On Target'; }).length;
+    var onTargetRate = filteredShots.length ? Math.round(onTarget / filteredShots.length * 100) : 0;
 
     // ── Strokes Gained computation ─────────────────────────────────────────────
     var CATS = ['Off the Tee', 'Approach', 'Around the Green', 'Putting'];
@@ -1893,7 +2009,7 @@ sitemap: true
     var sgByClub = {};
     var sgTotal = 0, sgN = 0;
 
-    shots.forEach(function (s) {
+    filteredShots.forEach(function (s) {
       var sg = s.sg != null ? s.sg : calcSG(s);
       if (sg == null) return;
       sgTotal += sg; sgN++;
@@ -1935,11 +2051,17 @@ sitemap: true
         '<p class="gt-info" style="margin-top:0.75rem;">Baseline: scratch golfer reference. Positive = gained strokes vs baseline; negative = lost strokes.</p>';
 
     var settings = loadSettings();
-    var targetHcpSection = buildTargetHcpSection(sgByCat, sgN, settings);
+    // Use indoor HCP/target when filtering for indoor rounds
+    var statsSettings = { hcp: settings.hcp, targetHcp: settings.targetHcp };
+    if (statsFilter === 'indoor') {
+      statsSettings.hcp       = settings.hcpIndoor;
+      statsSettings.targetHcp = settings.targetHcpIndoor;
+    }
+    var targetHcpSection = buildTargetHcpSection(sgByCat, sgN, statsSettings);
 
     el.innerHTML =
       '<div class="gt-stats-grid">' +
-        stat('Total shots', shots.length, '') +
+        stat('Total shots', filteredShots.length, '') +
         stat('Avg distance', avgDist, 'm') +
         stat('Solid strike', pureRate + '%', pure + ' shots') +
         stat('On target', onTargetRate + '%', onTarget + ' shots') +
@@ -1947,10 +2069,10 @@ sitemap: true
       '<p class="gt-section-title">Strokes Gained vs Scratch</p>' +
       sgSection +
       targetHcpSection +
-      barChart('Result distribution', 'result') +
-      barChart('Strike distribution', 'strike') +
-      barChart('Club usage', 'club') +
-      barChart('Lie distribution', 'lie');
+      barChart('Result distribution', 'result', filteredShots) +
+      barChart('Strike distribution', 'strike', filteredShots) +
+      barChart('Club usage', 'club', filteredShots) +
+      barChart('Lie distribution', 'lie', filteredShots);
   };
 
   function stat(label, val, sub) {
@@ -1968,9 +2090,9 @@ sitemap: true
       '<div class="gt-sg-sub">' + (n > 0 ? n + ' shot' + (n !== 1 ? 's' : '') : 'no data') + '</div></div>';
   }
 
-  function barChart(title, field) {
+  function barChart(title, field, data) {
     var counts = {};
-    shots.forEach(function (s) {
+    (data || shots.filter(function(s){ return !s.synthetic; })).forEach(function (s) {
       var v = s[field] || '(not set)';
       counts[v] = (counts[v] || 0) + 1;
     });
@@ -2148,16 +2270,57 @@ sitemap: true
     if (!activeRoundId) { lbl.textContent = ''; return; }
     var r = rounds.find(function (x) { return x.id === activeRoundId; });
     if (!r) { lbl.textContent = ''; return; }
-    var cnt = shots.filter(function (s) { return s.roundId === activeRoundId; }).length;
+    // Sync indoor toggle to the active round's type
+    activeRoundType = r.type || 'outdoor';
+    gtUpdateIndoorToggle();
+    gtUpdateProximityRow();
+    var cnt = shots.filter(function (s) { return s.roundId === activeRoundId && !s.synthetic; }).length;
     lbl.textContent = cnt + ' shot' + (cnt !== 1 ? 's' : '') + ' this round';
   }
 
+  // ── Indoor toggle helpers ─────────────────────────────────────────────────
+  window.gtToggleIndoor = function (btn) {
+    activeRoundType = activeRoundType === 'indoor' ? 'outdoor' : 'indoor';
+    gtUpdateIndoorToggle();
+    gtUpdateProximityRow();
+  };
+
+  function gtUpdateIndoorToggle() {
+    var btn = document.getElementById('gt-indoor-toggle');
+    if (!btn) return;
+    if (activeRoundType === 'indoor') {
+      btn.textContent = 'Indoor';
+      btn.classList.add('indoor');
+    } else {
+      btn.textContent = 'Outdoor';
+      btn.classList.remove('indoor');
+    }
+  }
+
+  function gtUpdateProximityRow() {
+    var proxRow = document.getElementById('gt-proximity-row');
+    if (!proxRow) return;
+    var isIndoor = activeRoundType === 'indoor';
+    var settings = loadSettings();
+    proxRow.style.display = (isIndoor && settings.fixedPutting) ? '' : 'none';
+  }
+
+  window.gtProximityHint = function (val) {
+    var hint = document.getElementById('gt-proximity-hint');
+    if (!hint) return;
+    var prox = parseFloat(val);
+    if (isNaN(prox) || val === '') { hint.textContent = ''; return; }
+    var fp = prox <= 3 ? 1 : prox <= 20 ? 2 : 3;
+    hint.textContent = '→ ' + fp + ' putt' + (fp !== 1 ? 's' : '') + ' will be assigned';
+  };
+
   // Create a round immediately (used auto on hole-1 save)
-  function gtAutoCreateRound(courseId, date) {
+  function gtAutoCreateRound(courseId, date, type) {
     var round = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       date: date,
       courseId: courseId,
+      type: type || 'outdoor',
       notes: ''
     };
     rounds.push(round);
@@ -2270,9 +2433,10 @@ sitemap: true
         diffStr = '<div class="gt-round-score-diff" style="color:' + diffColor + '">' + sign + sc.diff + ' (' + sc.holes + ' holes)</div>';
       }
       var activeBadge = isActive ? ' <span style="font-size:0.72rem;background:#2a7a2a;color:#fff;padding:0.1rem 0.4rem;border-radius:3px;vertical-align:middle;">ACTIVE</span>' : '';
+      var indoorBadge = (r.type === 'indoor') ? ' <span style="font-size:0.72rem;background:#1a5fa8;color:#fff;padding:0.1rem 0.4rem;border-radius:3px;vertical-align:middle;">INDOOR</span>' : '';
       return '<div class="gt-round-card' + (isActive ? ' active-round' : '') + '">' +
         '<div class="gt-round-card-info">' +
-          '<div class="gt-round-card-title">' + r.date + (course ? ' · ' + esc(course.name) : '') + activeBadge + '</div>' +
+          '<div class="gt-round-card-title">' + r.date + (course ? ' · ' + esc(course.name) : '') + activeBadge + indoorBadge + '</div>' +
           '<div class="gt-round-card-sub">' + (r.notes ? esc(r.notes) + ' · ' : '') + gtRoundShotCount(r.id) + ' shots</div>' +
         '</div>' +
         '<div>' +
@@ -2317,40 +2481,51 @@ sitemap: true
 
   function computeHoleStats(holeShots, par) {
     if (!holeShots || holeShots.length === 0) return null;
-    var score    = holeShots.length;
+
+    // Separate real shots from synthetic (fixed-putting) shots
+    var realShots  = holeShots.filter(function (s) { return !s.synthetic; });
+    var synShots   = holeShots.filter(function (s) { return s.synthetic; });
+    var hasSyn     = synShots.length > 0;
+    var fixedPutts = synShots.reduce(function (sum, s) { return sum + (s.fixedPutts || 0); }, 0);
+
+    // Score = real shots + fixed putts (synthetic counts as N strokes, not 1)
+    var score    = hasSyn ? realShots.length + fixedPutts : holeShots.length;
     var lastShot = holeShots[holeShots.length - 1];
-    var holed    = lastShot.end_lie === 'Holed' || lastShot.end_distance === 0;
+    var holed    = hasSyn || lastShot.end_lie === 'Holed' || lastShot.end_distance === 0;
 
-    // Putts: shots starting from Green or using Putter
-    var putts = holeShots.filter(function (s) {
-      return s.lie === 'Green' || s.club === 'Putter';
-    }).length;
+    // Putts: fixed putts if indoor, otherwise shots from Green or using Putter
+    var putts = hasSyn
+      ? fixedPutts
+      : holeShots.filter(function (s) { return s.lie === 'Green' || s.club === 'Putter'; }).length;
 
-    // FIR: par 4/5 only — tee shot ends on Fairway
+    // FIR: par 4/5 only — tee shot ends on Fairway (real shots only)
     var fir = null;
-    if (par >= 4 && holeShots.length > 0 && holeShots[0].lie === 'Tee') {
-      fir = holeShots[0].end_lie === 'Fairway';
+    if (par >= 4 && realShots.length > 0 && realShots[0].lie === 'Tee') {
+      fir = realShots[0].end_lie === 'Fairway';
     }
 
-    // GIR: reached green in (par - 2) shots or fewer
+    // GIR: reached green in (par - 2) shots or fewer (real shots only)
     var girAllowed = par - 2; // 1 for par3, 2 for par4, 3 for par5
     var gir = false;
-    for (var i = 0; i < Math.min(girAllowed, holeShots.length); i++) {
-      var s = holeShots[i];
+    for (var i = 0; i < Math.min(girAllowed, realShots.length); i++) {
+      var s = realShots[i];
       if (s.end_lie === 'Green' || s.end_lie === 'Holed' || s.end_distance === 0) {
         gir = true; break;
       }
+    }
+    // Indoor: if last real shot ended on green within par-2 shots → GIR
+    if (!gir && hasSyn && realShots.length <= girAllowed && realShots.length > 0) {
+      if (realShots[realShots.length - 1].end_lie === 'Green') gir = true;
     }
 
     // Up & Down: missed GIR — find first "around green" shot, did player hole in ≤2?
     var updown   = null;
     var sandSave = null;
     if (!gir) {
-      var hadSand = holeShots.some(function (s) { return s.lie === 'Sand'; });
+      var hadSand = realShots.some(function (s) { return s.lie === 'Sand'; });
       var atgIdx  = -1;
-      for (var i = 0; i < holeShots.length; i++) {
-        var s = holeShots[i];
-        // Around green: distance ≤30m (not off tee) or sand shot
+      for (var i = 0; i < realShots.length; i++) {
+        var s = realShots[i];
         if (s.lie !== 'Tee' && (
               (s.distance != null && s.distance <= 30) ||
               s.lie === 'Sand' || s.lie === 'Fringe' || s.lie === 'Green'
@@ -2360,7 +2535,8 @@ sitemap: true
       }
       if (atgIdx >= 0) {
         if (holed) {
-          updown = (holeShots.length - atgIdx) <= 2;
+          var shotsFromAtg = hasSyn ? (realShots.length - atgIdx) + fixedPutts : holeShots.length - atgIdx;
+          updown = shotsFromAtg <= 2;
         } else {
           updown = false;
         }
@@ -2368,14 +2544,15 @@ sitemap: true
       }
     }
 
-    var sg = holeShots.reduce(function (acc, s) {
+    // SG: only from real shots (synthetic putts excluded)
+    var sg = realShots.reduce(function (acc, s) {
       var v = s.sg != null ? s.sg : calcSG(s);
       return acc + (v != null ? v : 0);
     }, 0);
 
     return { score: score, par: par, diff: holed ? score - par : null,
              putts: putts, fir: fir, gir: gir, updown: updown, sandSave: sandSave,
-             holed: holed, sg: sg };
+             holed: holed, sg: sg, fixedPutts: hasSyn ? fixedPutts : null };
   }
 
   function buildScorecard(round, course) {
@@ -2454,7 +2631,7 @@ sitemap: true
           scoreRow += '<td class="' + cls + '">' + (hd.holed ? hd.score : '—') + '</td>';
           var dStr = hd.diff != null ? (hd.diff > 0 ? '+' + hd.diff : hd.diff === 0 ? 'E' : hd.diff) : '—';
           diffRow  += '<td class="' + cls + '">' + dStr + '</td>';
-          puttsRow += '<td>' + hd.putts + '</td>';
+          puttsRow += '<td>' + hd.putts + (hd.fixedPutts != null ? '*' : '') + '</td>';
           firRow   += (par >= 4 ? ynCell(hd.fir) : '<td class="sc-na">—</td>');
           girRow   += ynCell(hd.gir);
           udRow    += ynCell(hd.updown);
@@ -2492,11 +2669,13 @@ sitemap: true
              '<div class="gt-sc-stat-label">' + c.label + '</div></div>';
     }).join('');
 
+    var hasFixedPutts = holeData.some(function(hd){ return hd && hd.fixedPutts != null; });
     return '<div class="gt-scorecard-summary">' + summaryCards + '</div>' +
       '<p class="gt-section-title" style="margin-top:1.25rem;">Front 9</p>' +
       '<div class="gt-scorecard-wrap"><table class="gt-scorecard">' + buildHalf(1, 9) + '</table></div>' +
       '<p class="gt-section-title" style="margin-top:1rem;">Back 9</p>' +
       '<div class="gt-scorecard-wrap"><table class="gt-scorecard">' + buildHalf(10, 18) + '</table></div>' +
+      (hasFixedPutts ? '<p class="gt-info" style="margin-top:0.5rem;">* Fixed putting (simulator). Putts were auto-assigned based on proximity; excluded from SG Putting.</p>' : '') +
       (totals.sg !== 0
         ? '<p class="gt-info" style="margin-top:0.75rem;">Round SG: ' + fmtSG(totals.sg, 2) + '</p>'
         : '');
