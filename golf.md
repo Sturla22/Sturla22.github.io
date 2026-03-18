@@ -804,7 +804,6 @@ sitemap: true
     <div class="gt-tab" onclick="gtShowTab('rounds')">Rounds</div>
     <div class="gt-tab" onclick="gtShowTab('history')">History</div>
     <div class="gt-tab" onclick="gtShowTab('stats')">Stats</div>
-    <div class="gt-tab" onclick="gtShowTab('io')">Import / Export</div>
     <div class="gt-tab" onclick="gtShowTab('settings')">Settings</div>
   </div>
 
@@ -887,9 +886,11 @@ sitemap: true
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Deep Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Sand</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Plugged</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Fringe</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Hardpan</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Divot</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">GUR</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Green</span>
           </div>
           <input type="hidden" id="gt-lie">
@@ -910,37 +911,41 @@ sitemap: true
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Deep Rough</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Sand</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Plugged</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Fringe</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Hardpan</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Divot</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">GUR</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Green</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Penalty area</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">OB / Lost</span>
-            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Water</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Unplayable</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'endLie')">Holed</span>
           </div>
           <input type="hidden" id="gt-endLie">
         </div>
 
-        <!-- Collapsible extra details -->
-        <button type="button" class="gt-more-toggle" id="gt-more-btn" onclick="gtToggleMore()">▸ Add details — result, strike, shape, notes</button>
+        <!-- Result (direction) -->
+        <div class="gt-field">
+          <label>Result</label>
+          <div class="gt-dpad">
+            <button type="button" class="gt-dpad-btn" data-value="Long Left"   onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↖</span><span class="gt-dpad-label">Long Left</span></button>
+            <button type="button" class="gt-dpad-btn" data-value="Long"        onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↑</span><span class="gt-dpad-label">Long</span></button>
+            <button type="button" class="gt-dpad-btn" data-value="Long Right"  onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↗</span><span class="gt-dpad-label">Long Right</span></button>
+            <button type="button" class="gt-dpad-btn" data-value="Left"        onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">←</span><span class="gt-dpad-label">Left</span></button>
+            <button type="button" class="gt-dpad-btn gt-dpad-center" data-value="On Target" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">●</span><span class="gt-dpad-label">On Target</span></button>
+            <button type="button" class="gt-dpad-btn" data-value="Right"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">→</span><span class="gt-dpad-label">Right</span></button>
+            <button type="button" class="gt-dpad-btn" data-value="Short Left"  onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↙</span><span class="gt-dpad-label">Short Left</span></button>
+            <button type="button" class="gt-dpad-btn" data-value="Short"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↓</span><span class="gt-dpad-label">Short</span></button>
+            <button type="button" class="gt-dpad-btn" data-value="Short Right" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↘</span><span class="gt-dpad-label">Short Right</span></button>
+          </div>
+          <input type="hidden" id="gt-result">
+        </div>
+
+        <!-- Collapsible: strike, shape, notes, date -->
+        <button type="button" class="gt-more-toggle" id="gt-more-btn" onclick="gtToggleMore()">▸ Strike, shape &amp; notes</button>
         <div id="gt-more-section" style="display:none;">
           <div class="gt-form" style="margin-top:0.75rem;">
-
-            <div class="gt-field">
-              <label>Result</label>
-              <div class="gt-dpad">
-                <button type="button" class="gt-dpad-btn" data-value="Long Left"  onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↖</span><span class="gt-dpad-label">Long Left</span></button>
-                <button type="button" class="gt-dpad-btn" data-value="Long"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↑</span><span class="gt-dpad-label">Long</span></button>
-                <button type="button" class="gt-dpad-btn" data-value="Long Right" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↗</span><span class="gt-dpad-label">Long Right</span></button>
-                <button type="button" class="gt-dpad-btn" data-value="Left"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">←</span><span class="gt-dpad-label">Left</span></button>
-                <button type="button" class="gt-dpad-btn gt-dpad-center" data-value="On Target" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">●</span><span class="gt-dpad-label">On Target</span></button>
-                <button type="button" class="gt-dpad-btn" data-value="Right"      onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">→</span><span class="gt-dpad-label">Right</span></button>
-                <button type="button" class="gt-dpad-btn" data-value="Short Left" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↙</span><span class="gt-dpad-label">Short Left</span></button>
-                <button type="button" class="gt-dpad-btn" data-value="Short"      onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↓</span><span class="gt-dpad-label">Short</span></button>
-                <button type="button" class="gt-dpad-btn" data-value="Short Right" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↘</span><span class="gt-dpad-label">Short Right</span></button>
-              </div>
-              <input type="hidden" id="gt-result">
-            </div>
 
             <div class="gt-field">
               <label>Strike</label>
@@ -1075,31 +1080,6 @@ sitemap: true
   </div>
 
   <!-- IMPORT / EXPORT -->
-  <div id="gt-panel-io" class="gt-panel">
-    <p class="gt-section-title">Export</p>
-    <p style="font-size:0.9rem;color:#555;">Download all your shots as a JSON or CSV file. All data is stored only in this browser.</p>
-    <div class="gt-actions">
-      <button class="gt-btn gt-btn-primary" onclick="gtExportJSON()">Download JSON</button>
-      <button class="gt-btn gt-btn-secondary" onclick="gtExportCSV()">Download CSV</button>
-    </div>
-
-    <p class="gt-section-title">Import</p>
-    <p style="font-size:0.9rem;color:#555;">Import shots from a previously exported JSON file. Existing shots are kept; duplicates are skipped.</p>
-    <div class="gt-io">
-      <textarea id="gt-import-area" placeholder='Paste JSON here, or use the file picker below…'></textarea>
-    </div>
-    <div class="gt-actions" style="margin-top:0.5rem;">
-      <label class="gt-btn gt-btn-outline" style="cursor:pointer;">
-        Choose file
-        <input type="file" accept=".json" style="display:none" onchange="gtImportFile(event)">
-      </label>
-      <button class="gt-btn gt-btn-primary" onclick="gtImportJSON()">Import from text area</button>
-    </div>
-
-    <p class="gt-section-title" style="color:#c0392b;">Danger Zone</p>
-    <button class="gt-btn gt-btn-danger" onclick="gtClearAll()">Delete all shots</button>
-  </div>
-
   <!-- SETTINGS -->
   <div id="gt-panel-settings" class="gt-panel">
 
@@ -1211,6 +1191,30 @@ sitemap: true
 
     <button class="gt-btn gt-btn-secondary" id="gt-add-course-btn" onclick="gtShowNewCourseForm()" style="margin-top:0.5rem;">+ Add Course</button>
 
+    <!-- Data -->
+    <p class="gt-section-title" style="margin-top:2rem;">Export Data</p>
+    <p style="font-size:0.85rem;color:#555;margin:0 0 0.75rem;">Download all shots as JSON or CSV. Data is stored only in this browser.</p>
+    <div class="gt-actions">
+      <button class="gt-btn gt-btn-primary" onclick="gtExportJSON()">Download JSON</button>
+      <button class="gt-btn gt-btn-secondary" onclick="gtExportCSV()">Download CSV</button>
+    </div>
+
+    <p class="gt-section-title" style="margin-top:1.5rem;">Import Data</p>
+    <p style="font-size:0.85rem;color:#555;margin:0 0 0.75rem;">Import shots from a previously exported JSON file. Existing shots are kept; duplicates are skipped.</p>
+    <div class="gt-io">
+      <textarea id="gt-import-area" placeholder='Paste JSON here, or use the file picker below…'></textarea>
+    </div>
+    <div class="gt-actions" style="margin-top:0.5rem;">
+      <label class="gt-btn gt-btn-outline" style="cursor:pointer;">
+        Choose file
+        <input type="file" accept=".json" style="display:none" onchange="gtImportFile(event)">
+      </label>
+      <button class="gt-btn gt-btn-primary" onclick="gtImportJSON()">Import from text area</button>
+    </div>
+
+    <p class="gt-section-title" style="margin-top:1.5rem;color:#c0392b;">Danger Zone</p>
+    <button class="gt-btn gt-btn-danger" onclick="gtClearAll()">Delete all shots</button>
+
   </div>
 
 </div><!-- golf-tracker -->
@@ -1230,23 +1234,25 @@ sitemap: true
     [50,2.72],[75,2.78],[100,2.84],[125,2.91],[150,2.98],
     [175,3.06],[200,3.14],[250,3.27],[300,3.38],[350,3.50],[400,3.62]
   ];
-  // Penalty lies relative to fairway
+  // Lie offsets vs fairway (expected strokes added relative to same distance from fairway).
+  // Sources: Broadie (2014) for Fairway/Rough/Sand. Fringe, Hardpan, Divot, Plugged,
+  // GUR, Unplayable and Penalty area are author estimates — not in Broadie's published tables.
   var SG_OFFSETS = {
-    'Tee':        0,      // tee shot advantage ≈ same as fairway
-    'Fairway':    0,
-    'Fringe':     0.05,
-    'Hardpan':    0.10,
-    'Rough':      0.18,
-    'Divot':      0.20,
-    'Deep Rough': 0.32,
-    'Sand':       0.38,
-    'Uphill':     0.08,
-    'Downhill':   0.08,
-    'Sidehill':   0.10,
-    'Green':      null,   // use SG_GREEN table
-    'Holed':      null,   // always 0
-    'OB / Lost':  2.0,    // stroke + distance penalty approximation
-    'Water':      1.5
+    'Tee':           0,     // plays similar to fairway at equivalent distance
+    'Fairway':       0,
+    'GUR':           0,     // free drop to nearest relief — treat as fairway
+    'Fringe':        0.05,  // estimate: minimal extra difficulty
+    'Hardpan':       0.12,  // estimate: tight lie with mishit risk; NOT in Broadie data
+    'Rough':         0.18,  // Broadie
+    'Divot':         0.22,  // estimate: similar to rough; NOT in Broadie data
+    'Deep Rough':    0.32,  // Broadie (thick rough)
+    'Plugged':       0.50,  // estimate: buried in sand, significantly harder
+    'Sand':          0.38,  // Broadie (greenside/fairway bunker average)
+    'Green':         null,  // use SG_GREEN table
+    'Holed':         null,  // always 0 strokes remaining
+    'Penalty area':  1.5,   // 1-stroke penalty + drop (red/yellow stakes)
+    'OB / Lost':     2.0,   // stroke-and-distance: effectively 2 strokes lost
+    'Unplayable':    1.0    // 1-stroke penalty + drop within 2 club-lengths
   };
 
   function lerp(table, dist) {
@@ -1272,9 +1278,12 @@ sitemap: true
     if (dist == null || dist < 0) return null;
     if (dist === 0 || lie === 'Holed') return 0;
     if (lie === 'Green') return lerp(SG_GREEN, dist);
-    var offset = (SG_OFFSETS[lie] != null) ? SG_OFFSETS[lie] : 0.15; // unknown lie → rough approx
-    if (lie === 'OB / Lost') return lerp(SG_FAIRWAY, dist) + 2.0;
-    if (lie === 'Water')     return lerp(SG_FAIRWAY, dist) + 1.5;
+    // Penalty lies: add stroke(s) to fairway-equivalent distance expected value
+    if (lie === 'OB / Lost')    return lerp(SG_FAIRWAY, dist) + 2.0;
+    if (lie === 'Penalty area') return lerp(SG_FAIRWAY, dist) + 1.5;
+    if (lie === 'Water')        return lerp(SG_FAIRWAY, dist) + 1.5; // legacy alias
+    if (lie === 'Unplayable')   return lerp(SG_FAIRWAY, dist) + 1.0;
+    var offset = (SG_OFFSETS[lie] != null) ? SG_OFFSETS[lie] : 0.18; // unknown → rough approx
     return lerp(SG_FAIRWAY, dist) + offset;
   }
 
@@ -1509,7 +1518,7 @@ sitemap: true
     var btn = document.getElementById('gt-more-btn');
     var open = sec.style.display !== 'none';
     sec.style.display = open ? 'none' : 'block';
-    btn.textContent = open ? '▸ Add details — result, strike, shape, notes' : '▾ Hide details';
+    btn.textContent = open ? '▸ Strike, shape & notes' : '▾ Hide strike, shape & notes';
   };
 
   function today() {
@@ -1712,7 +1721,7 @@ sitemap: true
     document.getElementById('gt-shot-status').style.display = 'none';
     // Collapse "More" section
     document.getElementById('gt-more-section').style.display = 'none';
-    document.getElementById('gt-more-btn').textContent = '▸ Add details — result, strike, shape, notes';
+    document.getElementById('gt-more-btn').textContent = '▸ Strike, shape \u0026 notes';
   };
 
   // Called after a save — resets then pre-fills from the shot just saved
