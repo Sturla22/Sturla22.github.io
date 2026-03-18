@@ -30,6 +30,28 @@ async function clickDpad(page, value) {
   await page.locator(`.gt-dpad-btn[data-value="${value}"]`).click();
 }
 
+async function saveShot(page, details) {
+  if (details.hole != null) {
+    await page.locator('#gt-hole').fill(String(details.hole));
+    await page.locator('#gt-hole').dispatchEvent('input');
+  }
+  if (details.par != null) await page.locator('#gt-par').fill(String(details.par));
+  if (details.holeLength != null) {
+    await page.locator('#gt-hole-length').fill(String(details.holeLength));
+    await page.locator('#gt-hole-length').dispatchEvent('change');
+  }
+  if (details.distance != null) {
+    await page.locator('#gt-distance').fill(String(details.distance));
+    await page.locator('#gt-distance').dispatchEvent(details.autoSelect ? 'change' : 'input');
+  }
+  if (details.club) await clickPill(page, '#gt-club-pills', details.club);
+  if (details.swing) await clickPill(page, '#gt-swing-pills', details.swing);
+  if (details.result) await clickDpad(page, details.result);
+  if (details.endDistance != null) await page.locator('#gt-end-distance').fill(String(details.endDistance));
+  if (details.endLie) await clickPill(page, '#gt-end-lie-pills', details.endLie);
+  await page.getByRole('button', { name: 'Save Shot' }).click();
+}
+
 test.describe('Golf tracker', () => {
   test('renders with empty-state content', async ({ page }) => {
     await openGolf(page);
@@ -172,7 +194,7 @@ test.describe('Golf tracker', () => {
     await expect(page.locator('#gt-history-count')).toContainText('1 shot');
 
     await openTab(page, 'Log');
-    await page.getByRole('button', { name: 'Undo Last' }).click();
+    await page.getByRole('button', { name: 'Undo' }).click();
     await expect(page.locator('#gt-notice')).toContainText('Last shot removed.');
 
     await expect(page.locator('#gt-history-body')).toContainText('No shots match the filters.');
@@ -227,6 +249,226 @@ test.describe('Golf tracker', () => {
     await expect(page.locator('#gt-hole')).toHaveValue('2');
     await expect(page.locator('#gt-lie-pills .gt-pill.selected')).toHaveText('Tee');
     await expect(page.locator('#gt-shot-status')).toContainText('moving to hole 2');
+  });
+
+  test('plays several holes through the shot logger and builds a scorecard', async ({ page }) => {
+    await openGolf(page);
+
+    await page.selectOption('#gt-course-ctx', '__new__');
+    await page.locator('#gt-new-course-inline').fill('Logger Test Club');
+
+    await saveShot(page, {
+      hole: 1,
+      par: 4,
+      holeLength: 380,
+      distance: 380,
+      club: 'Driver',
+      result: 'On Target',
+      endDistance: 135,
+      endLie: 'Fairway'
+    });
+    await expect(page.locator('#gt-hole')).toHaveValue('1');
+    await expect(page.locator('#gt-distance')).toHaveValue('135');
+
+    await saveShot(page, {
+      distance: 135,
+      club: '8I',
+      result: 'On Target',
+      endDistance: 6,
+      endLie: 'Green'
+    });
+    await expect(page.locator('#gt-distance')).toHaveValue('6');
+    await expect(page.locator('#gt-lie-pills .gt-pill.selected')).toHaveText('Green');
+
+    await saveShot(page, {
+      distance: 6,
+      club: 'Putter',
+      result: 'On Target',
+      endDistance: 0,
+      endLie: 'Holed'
+    });
+    await expect(page.locator('#gt-hole')).toHaveValue('2');
+    await expect(page.locator('#gt-lie-pills .gt-pill.selected')).toHaveText('Tee');
+
+    await saveShot(page, {
+      hole: 2,
+      par: 3,
+      holeLength: 155,
+      distance: 155,
+      club: '7I',
+      result: 'On Target',
+      endDistance: 0,
+      endLie: 'Holed'
+    });
+    await expect(page.locator('#gt-hole')).toHaveValue('3');
+
+    await saveShot(page, {
+      hole: 3,
+      par: 5,
+      holeLength: 470,
+      distance: 470,
+      club: 'Driver',
+      result: 'Right',
+      endDistance: 210,
+      endLie: 'Rough'
+    });
+    await saveShot(page, {
+      distance: 210,
+      club: '5W',
+      result: 'On Target',
+      endDistance: 35,
+      endLie: 'Fringe'
+    });
+    await saveShot(page, {
+      distance: 35,
+      club: 'SW',
+      swing: '½',
+      result: 'On Target',
+      endDistance: 4,
+      endLie: 'Green'
+    });
+    await saveShot(page, {
+      distance: 4,
+      club: 'Putter',
+      result: 'On Target',
+      endDistance: 0,
+      endLie: 'Holed'
+    });
+
+    await openTab(page, 'Rounds');
+    await expect(page.locator('#gt-rounds-list')).toContainText('Logger Test Club');
+    await expect(page.locator('#gt-rounds-list')).toContainText('8 shots');
+
+    await page.getByRole('button', { name: 'Scorecard' }).click();
+    await expect(page.locator('#gt-scorecard-content')).toContainText('Front 9');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('Par');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('Score');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('Putts');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('FIR');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('GIR');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('3');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('1');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('4');
+  });
+
+  test('shortens logger flow by inferring end lie from end distance', async ({ page }) => {
+    await openGolf(page);
+
+    await page.selectOption('#gt-course-ctx', '__new__');
+    await page.locator('#gt-new-course-inline').fill('Fast Flow Club');
+
+    await saveShot(page, {
+      hole: 1,
+      par: 4,
+      holeLength: 390,
+      distance: 390,
+      club: 'Driver',
+      endDistance: 145
+    });
+    await expect(page.locator('#gt-distance')).toHaveValue('145');
+    await expect(page.locator('#gt-lie-pills .gt-pill.selected')).toHaveText('Fairway');
+
+    await saveShot(page, {
+      distance: 145,
+      club: '8I',
+      endDistance: 5
+    });
+    await expect(page.locator('#gt-distance')).toHaveValue('5');
+    await expect(page.locator('#gt-lie-pills .gt-pill.selected')).toHaveText('Green');
+
+    await saveShot(page, {
+      distance: 5,
+      club: 'Putter',
+      endDistance: 0
+    });
+    await expect(page.locator('#gt-hole')).toHaveValue('2');
+    await expect(page.locator('#gt-lie-pills .gt-pill.selected')).toHaveText('Tee');
+
+    await openTab(page, 'Rounds');
+    await expect(page.locator('#gt-rounds-list')).toContainText('Fast Flow Club');
+    await expect(page.locator('#gt-rounds-list')).toContainText('3 shots');
+  });
+
+  test('carries penalty-area and unplayable lies into the next shot on the same hole', async ({ page }) => {
+    await openGolf(page);
+
+    await page.selectOption('#gt-course-ctx', '__new__');
+    await page.locator('#gt-new-course-inline').fill('Trouble Test');
+
+    await saveShot(page, {
+      hole: 1,
+      par: 4,
+      holeLength: 400,
+      distance: 400,
+      club: 'Driver',
+      result: 'Right',
+      endDistance: 175,
+      endLie: 'Penalty area'
+    });
+    await expect(page.locator('#gt-hole')).toHaveValue('1');
+    await expect(page.locator('#gt-distance')).toHaveValue('175');
+    await expect(page.locator('#gt-lie-pills .gt-pill.selected')).toHaveText('Penalty area');
+
+    await saveShot(page, {
+      distance: 175,
+      club: '7I',
+      result: 'Left',
+      endDistance: 60,
+      endLie: 'Unplayable'
+    });
+    await expect(page.locator('#gt-distance')).toHaveValue('60');
+    await expect(page.locator('#gt-lie-pills .gt-pill.selected')).toHaveText('Unplayable');
+
+    await openTab(page, 'History');
+    await expect(page.locator('#gt-history-body')).toContainText('Driver');
+    await expect(page.locator('#gt-history-body')).toContainText('7I');
+  });
+
+  test('records an up-and-down sand save in the scorecard and stats', async ({ page }) => {
+    await openGolf(page);
+
+    await page.selectOption('#gt-course-ctx', '__new__');
+    await page.locator('#gt-new-course-inline').fill('Bunker Test');
+
+    await saveShot(page, {
+      hole: 1,
+      par: 4,
+      holeLength: 360,
+      distance: 360,
+      club: 'Driver',
+      endDistance: 118
+    });
+    await saveShot(page, {
+      distance: 118,
+      club: '9I',
+      result: 'Right',
+      endDistance: 12,
+      endLie: 'Sand'
+    });
+    await saveShot(page, {
+      distance: 12,
+      club: 'SW',
+      swing: '½',
+      endDistance: 1,
+      endLie: 'Green'
+    });
+    await saveShot(page, {
+      distance: 1,
+      club: 'Putter',
+      endDistance: 0
+    });
+
+    await openTab(page, 'Rounds');
+    await page.getByRole('button', { name: 'Scorecard' }).click();
+    await expect(page.locator('#gt-scorecard-content')).toContainText('Sand Save');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('Up&Down');
+    await expect(page.locator('#gt-scorecard-content')).toContainText('1/1 (100%)');
+
+    await openTab(page, 'Stats');
+    await expect(page.locator('#gt-stats-content')).toContainText('Sand Save');
+    await expect(page.locator('#gt-stats-content')).toContainText('Up & Down');
+    await expect(page.locator('#gt-stats-content')).toContainText('100%');
+    await expect(page.locator('#gt-stats-content')).toContainText('1 / 1 holes');
   });
 
   test('autofills par and tee length from the selected course and tee', async ({ page }) => {

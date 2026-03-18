@@ -318,6 +318,16 @@
     background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
     border: 1px solid var(--gt-border-soft);
   }
+  .gt-btn-compact {
+    padding: 0.55rem 0.8rem;
+    min-height: 40px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    flex: 0 0 auto;
+  }
+  .gt-btn-save {
+    min-width: 0;
+  }
 
   /* Pill selects */
   .gt-pills {
@@ -1094,7 +1104,16 @@
     .gt-actions { flex-direction: column; }
     .gt-filters { flex-direction: column; align-items: stretch; }
     .gt-filters input, .gt-filters select { width: 100%; }
-    .gt-actions-sticky { bottom: 0; border-radius: 14px 14px 0 0; }
+    .gt-actions-sticky {
+      bottom: 0;
+      border-radius: 14px 14px 0 0;
+      display: grid;
+      grid-template-columns: auto auto minmax(0, 1fr);
+      align-items: center;
+    }
+    .gt-actions-sticky .gt-btn {
+      width: 100%;
+    }
   }
 
   @media (max-width: 480px) {
@@ -1105,5 +1124,10 @@
     .gt-shot-meta-row .gt-field:last-child { grid-column: 1 / -1; }
     .gt-distance-input { font-size: 1.38rem; min-height: 62px; }
     .gt-actions-sticky { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)); }
+    .gt-btn-compact {
+      padding: 0.45rem 0.65rem;
+      min-height: 36px;
+      font-size: 0.85rem;
+    }
   }
 </style>

@@ -118,6 +118,9 @@
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Hardpan</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Divot</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">GUR</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Penalty area</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">OB / Lost</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Unplayable</span>
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Green</span>
           </div>
           <input type="hidden" id="gt-lie">
@@ -226,9 +229,9 @@
       </div><!-- gt-form -->
 
       <div class="gt-actions gt-actions-sticky">
-        <button type="button" class="gt-btn gt-btn-outline" onclick="gtUndoLastShot()">Undo Last</button>
-        <button type="button" class="gt-btn gt-btn-outline" onclick="gtResetForm()">Clear</button>
-        <button type="submit" class="gt-btn gt-btn-primary" style="flex:1;">Save Shot</button>
+        <button type="button" class="gt-btn gt-btn-outline gt-btn-compact" onclick="gtUndoLastShot()">Undo</button>
+        <button type="button" class="gt-btn gt-btn-outline gt-btn-compact" onclick="gtResetForm()">Clear</button>
+        <button type="submit" class="gt-btn gt-btn-primary gt-btn-save" style="flex:1;">Save Shot</button>
       </div>
 
     </form>

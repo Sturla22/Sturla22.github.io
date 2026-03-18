@@ -190,6 +190,31 @@
     return null;
   }
 
+  function inferEndLieValue(endDistance) {
+    if (endDistance == null || isNaN(endDistance) || endDistance < 0) return '';
+    if (endDistance === 0) return 'Holed';
+    if (endDistance <= 30) return 'Green';
+    return 'Fairway';
+  }
+
+  function syncEndLieFromEndDistance(rawValue) {
+    var endDistEl = document.getElementById('gt-end-distance');
+    if (!endDistEl) return;
+
+    var parsed = rawValue === '' || rawValue == null ? null : parseFloat(rawValue);
+    var suggestedLie = inferEndLieValue(parsed);
+    if (!suggestedLie) return;
+
+    var currentEndLie = pillState.endLie || '';
+    var lastAutoEndLie = endDistEl.dataset.gtClubAutofillLie || '';
+    var canReplaceEndLie = currentEndLie === '' || currentEndLie === lastAutoEndLie;
+    if (!canReplaceEndLie) return;
+
+    selectPill('gt-end-lie-pills', 'endLie', suggestedLie);
+    endDistEl.dataset.gtClubAutofillLie = suggestedLie;
+    setSuggestedPill('gt-end-lie-pills', suggestedLie, true);
+  }
+
   function syncEndFromSelectedClub() {
     var stock = selectedClubStockDistance();
     var startDist = parseFloat(document.getElementById('gt-distance').value);
@@ -467,6 +492,10 @@
           this.dataset.gtClubAutofillValue = '';
           setSuggestedState(this, false);
         }
+        syncEndLieFromEndDistance(currentVal);
+      });
+      endDistanceInput.addEventListener('change', function () {
+        syncEndLieFromEndDistance(this.value.trim());
       });
     }
 
@@ -812,6 +841,8 @@
     gtUpdateProximityRow();
 
     var endDistRaw = v('gt-end-distance');
+    var endDistVal = endDistRaw !== '' ? parseFloat(endDistRaw) : null;
+    var endLieVal = pillState.endLie || inferEndLieValue(endDistVal) || '';
     var shot = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       date: shotDate,
@@ -825,8 +856,8 @@
       result: pillState.result || 'On Target',
       strike: pillState.strike,
       shape: pillState.shape,
-      end_distance: endDistRaw !== '' ? parseFloat(endDistRaw) : null,
-      end_lie: pillState.endLie,
+      end_distance: endDistVal,
+      end_lie: endLieVal,
       notes: v('gt-notes'),
       roundId: activeRoundId || null,
     };
