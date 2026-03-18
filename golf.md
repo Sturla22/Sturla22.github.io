@@ -828,14 +828,22 @@ sitemap: true
     <form id="gt-shot-form" onsubmit="gtSaveShot(event)">
       <div class="gt-form">
 
-        <!-- Hole + Distance -->
-        <div class="gt-row">
+        <!-- Hole + Par + Distance -->
+        <div class="gt-row" style="grid-template-columns:1fr 1fr 2fr;">
           <div class="gt-field">
             <label>Hole</label>
             <div class="gt-num-input">
-              <button type="button" class="gt-num-btn" onclick="gtAdjNum('gt-hole',-1,1,18)">−</button>
-              <input type="number" id="gt-hole" min="1" max="18" placeholder="?" inputmode="numeric">
-              <button type="button" class="gt-num-btn" onclick="gtAdjNum('gt-hole',1,1,18)">+</button>
+              <button type="button" class="gt-num-btn" onclick="gtAdjNum('gt-hole',-1,1,18);gtHoleChanged()">−</button>
+              <input type="number" id="gt-hole" min="1" max="18" placeholder="?" inputmode="numeric" oninput="gtHoleChanged()">
+              <button type="button" class="gt-num-btn" onclick="gtAdjNum('gt-hole',1,1,18);gtHoleChanged()">+</button>
+            </div>
+          </div>
+          <div class="gt-field">
+            <label>Par</label>
+            <div class="gt-num-input">
+              <button type="button" class="gt-num-btn" onclick="gtAdjNum('gt-par',-1,3,6)">−</button>
+              <input type="number" id="gt-par" min="3" max="6" placeholder="4" inputmode="numeric">
+              <button type="button" class="gt-num-btn" onclick="gtAdjNum('gt-par',1,3,6)">+</button>
             </div>
           </div>
           <div class="gt-field">
@@ -1547,6 +1555,32 @@ sitemap: true
     el.value = Math.max(min, Math.min(max, val + delta));
   };
 
+  // Auto-fill par when hole number changes
+  window.gtHoleChanged = function () {
+    var holeNum = parseInt(document.getElementById('gt-hole').value);
+    if (isNaN(holeNum) || holeNum < 1 || holeNum > 18) return;
+
+    var par = null;
+
+    // 1. Course pars (highest priority — authoritative)
+    var courseId = currentCourseId();
+    var course = courseId ? courses.find(function (c) { return c.id === courseId; }) : null;
+    if (course && course.pars && course.pars[holeNum - 1]) {
+      par = course.pars[holeNum - 1];
+    }
+
+    // 2. Previously logged shots for this hole (for no-course or unconfigured courses)
+    if (par == null) {
+      var existing = shots.find(function (s) {
+        return s.hole === holeNum && s.par != null && !s.synthetic &&
+               (activeRoundId ? s.roundId === activeRoundId : true);
+      });
+      if (existing) par = existing.par;
+    }
+
+    if (par != null) document.getElementById('gt-par').value = par;
+  };
+
   window.gtToggleDpad = function (el, group) {
     el.closest('.gt-dpad').querySelectorAll('.gt-dpad-btn').forEach(function (b) { b.classList.remove('selected'); });
     var val = el.dataset.value;
@@ -1735,6 +1769,7 @@ sitemap: true
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       date: shotDate,
       hole: holeNum,
+      par: v('gt-par') ? parseInt(v('gt-par')) : null,
       distance: v('gt-distance') ? parseFloat(v('gt-distance')) : null,
       club: pillState.club,
       swing: pillState.swing || null,
@@ -1829,13 +1864,19 @@ sitemap: true
       // Advance to next hole
       if (shot.hole != null && shot.hole < 18) {
         document.getElementById('gt-hole').value = shot.hole + 1;
+        gtHoleChanged();
       }
       var holeShots = shots.filter(function (s) { return s.date === shot.date && s.hole === shot.hole; }).length;
       updateShotStatus(null, 'Hole ' + shot.hole + ' complete in ' + holeShots + ' shot' + (holeShots !== 1 ? 's' : '') +
         (shot.hole < 18 ? ' — moving to hole ' + (shot.hole + 1) : ' — round done!'));
     } else {
       // Keep same hole
-      if (shot.hole != null) document.getElementById('gt-hole').value = shot.hole;
+      if (shot.hole != null) {
+        document.getElementById('gt-hole').value = shot.hole;
+        // Carry forward the par the user already set (or refill from course)
+        if (shot.par != null) document.getElementById('gt-par').value = shot.par;
+        else gtHoleChanged();
+      }
 
       // Pre-fill start position from previous end position
       if (shot.end_distance != null) {
@@ -2231,6 +2272,8 @@ sitemap: true
       // Sync active round to match the selected course for today
       gtSyncActiveRound();
       gtUpdateRoundCtxLabel();
+      // Re-fill par for the currently-shown hole from the new course's pars
+      gtHoleChanged();
     }
   };
 
@@ -2556,13 +2599,16 @@ sitemap: true
   }
 
   function buildScorecard(round, course) {
-    var pars     = course ? course.pars : defaultPars();
-    var rs       = shots.filter(function (s) { return s.roundId === round.id; });
-    var holeData = [];
+    var coursePars = course ? course.pars : defaultPars();
+    var rs         = shots.filter(function (s) { return s.roundId === round.id; });
+    var holeData   = [];
 
     for (var h = 1; h <= 18; h++) {
       var hs = rs.filter(function (s) { return s.hole === h; });
-      holeData.push(computeHoleStats(hs, pars[h - 1]));
+      // Par priority: shot-stored par (user-entered) → course pars → default
+      var shotWithPar = hs.find(function (s) { return s.par != null && !s.synthetic; });
+      var par = shotWithPar ? shotWithPar.par : coursePars[h - 1];
+      holeData.push(computeHoleStats(hs, par));
     }
 
     // Totals
