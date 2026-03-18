@@ -155,15 +155,11 @@
         <div class="gt-field">
           <label>Result</label>
           <div class="gt-dpad">
-            <button type="button" class="gt-dpad-btn" data-value="Long Left"   onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↖</span><span class="gt-dpad-label">Long Left</span></button>
-            <button type="button" class="gt-dpad-btn" data-value="Long"        onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↑</span><span class="gt-dpad-label">Long</span></button>
-            <button type="button" class="gt-dpad-btn" data-value="Long Right"  onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↗</span><span class="gt-dpad-label">Long Right</span></button>
-            <button type="button" class="gt-dpad-btn" data-value="Left"        onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">←</span><span class="gt-dpad-label">Left</span></button>
+            <button type="button" class="gt-dpad-btn gt-dpad-long" data-value="Long"        onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↑</span><span class="gt-dpad-label">Long</span></button>
+            <button type="button" class="gt-dpad-btn gt-dpad-left" data-value="Left"        onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">←</span><span class="gt-dpad-label">Left</span></button>
             <button type="button" class="gt-dpad-btn gt-dpad-center" data-value="On Target" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">●</span><span class="gt-dpad-label">On Target</span></button>
-            <button type="button" class="gt-dpad-btn" data-value="Right"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">→</span><span class="gt-dpad-label">Right</span></button>
-            <button type="button" class="gt-dpad-btn" data-value="Short Left"  onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↙</span><span class="gt-dpad-label">Short Left</span></button>
-            <button type="button" class="gt-dpad-btn" data-value="Short"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↓</span><span class="gt-dpad-label">Short</span></button>
-            <button type="button" class="gt-dpad-btn" data-value="Short Right" onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↘</span><span class="gt-dpad-label">Short Right</span></button>
+            <button type="button" class="gt-dpad-btn gt-dpad-right" data-value="Right"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">→</span><span class="gt-dpad-label">Right</span></button>
+            <button type="button" class="gt-dpad-btn gt-dpad-short" data-value="Short"       onclick="gtToggleDpad(this,'result')"><span class="gt-dpad-arrow">↓</span><span class="gt-dpad-label">Short</span></button>
           </div>
           <input type="hidden" id="gt-result">
         </div>
@@ -260,8 +256,6 @@
         <option>On Target</option>
         <option>Short</option><option>Long</option>
         <option>Left</option><option>Right</option>
-        <option>Short Left</option><option>Short Right</option>
-        <option>Long Left</option><option>Long Right</option>
       </select>
       <label>Strike:</label>
       <select id="gt-filter-strike" onchange="gtRenderHistory()">

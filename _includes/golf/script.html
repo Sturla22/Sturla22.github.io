@@ -135,6 +135,91 @@
     return (el && el.value) ? el.value : today();
   }
 
+  function shotsForCurrentHole(holeNum) {
+    var shotDate = currentShotDate();
+    var courseId = currentCourseId();
+    return shots.filter(function (s) {
+      if (s.hole !== holeNum || s.synthetic) return false;
+      if (activeRoundId) return s.roundId === activeRoundId;
+
+      var shotRound = s.roundId ? findRoundById(s.roundId) : null;
+      if (courseId != null) {
+        return !!shotRound && shotRound.date === shotDate && shotRound.courseId === courseId;
+      }
+
+      if (shotRound) return shotRound.date === shotDate && shotRound.courseId == null;
+      return s.date === shotDate && !s.roundId;
+    });
+  }
+
+  function syncDistanceFromHoleLength(rawLength, options) {
+    options = options || {};
+    var holeNum = parseInt(document.getElementById('gt-hole').value, 10);
+    var distEl = document.getElementById('gt-distance');
+    if (!distEl || isNaN(holeNum) || holeNum < 1 || holeNum > 18) return;
+
+    var isStartingHole = shotsForCurrentHole(holeNum).length === 0;
+    if (!isStartingHole) return;
+
+    var lie = pillState.lie || '';
+    if (lie && lie !== 'Tee') return;
+
+    var nextVal = rawLength != null ? String(rawLength).trim() : '';
+    var currentVal = distEl.value.trim();
+    var lastAutoVal = distEl.dataset.gtHoleLengthAutofillValue || '';
+    var canReplace = currentVal === '' || currentVal === lastAutoVal;
+    if (!canReplace) return;
+
+    distEl.value = nextVal;
+    distEl.dataset.gtHoleLengthAutofillValue = nextVal;
+    if (options.autoSelectClub) gtAutoSelectClub(nextVal);
+  }
+
+  function selectedClubStockDistance() {
+    var club = pillState.club || '';
+    if (!club || club === 'Putter') return null;
+
+    var settings = loadSettings();
+    var cd = settings.clubDistances || {};
+    var clubDist = cd[club];
+    if (WEDGES.indexOf(club) !== -1 && clubDist && typeof clubDist === 'object') {
+      var swing = pillState.swing || '';
+      if (!swing || clubDist[swing] == null || clubDist[swing] <= 0) return null;
+      return clubDist[swing];
+    }
+    if (typeof clubDist === 'number' && clubDist > 0) return clubDist;
+    return null;
+  }
+
+  function syncEndFromSelectedClub() {
+    var stock = selectedClubStockDistance();
+    var startDist = parseFloat(document.getElementById('gt-distance').value);
+    var endDistEl = document.getElementById('gt-end-distance');
+    if (!endDistEl || stock == null || isNaN(startDist) || startDist <= 0) return;
+
+    var remaining = Math.abs(startDist - stock);
+    var roundedRemaining = Math.round(remaining * 10) / 10;
+    var suggestedLie = roundedRemaining <= 30 ? 'Green' : 'Fairway';
+    var nextEndDist = String(roundedRemaining);
+    if (nextEndDist.indexOf('.') !== -1) nextEndDist = nextEndDist.replace(/\.0$/, '');
+
+    var currentEndDist = endDistEl.value.trim();
+    var lastAutoEndDist = endDistEl.dataset.gtClubAutofillValue || '';
+    var canReplaceEndDist = currentEndDist === '' || currentEndDist === lastAutoEndDist;
+    if (canReplaceEndDist) {
+      endDistEl.value = nextEndDist;
+      endDistEl.dataset.gtClubAutofillValue = nextEndDist;
+    }
+
+    var currentEndLie = pillState.endLie || '';
+    var lastAutoEndLie = endDistEl.dataset.gtClubAutofillLie || '';
+    var canReplaceEndLie = currentEndLie === '' || currentEndLie === lastAutoEndLie;
+    if (canReplaceEndLie) {
+      selectPill('gt-end-lie-pills', 'endLie', suggestedLie);
+      endDistEl.dataset.gtClubAutofillLie = suggestedLie;
+    }
+  }
+
   function normalizeImportId(rawId, index) {
     var base = String(rawId == null ? '' : rawId)
       .trim()
@@ -305,6 +390,41 @@
       });
     }
 
+    var holeLengthInput = document.getElementById('gt-hole-length');
+    if (holeLengthInput) {
+      holeLengthInput.addEventListener('input', function () {
+        syncDistanceFromHoleLength(this.value);
+      });
+      holeLengthInput.addEventListener('change', function () {
+        syncDistanceFromHoleLength(this.value, { autoSelectClub: true });
+      });
+    }
+
+    var distanceInput = document.getElementById('gt-distance');
+    if (distanceInput) {
+      distanceInput.addEventListener('input', function () {
+        var currentVal = this.value.trim();
+        if (currentVal === '' || currentVal !== (this.dataset.gtHoleLengthAutofillValue || '')) {
+          this.dataset.gtHoleLengthAutofillValue = '';
+        }
+        syncEndFromSelectedClub();
+      });
+      distanceInput.addEventListener('change', function () {
+        gtAutoSelectClub(this.value);
+        syncEndFromSelectedClub();
+      });
+    }
+
+    var endDistanceInput = document.getElementById('gt-end-distance');
+    if (endDistanceInput) {
+      endDistanceInput.addEventListener('input', function () {
+        var currentVal = this.value.trim();
+        if (currentVal === '' || currentVal !== (this.dataset.gtClubAutofillValue || '')) {
+          this.dataset.gtClubAutofillValue = '';
+        }
+      });
+    }
+
     gtRefreshTrackerUI();
   });
 
@@ -364,25 +484,35 @@
     if (hl) hl.value = length != null ? length : '';
 
     // Default lie to Tee when no shots have been logged for this hole yet
-    var roundShots = shots.filter(function (s) {
-      return s.hole === holeNum && !s.synthetic &&
-             (activeRoundId ? s.roundId === activeRoundId : s.date === (document.getElementById('gt-date').value || today()));
-    });
+    var roundShots = shotsForCurrentHole(holeNum);
     if (roundShots.length === 0 && !pillState.lie) {
       selectPill('gt-lie-pills', 'lie', 'Tee');
     }
+    syncDistanceFromHoleLength(length != null ? String(length) : (hl ? hl.value : ''), { autoSelectClub: true });
   };
 
+  function selectDpadValue(group, value) {
+    var input = document.getElementById('gt-' + group);
+    if (!input) return;
+    var pad = input.parentElement.querySelector('.gt-dpad');
+    if (!pad) return;
+    var matched = false;
+    pad.querySelectorAll('.gt-dpad-btn').forEach(function (b) {
+      var isMatch = b.dataset.value === value;
+      b.classList.toggle('selected', isMatch);
+      if (isMatch) matched = true;
+    });
+    pillState[group] = matched ? value : '';
+    input.value = pillState[group];
+  }
+
   window.gtToggleDpad = function (el, group) {
-    el.closest('.gt-dpad').querySelectorAll('.gt-dpad-btn').forEach(function (b) { b.classList.remove('selected'); });
     var val = el.dataset.value;
     if (pillState[group] === val) {
-      pillState[group] = '';
+      selectDpadValue(group, '');
     } else {
-      pillState[group] = val;
-      el.classList.add('selected');
+      selectDpadValue(group, val);
     }
-    document.getElementById('gt-' + group).value = pillState[group];
   };
 
   window.gtToggleMore = function () {
@@ -432,6 +562,10 @@
     }
     document.getElementById('gt-' + group).value = pillState[group];
     if (group === 'club') gtOnClubSelected(pillState[group]);
+    if (group === 'club' || group === 'swing') syncEndFromSelectedClub();
+    if (group === 'endLie' && pillState[group] !== (document.getElementById('gt-end-distance').dataset.gtClubAutofillLie || '')) {
+      document.getElementById('gt-end-distance').dataset.gtClubAutofillLie = '';
+    }
   };
 
   // Show/hide swing selector based on selected club
@@ -463,6 +597,7 @@
 
     var bag = settings.bag || ALL_CLUBS;
     var best = null, bestDiff = Infinity;
+    var longest = null;
 
     bag.forEach(function (club) {
       if (club === 'Putter') return;
@@ -472,10 +607,12 @@
         SWINGS.forEach(function (swing) {
           var dv = d[swing];
           if (dv == null || dv <= 0) return;
+          if (!longest || dv > longest.distance) longest = { club: club, swing: swing, distance: dv };
           var diff = Math.abs(dist - dv);
           if (diff < bestDiff) { bestDiff = diff; best = { club: club, swing: swing }; }
         });
       } else if (typeof d === 'number' && d > 0) {
+        if (!longest || d > longest.distance) longest = { club: club, swing: null, distance: d };
         var diff = Math.abs(dist - d);
         if (diff < bestDiff) { bestDiff = diff; best = { club: club, swing: null }; }
       }
@@ -486,11 +623,23 @@
     // Only auto-select if within 25% of club distance (avoids wild suggestions)
     var refDist = best.swing ? cd[best.club][best.swing] : cd[best.club];
     if (refDist && bestDiff / refDist > 0.25) {
+      var teeLie = (pillState.lie || '') === 'Tee';
+      if (teeLie && longest && dist >= longest.distance) {
+        best = { club: longest.club, swing: longest.swing };
+        refDist = longest.distance;
+      } else {
+        if (hint) hint.textContent = '';
+        // Clear any stale auto-selection so a bad intermediate value doesn't stick
+        document.querySelectorAll('#gt-club-pills .gt-pill.selected').forEach(function (p) {
+          p.classList.remove('selected');
+        });
+        pillState.club = '';
+        return;
+      }
+    }
+
+    if (!refDist) {
       if (hint) hint.textContent = '';
-      // Clear any stale auto-selection so a bad intermediate value doesn't stick
-      document.querySelectorAll('#gt-club-pills .gt-pill.selected').forEach(function (p) {
-        p.classList.remove('selected');
-      });
       pillState.club = '';
       return;
     }
@@ -510,6 +659,8 @@
       var label = best.club + (best.swing ? ' ' + best.swing : '');
       hint.textContent = '↑ ' + label + ' (' + refDist + ' m stock)';
     }
+
+    syncEndFromSelectedClub();
   };
 
   // ─── Save shot ───────────────────────────────────────────────────────────────
@@ -586,7 +737,7 @@
       club: pillState.club,
       swing: pillState.swing || null,
       lie: pillState.lie,
-      result: pillState.result,
+      result: pillState.result || 'On Target',
       strike: pillState.strike,
       shape: pillState.shape,
       end_distance: endDistRaw !== '' ? parseFloat(endDistRaw) : null,
@@ -651,8 +802,12 @@
     document.getElementById('gt-dist-hint').textContent = '';
     document.getElementById('gt-proximity').value = '';
     document.getElementById('gt-proximity-hint').textContent = '';
+    document.getElementById('gt-distance').dataset.gtHoleLengthAutofillValue = '';
+    document.getElementById('gt-end-distance').dataset.gtClubAutofillValue = '';
+    document.getElementById('gt-end-distance').dataset.gtClubAutofillLie = '';
     var hl = document.getElementById('gt-hole-length');
     if (hl) hl.value = '';
+    selectDpadValue('result', 'On Target');
   }
 
   // Called by the Clear button — wipes everything
@@ -717,12 +872,17 @@
   function selectPill(containerId, group, value) {
     var container = document.getElementById(containerId);
     if (!container || !value) return;
+    pillState[group] = '';
     container.querySelectorAll('.gt-pill').forEach(function (p) {
+      p.classList.remove('selected');
       if (p.textContent.trim() === value) {
         p.classList.add('selected');
         pillState[group] = value;
       }
     });
+    var input = document.getElementById('gt-' + group);
+    if (input) input.value = pillState[group] || '';
+    if (group === 'club') gtOnClubSelected(pillState[group] || '');
   }
 
   function updateShotStatus(el, msg) {
