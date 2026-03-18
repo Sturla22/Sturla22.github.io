@@ -24,6 +24,11 @@
     --gt-success-bg: #d4edda;
     --gt-success-border: #c3e6cb;
     --gt-shadow-ring: 0 0 0 3px rgba(42,122,42,0.12);
+    --gt-table-head-bg: #f3f5f3;
+    --gt-table-row-hover: #f7f8f7;
+    --gt-table-subtle-bg: #f5f7f5;
+    --gt-table-strong-bg: #eef1ee;
+    --gt-table-input-bg: #ffffff;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -51,6 +56,15 @@
       --gt-success-bg: #16301b;
       --gt-success-border: #2a5a34;
       --gt-shadow-ring: 0 0 0 3px rgba(74,133,80,0.12);
+      --gt-table-head-bg: #141917;
+      --gt-table-row-hover: #171d19;
+      --gt-table-subtle-bg: #131816;
+      --gt-table-strong-bg: #191f1b;
+      --gt-table-input-bg: #121715;
+      --gt-stats-card-bg: #131715;
+      --gt-stats-card-border: #222a25;
+      --gt-stats-panel-bg: #121614;
+      --gt-stats-track-bg: #191e1b;
     }
   }
 
@@ -537,10 +551,25 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.88rem;
+    color: var(--gt-text);
+  }
+
+  .golf-tracker .gt-table tr,
+  .golf-tracker .gt-sg-table tr,
+  .golf-tracker .gt-scorecard tr,
+  .golf-tracker .gt-club-dist-table tr {
+    background: transparent;
+  }
+
+  .golf-tracker .gt-table tr:nth-child(even),
+  .golf-tracker .gt-sg-table tr:nth-child(even),
+  .golf-tracker .gt-scorecard tr:nth-child(even),
+  .golf-tracker .gt-club-dist-table tr:nth-child(even) {
+    background: transparent;
   }
 
   .gt-table th {
-    background: var(--gt-bg-muted);
+    background: var(--gt-table-head-bg);
     padding: 0.5rem 0.6rem;
     text-align: left;
     border-bottom: 2px solid var(--gt-border);
@@ -549,15 +578,16 @@
     user-select: none;
   }
 
-  .gt-table th:hover { background: var(--gt-bg-hover); }
+  .gt-table th:hover { background: var(--gt-table-row-hover); }
 
   .gt-table td {
     padding: 0.45rem 0.6rem;
     border-bottom: 1px solid var(--gt-border-soft);
     vertical-align: top;
+    background: transparent;
   }
 
-  .gt-table tr:hover td { background: var(--gt-surface-muted); }
+  .gt-table tr:hover td { background: var(--gt-table-row-hover); }
 
   .gt-delete-btn {
     background: none;
@@ -584,8 +614,8 @@
   }
 
   .gt-stat-card {
-    background: var(--gt-surface);
-    border: 1px solid var(--gt-border-soft);
+    background: var(--gt-stats-card-bg, var(--gt-surface));
+    border: 1px solid var(--gt-stats-card-border, var(--gt-border-soft));
     border-radius: 6px;
     padding: 1rem;
   }
@@ -624,7 +654,7 @@
 
   .gt-bar-track {
     flex: 1;
-    background: var(--gt-bg-muted);
+    background: var(--gt-stats-track-bg, var(--gt-bg-muted));
     border-radius: 3px;
     height: 18px;
     overflow: hidden;
@@ -720,6 +750,7 @@
     border-collapse: collapse;
     font-size: 0.82rem;
     min-width: 600px;
+    color: var(--gt-text);
   }
 
   .gt-scorecard th, .gt-scorecard td {
@@ -730,15 +761,15 @@
   }
 
   .gt-scorecard th {
-    background: var(--gt-bg-muted);
+    background: var(--gt-table-head-bg);
     font-size: 0.74rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
 
   .gt-scorecard .sc-hole-label { text-align: left; font-weight: 700; }
-  .gt-scorecard .sc-par-row td { background: var(--gt-bg-muted); font-weight: 600; color: var(--gt-text-muted); }
-  .gt-scorecard .sc-total { font-weight: 700; background: var(--gt-bg-hover); }
+  .gt-scorecard .sc-par-row td { background: var(--gt-table-subtle-bg); font-weight: 600; color: var(--gt-text-muted); }
+  .gt-scorecard .sc-total { font-weight: 700; background: var(--gt-table-strong-bg); }
 
   .sc-eagle  { background: #ffd700 !important; font-weight: 700; border-radius: 50%; }
   .sc-birdie { background: #d4edda !important; font-weight: 700; }
@@ -935,8 +966,8 @@
     align-items: center;
     margin-bottom: 1rem;
     padding: 0.75rem;
-    background: var(--gt-surface);
-    border: 1px solid var(--gt-border-soft);
+    background: var(--gt-stats-panel-bg, var(--gt-surface));
+    border: 1px solid var(--gt-stats-card-border, var(--gt-border-soft));
     border-radius: 4px;
   }
 
@@ -963,8 +994,8 @@
   }
 
   .gt-sg-card {
-    background: var(--gt-surface);
-    border: 1px solid var(--gt-border-soft);
+    background: var(--gt-stats-card-bg, var(--gt-surface));
+    border: 1px solid var(--gt-stats-card-border, var(--gt-border-soft));
     border-radius: 6px;
     padding: 1rem;
   }
@@ -992,10 +1023,11 @@
     border-collapse: collapse;
     font-size: 0.88rem;
     margin-top: 0.5rem;
+    color: var(--gt-text);
   }
 
   .gt-sg-table th {
-    background: var(--gt-bg-muted);
+    background: var(--gt-table-head-bg);
     padding: 0.4rem 0.6rem;
     text-align: left;
     border-bottom: 2px solid var(--gt-border);
@@ -1007,15 +1039,16 @@
   .gt-sg-table td {
     padding: 0.4rem 0.6rem;
     border-bottom: 1px solid var(--gt-border-soft);
+    background: transparent;
   }
 
-  .gt-sg-table tr:hover td { background: var(--gt-surface-muted); }
+  .gt-sg-table tr:hover td { background: var(--gt-table-row-hover); }
 
   .gt-info {
     font-size: 0.82rem;
     color: var(--gt-text-soft);
-    background: var(--gt-surface);
-    border: 1px solid var(--gt-border-soft);
+    background: var(--gt-stats-panel-bg, var(--gt-surface));
+    border: 1px solid var(--gt-stats-card-border, var(--gt-border-soft));
     border-radius: 4px;
     padding: 0.6rem 0.8rem;
     margin-bottom: 1rem;
@@ -1027,10 +1060,11 @@
   .gt-club-dist-table {
     border-collapse: collapse;
     font-size: 0.85rem;
+    color: var(--gt-text);
   }
 
   .gt-club-dist-table th {
-    background: var(--gt-bg-muted);
+    background: var(--gt-table-head-bg);
     padding: 0.3rem 0.5rem;
     font-size: 0.75rem;
     text-align: center;
@@ -1042,6 +1076,7 @@
     padding: 0.25rem 0.3rem;
     border: 1px solid var(--gt-border-soft);
     text-align: center;
+    background: var(--gt-table-subtle-bg);
   }
 
   .gt-club-dist-table input {
@@ -1052,6 +1087,8 @@
     padding: 0.25rem 0.2rem;
     font-size: 0.88rem;
     box-sizing: border-box;
+    background: var(--gt-table-input-bg);
+    color: var(--gt-text);
   }
 
   .gt-wedge-hdr { background: var(--gt-accent-soft) !important; color: var(--gt-accent) !important; font-weight: 700 !important; }
@@ -1086,9 +1123,6 @@
     #gt-panel-settings .gt-btn-secondary {
       background: #2a322d;
       color: var(--gt-text-muted);
-    }
-    #gt-panel-settings .gt-club-dist-table th {
-      background: #141917;
     }
     #gt-panel-settings .gt-club-dist-table td,
     #gt-panel-settings .gt-club-dist-table input,
@@ -1128,6 +1162,249 @@
       padding: 0.45rem 0.65rem;
       min-height: 36px;
       font-size: 0.85rem;
+    }
+  }
+
+  /* Refactor utilities and extracted render classes */
+  .gt-hidden { display: none; }
+  .gt-shot-status { display: none; }
+  .gt-proximity-hint { color: var(--gt-accent); font-style: italic; }
+  .gt-more-section { display: none; }
+  .gt-more-form { margin-top: 0.75rem; }
+  .gt-btn-grow { flex: 1; }
+
+  .gt-rounds-header { margin-bottom: 0.75rem; }
+  .gt-rounds-title,
+  .gt-scorecard-title { margin: 0; font-size: 1rem; }
+  .gt-rounds-title { margin-bottom: 0.25rem; }
+  .gt-scorecard-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .gt-scorecard-back,
+  .gt-btn-small {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.82rem;
+  }
+
+  .gt-filter-search {
+    flex: 1;
+    min-width: 120px;
+  }
+  .gt-history-count { margin-top: 0.5rem; }
+  .gt-history-cell-sg { white-space: nowrap; }
+  .gt-history-cell-notes {
+    max-width: 180px;
+    word-break: break-word;
+  }
+
+  .gt-stats-filter-row,
+  .gt-stats-date-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .gt-stats-filter-row { gap: 0.4rem; margin-bottom: 0.5rem; }
+  .gt-stats-date-row { gap: 0.5rem; margin-bottom: 1rem; }
+  .gt-stats-date-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--gt-text-soft);
+  }
+  .gt-stats-date-input {
+    padding: 0.3rem 0.4rem;
+    border: 1px solid var(--gt-border);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    background: var(--gt-surface);
+    color: var(--gt-text);
+  }
+  .gt-stats-date-clear {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    min-height: 0;
+  }
+
+  .gt-settings-row,
+  .gt-settings-block { max-width: 460px; }
+  .gt-settings-block { margin-top: 0.6rem; }
+  .gt-inline-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+  .gt-inline-checkbox-input { width: auto; }
+  .gt-inline-checkbox-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gt-text-muted);
+  }
+  .gt-bag-grid { max-width: 420px; }
+  .gt-settings-notice {
+    display: none;
+    color: var(--gt-accent);
+    margin-top: 0.5rem;
+  }
+
+  .gt-help-text-spaced { margin: 0 0 0.75rem; }
+  .gt-help-text-tight { margin: 0 0 0.45rem; }
+  .gt-section-title-spaced-sm { margin-top: 1rem; }
+  .gt-section-title-spaced { margin-top: 1.5rem; }
+  .gt-section-title-spaced-lg { margin-top: 1.25rem; }
+  .gt-section-title-spaced-xl { margin-top: 2rem; }
+  .gt-danger-title { color: var(--gt-danger); }
+
+  .gt-field-spaced { margin-bottom: 0.75rem; }
+  .gt-course-subsection { margin-bottom: 0.5rem; }
+  .gt-course-subsection-lg { margin-bottom: 0.75rem; }
+  .gt-course-tee-section { margin-top: 0.75rem; }
+  .gt-tee-row-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+  .gt-tee-name-field {
+    flex: 1;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--gt-border);
+    border-radius: 4px;
+    font-size: 0.88rem;
+    background: var(--gt-surface);
+    color: var(--gt-text);
+  }
+  .gt-tee-remove-btn {
+    background: none;
+    border: none;
+    color: var(--gt-danger);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 0.2rem;
+  }
+  .gt-tee-row-label {
+    font-size: 0.72rem;
+    color: var(--gt-text-faint);
+    margin-bottom: 0.15rem;
+  }
+  .gt-tee-row-grid { margin-bottom: 0.3rem; }
+  .gt-subsection-heading {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.3rem;
+  }
+  .gt-subsection-note { margin: 0 0 0.5rem; }
+  .gt-tee-add-btn {
+    font-size: 0.82rem;
+    padding: 0.3rem 0.7rem;
+  }
+  .gt-actions-spaced { margin-top: 0.75rem; }
+  .gt-add-course-btn { margin-top: 0.5rem; }
+  .gt-actions-top { margin-top: 0.5rem; }
+  .gt-actions-wrap { flex-wrap: wrap; }
+  .gt-file-picker { cursor: pointer; }
+  .gt-file-input-hidden { display: none; }
+
+  .gt-table-empty-note,
+  .gt-empty-meta {
+    font-size: 0.85rem;
+    color: var(--gt-text-faint);
+    margin: 0 0 0.5rem;
+  }
+  .gt-club-table-label {
+    text-align: left;
+    padding-right: 0.75rem;
+  }
+  .gt-club-table-meta {
+    font-size: 0.75rem;
+    color: var(--gt-text-faint);
+    white-space: nowrap;
+  }
+  .gt-wedge-row-label {
+    font-weight: 700;
+    padding-right: 0.5rem;
+  }
+
+  .gt-course-card-meta {
+    font-size: 0.8rem;
+    color: var(--gt-text-faint);
+    margin-left: 0.5rem;
+  }
+  .gt-course-card-actions {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .gt-round-badge {
+    font-size: 0.72rem;
+    color: #fff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    vertical-align: middle;
+  }
+  .gt-round-badge-active { background: var(--gt-accent); }
+  .gt-round-badge-indoor { background: #1a5fa8; }
+  .gt-round-score-diff-pos { color: var(--gt-accent); }
+  .gt-round-score-diff-even { color: var(--gt-text-soft); }
+  .gt-round-score-diff-neg { color: var(--gt-danger); }
+
+  .gt-scorecard-length-row {
+    font-size: 0.75rem;
+    color: var(--gt-text-faint);
+  }
+  .gt-scorecard-length-total { font-size: 0.75rem; }
+  .gt-sc-stat-val-positive { color: var(--gt-accent); }
+  .gt-sc-stat-val-danger { color: var(--gt-danger); }
+  .gt-sc-stat-val-neutral { color: var(--gt-text); }
+  .gt-info-spaced-sm { margin-top: 0.5rem; }
+  .gt-info-spaced { margin-top: 0.75rem; }
+  .gt-muted-text { color: var(--gt-text-faint); }
+
+  .gt-sg-summary-positive { border-color: var(--gt-accent); }
+  .gt-sg-summary-negative { border-color: var(--gt-danger); }
+
+  .gt-hcp-tone-muted { color: var(--gt-text-faint); }
+  .gt-hcp-tone-ok { color: var(--gt-accent); }
+  .gt-hcp-tone-warn { color: #f39c12; }
+  .gt-hcp-tone-danger { color: var(--gt-danger); }
+  .gt-hcp-bar-fill.gt-hcp-tone-ok { background: var(--gt-accent); }
+  .gt-hcp-bar-fill.gt-hcp-tone-warn { background: #f39c12; }
+  .gt-hcp-bar-fill.gt-hcp-tone-danger { background: var(--gt-danger); }
+
+  @media (prefers-color-scheme: dark) {
+    .gt-round-badge-indoor { background: #315f91; }
+    .gt-hcp-tone-warn { color: #d4a24c; }
+    .gt-hcp-bar-fill.gt-hcp-tone-warn { background: #d4a24c; }
+    #gt-panel-history .gt-table,
+    #gt-panel-stats .gt-sg-table,
+    #gt-panel-stats .gt-scorecard,
+    #gt-panel-history .gt-table td,
+    #gt-panel-stats .gt-sg-table td,
+    #gt-panel-stats .gt-scorecard td {
+      background: transparent;
+    }
+    #gt-panel-history .gt-table th,
+    #gt-panel-stats .gt-sg-table th {
+      background: #141917;
+    }
+    #gt-panel-history .gt-table tr:hover td,
+    #gt-panel-stats .gt-sg-table tr:hover td {
+      background: #161b18;
+    }
+    #gt-panel-stats .gt-stat-card,
+    #gt-panel-stats .gt-sg-card,
+    #gt-panel-stats .gt-hcp-card,
+    #gt-panel-stats .gt-info,
+    #gt-panel-history .gt-filters {
+      background: #121614;
+      border-color: #222a25;
+    }
+    #gt-panel-stats .gt-bar-track {
+      background: #191e1b;
     }
   }
 </style>
