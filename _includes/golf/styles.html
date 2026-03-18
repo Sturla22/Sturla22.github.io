@@ -1,0 +1,803 @@
+<style>
+  .golf-tracker {
+    font-family: inherit;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .gt-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 1.5rem;
+  }
+
+  .gt-tab {
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    background: #f5f5f5;
+    font-size: 0.95rem;
+    color: #555;
+    transition: background 0.15s;
+    white-space: nowrap;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  @media (max-width: 480px) {
+    .gt-tab { padding: 0.55rem 0.65rem; font-size: 0.82rem; }
+  }
+
+  .gt-tab:hover { background: #e8e8e8; }
+
+  .gt-tab.active {
+    background: #fff;
+    border-color: #ccc;
+    border-bottom-color: #fff;
+    margin-bottom: -2px;
+    color: #222;
+    font-weight: 600;
+  }
+
+  .gt-panel { display: none; }
+  .gt-panel.active { display: block; }
+
+  /* Form */
+  .gt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .gt-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .gt-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .gt-field label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .gt-field input,
+  .gt-field select,
+  .gt-field textarea {
+    padding: 0.6rem 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    background: #fff;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .gt-field textarea { resize: vertical; min-height: 60px; }
+
+  /* Stepper for hole number */
+  .gt-num-input {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .gt-num-input input {
+    flex: 1;
+    border: none;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 0.55rem 0;
+    min-width: 0;
+    background: #fff;
+    -moz-appearance: textfield;
+  }
+
+  .gt-num-input input::-webkit-outer-spin-button,
+  .gt-num-input input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .gt-num-btn {
+    background: #f0f0f0;
+    border: none;
+    padding: 0;
+    width: 48px;
+    flex-shrink: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+  }
+
+  .gt-num-btn:active { background: #d8d8d8; }
+
+  .gt-btn {
+    padding: 0.65rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: opacity 0.15s;
+    touch-action: manipulation;
+    min-height: 44px;
+  }
+
+  .gt-btn:hover { opacity: 0.85; }
+  .gt-btn-primary { background: #2a7a2a; color: #fff; }
+  .gt-btn-secondary { background: #555; color: #fff; }
+  .gt-btn-danger { background: #c0392b; color: #fff; }
+  .gt-btn-outline { background: transparent; border: 1px solid #555; color: #555; }
+  .gt-stats-filter-btn.active { background: #2a7a2a; border-color: #2a7a2a; color: #fff; }
+  .gt-indoor-btn { font-size: 0.8rem; padding: 0.25rem 0.65rem; border-radius: 4px; cursor: pointer; border: 1px solid #888; background: #f0f0f0; color: #555; white-space: nowrap; }
+  .gt-indoor-btn.indoor { background: #1a5fa8; border-color: #1a5fa8; color: #fff; }
+  .gt-tee-row { background: #f7f7f7; border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; }
+  .gt-tee-len-inp { width: 100%; padding: 0.3rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; text-align: center; box-sizing: border-box; }
+  .gt-tee-ctx-sel { padding: 0.3rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; background: #fff; }
+
+  .gt-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  /* Pill selects */
+  .gt-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .gt-pill {
+    padding: 0.55rem 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 22px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    background: #f9f9f9;
+    transition: all 0.15s;
+    user-select: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    touch-action: manipulation;
+    box-sizing: border-box;
+  }
+
+  .gt-pill:hover { border-color: #888; background: #eee; }
+  .gt-pill.selected { background: #2a7a2a; border-color: #2a7a2a; color: #fff; }
+
+  /* Club grid */
+  .gt-club-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+  }
+
+  .gt-club-pill {
+    padding: 0.5rem 0.2rem;
+    font-size: 0.88rem;
+    min-height: 42px;
+    border-radius: 8px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Section sub-header */
+  .gt-section-sub {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #2a7a2a;
+    padding: 0.4rem 0 0.1rem;
+    border-top: 2px solid #d4ecd4;
+    margin-top: 0.1rem;
+  }
+
+  /* "Add details" toggle */
+  .gt-more-toggle {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    font-size: 0.88rem;
+    color: #555;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    touch-action: manipulation;
+  }
+
+  .gt-more-toggle:active { background: #eee; }
+
+  /* Directional result pad */
+  .gt-dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    max-width: 240px;
+  }
+
+  .gt-dpad-btn {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #f9f9f9;
+    cursor: pointer;
+    padding: 0.45rem 0.2rem;
+    min-height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    touch-action: manipulation;
+    user-select: none;
+    transition: background 0.1s, border-color 0.1s;
+  }
+
+  .gt-dpad-btn:active { background: #e0e0e0; }
+  .gt-dpad-btn.selected { background: #2a7a2a; border-color: #2a7a2a; color: #fff; }
+  .gt-dpad-arrow { font-size: 1.25rem; line-height: 1; }
+  .gt-dpad-label { font-size: 0.6rem; color: #888; line-height: 1.2; text-align: center; }
+  .gt-dpad-btn.selected .gt-dpad-label { color: rgba(255,255,255,0.8); }
+  .gt-dpad-center { background: #f0f7f0; border-color: #b6d9b6; }
+  .gt-dpad-center.selected { background: #2a7a2a; border-color: #2a7a2a; }
+
+  /* Table */
+  .gt-table-wrap { overflow-x: auto; }
+
+  .gt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  .gt-table th {
+    background: #f0f0f0;
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+    border-bottom: 2px solid #ccc;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .gt-table th:hover { background: #e4e4e4; }
+
+  .gt-table td {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+  }
+
+  .gt-table tr:hover td { background: #fafafa; }
+
+  .gt-delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #c0392b;
+    font-size: 1rem;
+    padding: 0 0.2rem;
+  }
+
+  .gt-empty {
+    text-align: center;
+    color: #888;
+    padding: 2rem;
+    font-style: italic;
+  }
+
+  /* Stats */
+  .gt-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .gt-stat-card {
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  .gt-stat-card h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #666;
+  }
+
+  .gt-stat-val {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #2a7a2a;
+  }
+
+  .gt-stat-sub {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 0.2rem;
+  }
+
+  .gt-bar-chart { margin-top: 1rem; }
+
+  .gt-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  .gt-bar-label { width: 90px; flex-shrink: 0; text-align: right; color: #555; }
+
+  .gt-bar-track {
+    flex: 1;
+    background: #eee;
+    border-radius: 3px;
+    height: 18px;
+    overflow: hidden;
+  }
+
+  .gt-bar-fill {
+    height: 100%;
+    background: #2a7a2a;
+    border-radius: 3px;
+    transition: width 0.4s;
+  }
+
+  .gt-bar-count { width: 30px; color: #555; }
+
+  /* IO area */
+  .gt-io textarea {
+    width: 100%;
+    height: 200px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+
+  .gt-notice {
+    padding: 0.6rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    display: none;
+  }
+
+  .gt-notice.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
+  .gt-notice.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block; }
+
+  .gt-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #333;
+    margin: 1.5rem 0 0.75rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .sort-asc::after { content: " ▲"; font-size: 0.7rem; }
+  .sort-desc::after { content: " ▼"; font-size: 0.7rem; }
+
+  /* Rounds list */
+  .gt-round-card {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.65rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .gt-round-card.active-round {
+    border-color: #2a7a2a;
+    background: #f0f7f0;
+  }
+
+  .gt-round-card-info { flex: 1; min-width: 0; }
+  .gt-round-card-title { font-weight: 700; color: #222; }
+  .gt-round-card-sub { font-size: 0.82rem; color: #777; margin-top: 0.15rem; }
+
+  .gt-round-score {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .gt-round-score-diff {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .gt-round-card-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+  /* Scorecard */
+  .gt-scorecard-wrap { overflow-x: auto; margin-top: 0.75rem; }
+
+  .gt-scorecard {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    min-width: 600px;
+  }
+
+  .gt-scorecard th, .gt-scorecard td {
+    padding: 0.35rem 0.45rem;
+    border: 1px solid #ddd;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .gt-scorecard th {
+    background: #f0f0f0;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .gt-scorecard .sc-hole-label { text-align: left; font-weight: 700; }
+  .gt-scorecard .sc-par-row td { background: #f5f5f5; font-weight: 600; color: #555; }
+  .gt-scorecard .sc-total { font-weight: 700; background: #eee; }
+
+  .sc-eagle  { background: #ffd700 !important; font-weight: 700; border-radius: 50%; }
+  .sc-birdie { background: #d4edda !important; font-weight: 700; }
+  .sc-par    { }
+  .sc-bogey  { background: #fff3cd !important; }
+  .sc-double { background: #ffd7d7 !important; }
+  .sc-triple { background: #f5b7b7 !important; font-weight: 700; }
+
+  .sc-yes { color: #2a7a2a; font-weight: 700; }
+  .sc-no  { color: #c0392b; }
+  .sc-na  { color: #ccc; }
+
+  .gt-scorecard-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  .gt-sc-stat {
+    background: #f7f7f7;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    text-align: center;
+  }
+
+  .gt-sc-stat-val { font-size: 1.4rem; font-weight: 700; color: #2a7a2a; }
+  .gt-sc-stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Target HCP comparison */
+  .gt-hcp-compare-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .gt-hcp-card {
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+  }
+
+  .gt-hcp-card h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #666;
+  }
+
+  .gt-hcp-card-vals {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .gt-hcp-current { font-size: 1.3rem; font-weight: 700; }
+  .gt-hcp-target-val { font-size: 0.88rem; color: #888; }
+
+  .gt-hcp-bar-wrap {
+    position: relative;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    margin: 0.4rem 0;
+    overflow: visible;
+  }
+
+  .gt-hcp-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .gt-hcp-bar-marker {
+    position: absolute;
+    top: -5px;
+    width: 3px;
+    height: 18px;
+    background: #333;
+    border-radius: 2px;
+    transform: translateX(-50%);
+  }
+
+  .gt-hcp-gap {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+  }
+
+  .gap-ahead { color: #2a7a2a; font-weight: 600; }
+  .gap-behind { color: #c0392b; font-weight: 600; }
+  .gap-close { color: #888; }
+
+  .gt-priority-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.25rem;
+  }
+
+  .priority-1 { background: #c0392b; color: #fff; }
+  .priority-2 { background: #e67e22; color: #fff; }
+  .priority-3 { background: #f39c12; color: #fff; }
+  .priority-ok { background: #2a7a2a; color: #fff; }
+
+  /* Courses */
+  .gt-course-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-bottom: 0.4rem;
+    background: #fafafa;
+  }
+
+  .gt-par-inputs {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .gt-par-inputs input {
+    text-align: center;
+    padding: 0.3rem 0.1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .gt-par-hole-labels {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .gt-par-hole-labels span {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #888;
+  }
+
+  .gt-new-course-form {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .gt-new-course-form.open { display: block; }
+
+  /* Active round banner */
+  .gt-active-round-bar {
+    display: none;
+    background: #f0f7f0;
+    border: 1px solid #b6d9b6;
+    border-radius: 4px;
+    padding: 0.5rem 0.8rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.85rem;
+    color: #2a7a2a;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .gt-active-round-bar.shown { display: flex; }
+
+  /* Filters */
+  .gt-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 4px;
+  }
+
+  .gt-filters label { font-size: 0.85rem; font-weight: 600; color: #444; }
+  .gt-filters select, .gt-filters input {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  /* Strokes Gained */
+  .sg-pos { color: #2a7a2a; font-weight: 600; }
+  .sg-neg { color: #c0392b; font-weight: 600; }
+  .sg-zero { color: #888; }
+
+  .gt-sg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .gt-sg-card {
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  .gt-sg-card h4 {
+    margin: 0 0 0.4rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #666;
+  }
+
+  .gt-sg-val {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .gt-sg-sub { font-size: 0.78rem; color: #888; margin-top: 0.2rem; }
+
+  /* Wider bar labels for club names */
+  .gt-bar-label-wide { width: 140px; flex-shrink: 0; text-align: right; color: #555; font-size: 0.85rem; }
+
+  .gt-sg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin-top: 0.5rem;
+  }
+
+  .gt-sg-table th {
+    background: #f0f0f0;
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+    border-bottom: 2px solid #ccc;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .gt-sg-table td {
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .gt-sg-table tr:hover td { background: #fafafa; }
+
+  .gt-info {
+    font-size: 0.82rem;
+    color: #777;
+    background: #f9f9f9;
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Club distances */
+  .gt-club-dist-wrap { overflow-x: auto; margin-bottom: 0.75rem; }
+
+  .gt-club-dist-table {
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .gt-club-dist-table th {
+    background: #f0f0f0;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+    text-align: center;
+    border: 1px solid #ddd;
+    white-space: nowrap;
+  }
+
+  .gt-club-dist-table td {
+    padding: 0.25rem 0.3rem;
+    border: 1px solid #eee;
+    text-align: center;
+  }
+
+  .gt-club-dist-table input {
+    width: 52px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.25rem 0.2rem;
+    font-size: 0.88rem;
+    box-sizing: border-box;
+  }
+
+  .gt-wedge-hdr { background: #f0f7f0 !important; color: #2a7a2a !important; font-weight: 700 !important; }
+
+  /* Swing pills in shot form */
+  .gt-swing-row { display: none; }
+  .gt-swing-row.visible { display: block; }
+
+  /* Auto-select hint */
+  .gt-dist-hint {
+    font-size: 0.75rem;
+    color: #2a7a2a;
+    margin-top: 0.2rem;
+    min-height: 1em;
+    font-style: italic;
+  }
+</style>

@@ -1,0 +1,14 @@
+{
+  "name": "sturla22-golf-tracker-tests",
+  "private": true,
+  "scripts": {
+    "test:unit": "node tests/unit/golf-core.test.js",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test": "npm run test:unit && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.0"
+  }
+}
