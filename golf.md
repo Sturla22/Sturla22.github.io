@@ -745,6 +745,54 @@ sitemap: true
     padding: 0.6rem 0.8rem;
     margin-bottom: 1rem;
   }
+
+  /* Club distances */
+  .gt-club-dist-wrap { overflow-x: auto; margin-bottom: 0.75rem; }
+
+  .gt-club-dist-table {
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .gt-club-dist-table th {
+    background: #f0f0f0;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+    text-align: center;
+    border: 1px solid #ddd;
+    white-space: nowrap;
+  }
+
+  .gt-club-dist-table td {
+    padding: 0.25rem 0.3rem;
+    border: 1px solid #eee;
+    text-align: center;
+  }
+
+  .gt-club-dist-table input {
+    width: 52px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.25rem 0.2rem;
+    font-size: 0.88rem;
+    box-sizing: border-box;
+  }
+
+  .gt-wedge-hdr { background: #f0f7f0 !important; color: #2a7a2a !important; font-weight: 700 !important; }
+
+  /* Swing pills in shot form */
+  .gt-swing-row { display: none; }
+  .gt-swing-row.visible { display: block; }
+
+  /* Auto-select hint */
+  .gt-dist-hint {
+    font-size: 0.75rem;
+    color: #2a7a2a;
+    margin-top: 0.2rem;
+    min-height: 1em;
+    font-style: italic;
+  }
 </style>
 
 <div class="golf-tracker">
@@ -762,10 +810,17 @@ sitemap: true
 
   <!-- LOG SHOT -->
   <div id="gt-panel-log" class="gt-panel active">
-    <div id="gt-active-round-bar" class="gt-active-round-bar">
-      <span id="gt-active-round-label"></span>
-      <button class="gt-btn gt-btn-outline" style="padding:0.3rem 0.7rem;font-size:0.8rem;" onclick="gtEndRound()">End Round</button>
+
+    <!-- Course context: always visible, drives auto-round creation -->
+    <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;background:#f9f9f9;border:1px solid #e4e4e4;border-radius:6px;padding:0.55rem 0.8rem;margin-bottom:0.8rem;font-size:0.88rem;">
+      <span style="font-weight:700;color:#555;white-space:nowrap;">Playing at:</span>
+      <select id="gt-course-ctx" onchange="gtCourseCtxChange()" style="flex:1;min-width:140px;padding:0.3rem 0.5rem;border:1px solid #ccc;border-radius:4px;font-size:0.88rem;background:#fff;">
+        <option value="">Practice (no round)</option>
+      </select>
+      <input type="text" id="gt-new-course-inline" placeholder="New course name…" style="display:none;flex:1;min-width:140px;padding:0.3rem 0.5rem;border:1px solid #2a7a2a;border-radius:4px;font-size:0.88rem;">
+      <span id="gt-round-ctx-label" style="font-size:0.8rem;color:#666;white-space:nowrap;"></span>
     </div>
+
     <div id="gt-shot-status" style="display:none;font-size:0.85rem;color:#444;background:#f0f7f0;border:1px solid #b6d9b6;border-radius:4px;padding:0.5rem 0.8rem;margin-bottom:0.8rem;"></div>
     <form id="gt-shot-form" onsubmit="gtSaveShot(event)">
       <div class="gt-form">
@@ -782,7 +837,8 @@ sitemap: true
           </div>
           <div class="gt-field">
             <label>Distance (m)</label>
-            <input type="number" id="gt-distance" min="0" step="1" placeholder="e.g. 150" inputmode="decimal">
+            <input type="number" id="gt-distance" min="0" step="1" placeholder="e.g. 150" inputmode="decimal" oninput="gtAutoSelectClub(this.value)">
+            <div class="gt-dist-hint" id="gt-dist-hint"></div>
           </div>
         </div>
 
@@ -808,6 +864,18 @@ sitemap: true
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">Putter</span>
           </div>
           <input type="hidden" id="gt-club">
+        </div>
+
+        <!-- Swing (wedge only) -->
+        <div class="gt-field gt-swing-row" id="gt-swing-row">
+          <label>Swing</label>
+          <div class="gt-pills" id="gt-swing-pills">
+            <span class="gt-pill" onclick="gtTogglePill(this,'swing')">¼</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'swing')">½</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'swing')">¾</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'swing')">Full</span>
+          </div>
+          <input type="hidden" id="gt-swing">
         </div>
 
         <!-- Lie -->
@@ -926,39 +994,14 @@ sitemap: true
   <!-- ROUNDS -->
   <div id="gt-panel-rounds" class="gt-panel">
 
-    <!-- New round form (collapsible) -->
-    <div id="gt-new-round-form" style="display:none;background:#f9f9f9;border:1px solid #e0e0e0;border-radius:6px;padding:1rem;margin-bottom:1rem;">
-      <p class="gt-section-title" style="margin-top:0;">New Round</p>
-      <div class="gt-row">
-        <div class="gt-field">
-          <label>Date</label>
-          <input type="date" id="gt-round-date">
-        </div>
-        <div class="gt-field">
-          <label>Course</label>
-          <select id="gt-round-course">
-            <option value="">— No course —</option>
-          </select>
-        </div>
-      </div>
-      <div class="gt-field" style="margin-top:0.5rem;">
-        <label>Notes (optional)</label>
-        <input type="text" id="gt-round-notes" placeholder="e.g. windy, played with John">
-      </div>
-      <div class="gt-actions" style="margin-top:0.75rem;">
-        <button class="gt-btn gt-btn-primary" onclick="gtCreateRound()">Start Round</button>
-        <button class="gt-btn gt-btn-outline" onclick="document.getElementById('gt-new-round-form').style.display='none'">Cancel</button>
-      </div>
-    </div>
-
     <!-- Rounds list -->
     <div id="gt-rounds-list-view">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-        <h3 style="margin:0;font-size:1rem;">Your Rounds</h3>
-        <button class="gt-btn gt-btn-primary" onclick="gtShowNewRoundForm()">+ New Round</button>
+      <div style="margin-bottom:0.75rem;">
+        <h3 style="margin:0 0 0.25rem;font-size:1rem;">Rounds</h3>
+        <p style="margin:0;font-size:0.82rem;color:#888;">Rounds start automatically when you log your first shot on hole 1. Select a course in the "Playing at" bar on the Log Shot tab first.</p>
       </div>
       <div id="gt-rounds-list">
-        <p class="gt-empty">No rounds logged yet. Start a new round to track your scorecard.</p>
+        <p class="gt-empty">No rounds yet — log a shot on hole 1 to start one.</p>
       </div>
     </div>
 
@@ -1005,6 +1048,7 @@ sitemap: true
             <th onclick="gtSort('date')" id="gt-th-date">Date</th>
             <th onclick="gtSort('hole')" id="gt-th-hole">Hole</th>
             <th onclick="gtSort('club')" id="gt-th-club">Club</th>
+            <th>Swing</th>
             <th onclick="gtSort('distance')" id="gt-th-distance">Dist (m)</th>
             <th onclick="gtSort('lie')" id="gt-th-lie">Lie</th>
             <th onclick="gtSort('result')" id="gt-th-result">Result</th>
@@ -1016,7 +1060,7 @@ sitemap: true
           </tr>
         </thead>
         <tbody id="gt-history-body">
-          <tr><td colspan="11" class="gt-empty">No shots logged yet.</td></tr>
+          <tr><td colspan="12" class="gt-empty">No shots logged yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1091,6 +1135,22 @@ sitemap: true
       <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">SW</span>
       <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">LW</span>
       <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">Putter</span>
+    </div>
+
+    <p class="gt-section-title" style="margin-top:1.5rem;">Club Distances (m)</p>
+    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Enter your typical carry distances. The closest club is auto-selected when you type a distance on the Log Shot tab.</p>
+    <div class="gt-club-dist-wrap">
+      <table class="gt-club-dist-table" id="gt-club-dist-table">
+        <!-- populated by JS -->
+      </table>
+    </div>
+
+    <p class="gt-section-title" style="margin-top:1rem;">Wedge Matrix (m)</p>
+    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Enter carry distances for each wedge swing length. Selecting a distance will auto-pick the closest wedge + swing combination.</p>
+    <div class="gt-club-dist-wrap">
+      <table class="gt-club-dist-table" id="gt-wedge-matrix-table">
+        <!-- populated by JS -->
+      </table>
     </div>
 
     <div class="gt-actions">
@@ -1250,6 +1310,8 @@ sitemap: true
   var ROUNDS_KEY   = 'gt_rounds_v1';
   var COURSES_KEY  = 'gt_courses_v1';
   var ALL_CLUBS = ['Driver','3W','5W','7W','H','4I','5I','6I','7I','8I','9I','PW','GW','SW','LW','Putter'];
+  var WEDGES    = ['PW','GW','SW','LW'];
+  var SWINGS    = ['¼','½','¾','Full'];
 
   function load() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
@@ -1263,9 +1325,9 @@ sitemap: true
   function loadSettings() {
     try {
       var s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-      return s || { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice() };
+      return s || { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice(), clubDistances: {} };
     }
-    catch (e) { return { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice() }; }
+    catch (e) { return { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice(), clubDistances: {} }; }
   }
 
   function saveSettings(settings) {
@@ -1297,6 +1359,54 @@ sitemap: true
     });
   }
 
+  // Render club distance inputs and wedge matrix in Settings
+  function gtRenderClubDistTables() {
+    var settings = loadSettings();
+    var bag = settings.bag || ALL_CLUBS;
+    var cd  = settings.clubDistances || {};
+
+    // ── Non-wedge club distances ──────────────────────────────────────────────
+    var nonWedge = bag.filter(function (c) { return WEDGES.indexOf(c) === -1 && c !== 'Putter'; });
+    var tbl = document.getElementById('gt-club-dist-table');
+    if (tbl) {
+      if (nonWedge.length === 0) {
+        tbl.innerHTML = '';
+      } else {
+        var hdrs = nonWedge.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('');
+        var inps = nonWedge.map(function (c) {
+          var v = (typeof cd[c] === 'number' && cd[c] > 0) ? cd[c] : '';
+          return '<td><input class="gt-cdist-inp" type="number" min="1" max="400" step="1" ' +
+            'data-club="' + c + '" value="' + v + '" placeholder="—" inputmode="decimal"></td>';
+        }).join('');
+        tbl.innerHTML = '<thead><tr><th style="text-align:left;padding-right:0.75rem;">Club</th>' + hdrs + '</tr></thead>' +
+          '<tbody><tr><td style="font-size:0.75rem;color:#888;white-space:nowrap;">Distance (m)</td>' + inps + '</tr></tbody>';
+      }
+    }
+
+    // ── Wedge matrix ─────────────────────────────────────────────────────────
+    var bagWedges = WEDGES.filter(function (w) { return bag.indexOf(w) !== -1; });
+    var wTbl = document.getElementById('gt-wedge-matrix-table');
+    if (wTbl) {
+      if (bagWedges.length === 0) {
+        wTbl.innerHTML = '<tr><td style="font-size:0.85rem;color:#888;padding:0.5rem;">No wedges in bag.</td></tr>';
+      } else {
+        var wHdr = '<thead><tr><th style="text-align:left;">Club</th>' +
+          SWINGS.map(function (s) { return '<th class="gt-wedge-hdr">' + s + '</th>'; }).join('') +
+          '</tr></thead>';
+        var wBody = '<tbody>' + bagWedges.map(function (w) {
+          var wcd = (typeof cd[w] === 'object' && cd[w] !== null) ? cd[w] : {};
+          var cells = SWINGS.map(function (s) {
+            var v = (wcd[s] > 0) ? wcd[s] : '';
+            return '<td><input class="gt-wdist-inp" type="number" min="1" max="200" step="1" ' +
+              'data-club="' + w + '" data-swing="' + s + '" value="' + v + '" placeholder="—" inputmode="decimal"></td>';
+          }).join('');
+          return '<tr><td style="font-weight:700;padding-right:0.5rem;">' + w + '</td>' + cells + '</tr>';
+        }).join('') + '</tbody>';
+        wTbl.innerHTML = wHdr + wBody;
+      }
+    }
+  }
+
   window.gtSaveSettings = function () {
     var hcpVal = document.getElementById('gt-hcp').value;
     var targetHcpVal = document.getElementById('gt-target-hcp').value;
@@ -1305,13 +1415,40 @@ sitemap: true
       bag.push(p.textContent.trim());
     });
     if (bag.length === 0) bag = ALL_CLUBS.slice();
+
+    // Collect club distances from the rendered table inputs
+    var cd = {};
+    document.querySelectorAll('.gt-cdist-inp').forEach(function (inp) {
+      var club = inp.dataset.club;
+      var val  = parseFloat(inp.value);
+      if (club && !isNaN(val) && val > 0) {
+        if (WEDGES.indexOf(club) !== -1) {
+          // handled by wedge matrix inputs
+        } else {
+          cd[club] = val;
+        }
+      }
+    });
+    // Collect wedge matrix distances
+    document.querySelectorAll('.gt-wdist-inp').forEach(function (inp) {
+      var club  = inp.dataset.club;
+      var swing = inp.dataset.swing;
+      var val   = parseFloat(inp.value);
+      if (club && swing && !isNaN(val) && val > 0) {
+        if (!cd[club]) cd[club] = {};
+        cd[club][swing] = val;
+      }
+    });
+
     var settings = {
-      hcp: hcpVal !== '' ? parseFloat(hcpVal) : null,
-      targetHcp: targetHcpVal !== '' ? parseFloat(targetHcpVal) : null,
-      bag: bag
+      hcp:           hcpVal      !== '' ? parseFloat(hcpVal)      : null,
+      targetHcp:     targetHcpVal !== '' ? parseFloat(targetHcpVal) : null,
+      bag:           bag,
+      clubDistances: cd
     };
     saveSettings(settings);
     applyBag(bag);
+    gtRenderClubDistTables(); // refresh so new bag clubs appear
     var notice = document.getElementById('gt-settings-notice');
     notice.textContent = 'Settings saved.';
     notice.style.display = 'block';
@@ -1325,12 +1462,11 @@ sitemap: true
   var activeRoundId = null; // set when a round is started
   var sortKey = 'date';
   var sortDir = -1; // -1 = desc, 1 = asc
-  var pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '' };
+  var pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
 
   // ─── Init ────────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('gt-date').value = today();
-    document.getElementById('gt-round-date').value = today();
     populateClubFilter();
     gtRenderHistory();
     gtRenderCoursesList();
@@ -1345,7 +1481,9 @@ sitemap: true
       if (settings.bag.indexOf(p.textContent.trim()) !== -1) p.classList.add('selected');
     });
     applyBag(settings.bag);
-    populateCourseDropdown();
+    gtRenderClubDistTables();
+    populateCourseCtxDropdown();
+    gtUpdateRoundCtxLabel();
   });
 
   window.gtAdjNum = function (id, delta, min, max) {
@@ -1401,18 +1539,144 @@ sitemap: true
       el.classList.add('selected');
     }
     document.getElementById('gt-' + group).value = pillState[group];
+    if (group === 'club') gtOnClubSelected(pillState[group]);
+  };
+
+  // Show/hide swing selector based on selected club
+  function gtOnClubSelected(club) {
+    var row = document.getElementById('gt-swing-row');
+    if (!row) return;
+    var isWedge = WEDGES.indexOf(club) !== -1;
+    if (isWedge) {
+      row.classList.add('visible');
+    } else {
+      row.classList.remove('visible');
+      // clear swing state
+      document.querySelectorAll('#gt-swing-pills .gt-pill').forEach(function (p) { p.classList.remove('selected'); });
+      pillState.swing = '';
+      var sw = document.getElementById('gt-swing');
+      if (sw) sw.value = '';
+    }
+  }
+
+  // Auto-select closest club (+swing for wedges) based on distance typed
+  window.gtAutoSelectClub = function (distStr) {
+    var dist = parseFloat(distStr);
+    var hint = document.getElementById('gt-dist-hint');
+    if (!dist || isNaN(dist) || dist <= 0) { if (hint) hint.textContent = ''; return; }
+
+    var settings = loadSettings();
+    var cd = settings.clubDistances;
+    if (!cd || Object.keys(cd).length === 0) { if (hint) hint.textContent = ''; return; }
+
+    var bag = settings.bag || ALL_CLUBS;
+    var best = null, bestDiff = Infinity;
+
+    bag.forEach(function (club) {
+      if (club === 'Putter') return;
+      var d = cd[club];
+      if (!d) return;
+      if (WEDGES.indexOf(club) !== -1 && typeof d === 'object') {
+        SWINGS.forEach(function (swing) {
+          var dv = d[swing];
+          if (dv == null || dv <= 0) return;
+          var diff = Math.abs(dist - dv);
+          if (diff < bestDiff) { bestDiff = diff; best = { club: club, swing: swing }; }
+        });
+      } else if (typeof d === 'number' && d > 0) {
+        var diff = Math.abs(dist - d);
+        if (diff < bestDiff) { bestDiff = diff; best = { club: club, swing: null }; }
+      }
+    });
+
+    if (!best) { if (hint) hint.textContent = ''; return; }
+
+    // Only auto-select if within 20 % of club distance (avoids wild suggestions)
+    var refDist = best.swing ? cd[best.club][best.swing] : cd[best.club];
+    if (refDist && bestDiff / refDist > 0.25) { if (hint) hint.textContent = ''; return; }
+
+    // Apply selection
+    selectPill('gt-club-pills', 'club', best.club);
+    gtOnClubSelected(best.club);
+    if (best.swing) {
+      selectPill('gt-swing-pills', 'swing', best.swing);
+      pillState.swing = best.swing;
+      var sw = document.getElementById('gt-swing');
+      if (sw) sw.value = best.swing;
+    }
+
+    // Show hint
+    if (hint) {
+      var label = best.club + (best.swing ? ' ' + best.swing : '');
+      hint.textContent = '↑ ' + label + ' (' + refDist + ' m stock)';
+    }
   };
 
   // ─── Save shot ───────────────────────────────────────────────────────────────
   window.gtSaveShot = function (e) {
     e.preventDefault();
+
+    // ── Inline new course: create it now if the user typed a name ──────────────
+    var courseCtxSel   = document.getElementById('gt-course-ctx');
+    var newCourseInput = document.getElementById('gt-new-course-inline');
+    if (courseCtxSel.value === '__new__') {
+      var newName = (newCourseInput.value || '').trim();
+      if (newName) {
+        // Check for exact match first
+        var existing = courses.find(function (c) { return c.name.toLowerCase() === newName.toLowerCase(); });
+        if (existing) {
+          activeRoundId = null; // will be found/created below
+          populateCourseCtxDropdown(existing.id);
+        } else {
+          var defPars = [4,4,3,4,5,4,3,4,4, 4,3,4,5,4,3,4,4,4];
+          var nc = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: newName, pars: defPars };
+          courses.push(nc);
+          saveCourses(courses);
+          gtRenderCoursesList();
+          populateCourseCtxDropdown(nc.id);
+          gtNotice('Course "' + newName + '" created. Set exact pars in Settings.', 'success');
+        }
+        newCourseInput.style.display = 'none';
+        newCourseInput.value = '';
+      } else {
+        // Nothing typed → fall back to Practice
+        populateCourseCtxDropdown('');
+        newCourseInput.style.display = 'none';
+      }
+    }
+
+    var shotDate   = v('gt-date') || today();
+    var holeNum    = v('gt-hole') ? parseInt(v('gt-hole')) : null;
+    var courseId   = currentCourseId();
+
+    // ── Auto-create round when starting hole 1 ────────────────────────────────
+    if (holeNum === 1 && courseId !== null) {
+      // Look for existing round for today + this course
+      var existingRound = rounds.find(function (r) { return r.date === shotDate && r.courseId === courseId; });
+      if (existingRound) {
+        activeRoundId = existingRound.id;
+      } else {
+        var newRound = gtAutoCreateRound(courseId, shotDate);
+        gtNotice('Round started at ' + (courses.find(function(c){return c.id===courseId;})||{name:'?'}).name + '!', 'success');
+      }
+    } else if (holeNum === 1 && courseId === null) {
+      // Hole 1, no course selected → still create a round (no course)
+      var existingRound = rounds.find(function (r) { return r.date === shotDate && r.courseId === null; });
+      if (!existingRound) {
+        gtAutoCreateRound(null, shotDate);
+      } else {
+        activeRoundId = existingRound.id;
+      }
+    }
+
     var endDistRaw = v('gt-end-distance');
     var shot = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      date: v('gt-date') || today(),
-      hole: v('gt-hole') ? parseInt(v('gt-hole')) : null,
+      date: shotDate,
+      hole: holeNum,
       distance: v('gt-distance') ? parseFloat(v('gt-distance')) : null,
       club: pillState.club,
+      swing: pillState.swing || null,
       lie: pillState.lie,
       result: pillState.result,
       strike: pillState.strike,
@@ -1426,6 +1690,7 @@ sitemap: true
     shots.push(shot);
     save(shots);
     populateClubFilter();
+    gtUpdateRoundCtxLabel();
     gtNotice('Shot saved!', 'success');
     gtPrefillNext(shot);
   };
@@ -1435,7 +1700,9 @@ sitemap: true
   function clearForm() {
     document.getElementById('gt-shot-form').reset();
     document.querySelectorAll('.gt-pill.selected, .gt-dpad-btn.selected').forEach(function (p) { p.classList.remove('selected'); });
-    pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '' };
+    pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
+    gtOnClubSelected(''); // hide swing row
+    document.getElementById('gt-dist-hint').textContent = '';
   }
 
   // Called by the Clear button — wipes everything
@@ -1480,6 +1747,7 @@ sitemap: true
       // Auto-select Putter when arriving on green
       if (shot.end_lie === 'Green') {
         selectPill('gt-club-pills', 'club', 'Putter');
+        gtOnClubSelected('Putter');
       }
 
       var holeShots = shots.filter(function (s) { return s.date === shot.date && s.hole === shot.hole; }).length;
@@ -1537,7 +1805,7 @@ sitemap: true
 
     var tbody = document.getElementById('gt-history-body');
     if (filteredShots.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="11" class="gt-empty">No shots match the filters.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" class="gt-empty">No shots match the filters.</td></tr>';
       document.getElementById('gt-history-count').textContent = '';
       return;
     }
@@ -1548,6 +1816,7 @@ sitemap: true
         '<td>' + (s.date || '') + '</td>' +
         '<td>' + (s.hole != null ? s.hole : '') + '</td>' +
         '<td>' + esc(s.club) + '</td>' +
+        '<td>' + esc(s.swing || '') + '</td>' +
         '<td>' + (s.distance != null ? s.distance : '') + '</td>' +
         '<td>' + esc(s.lie) + '</td>' +
         '<td>' + esc(s.result) + '</td>' +
@@ -1726,7 +1995,7 @@ sitemap: true
   };
 
   window.gtExportCSV = function () {
-    var cols = ['date', 'hole', 'club', 'distance', 'lie', 'end_distance', 'end_lie', 'result', 'strike', 'shape', 'sg', 'notes'];
+    var cols = ['date', 'hole', 'club', 'swing', 'distance', 'lie', 'end_distance', 'end_lie', 'result', 'strike', 'shape', 'sg', 'notes'];
     var rows = [cols.join(',')].concat(shots.map(function (s) {
       return cols.map(function (c) {
         var val = s[c] == null ? '' : String(s[c]);
@@ -1804,26 +2073,98 @@ sitemap: true
   window.gtNotice = gtNotice;
 
   // ─── Courses ─────────────────────────────────────────────────────────────────
-  function populateCourseDropdown() {
-    var sel = document.getElementById('gt-round-course');
+  // ─── Course context dropdown (Log Shot panel) ────────────────────────────────
+  // Populates the "Playing at" dropdown with existing courses + "+ New course"
+  function populateCourseCtxDropdown(keepValue) {
+    var sel = document.getElementById('gt-course-ctx');
     if (!sel) return;
-    var cur = sel.value;
-    sel.innerHTML = '<option value="">— No course —</option>' +
+    var cur = keepValue != null ? keepValue : sel.value;
+    sel.innerHTML =
+      '<option value="">Practice (no round)</option>' +
       courses.map(function (c) {
         return '<option value="' + c.id + '"' + (c.id === cur ? ' selected' : '') + '>' + esc(c.name) + '</option>';
-      }).join('');
+      }).join('') +
+      '<option value="__new__">+ New course…</option>';
   }
 
+  // Called when the "Playing at" dropdown changes
+  window.gtCourseCtxChange = function () {
+    var sel   = document.getElementById('gt-course-ctx');
+    var input = document.getElementById('gt-new-course-inline');
+    if (sel.value === '__new__') {
+      input.style.display = '';
+      input.value = '';
+      input.focus();
+    } else {
+      input.style.display = 'none';
+      // Sync active round to match the selected course for today
+      gtSyncActiveRound();
+      gtUpdateRoundCtxLabel();
+    }
+  };
+
+  // Called as user types a new course name inline
+  window.gtNewCourseInlineChange = function () {};  // typing is handled at save time
+
+  // Return the current courseId from the context bar (null for Practice, or a real id)
+  function currentCourseId() {
+    var sel = document.getElementById('gt-course-ctx');
+    var v = sel ? sel.value : '';
+    if (!v || v === '__new__') return null;
+    return v;
+  }
+
+  // Ensure or re-use a round for today + courseId; sets activeRoundId
+  function gtSyncActiveRound() {
+    var courseId = currentCourseId();
+    var t = today();
+    // If active round already matches today + course, keep it
+    if (activeRoundId) {
+      var ar = rounds.find(function (r) { return r.id === activeRoundId; });
+      if (ar && ar.date === t && ar.courseId === courseId) return;
+    }
+    // Find an existing round for today + course
+    var existing = rounds.find(function (r) { return r.date === t && r.courseId === courseId; });
+    if (existing) {
+      activeRoundId = existing.id;
+    } else {
+      activeRoundId = null; // will be created on first hole-1 shot
+    }
+  }
+
+  // Update the small label next to the "Playing at" bar
+  function gtUpdateRoundCtxLabel() {
+    var lbl = document.getElementById('gt-round-ctx-label');
+    if (!lbl) return;
+    if (!activeRoundId) { lbl.textContent = ''; return; }
+    var r = rounds.find(function (x) { return x.id === activeRoundId; });
+    if (!r) { lbl.textContent = ''; return; }
+    var cnt = shots.filter(function (s) { return s.roundId === activeRoundId; }).length;
+    lbl.textContent = cnt + ' shot' + (cnt !== 1 ? 's' : '') + ' this round';
+  }
+
+  // Create a round immediately (used auto on hole-1 save)
+  function gtAutoCreateRound(courseId, date) {
+    var round = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      date: date,
+      courseId: courseId,
+      notes: ''
+    };
+    rounds.push(round);
+    saveRounds(rounds);
+    activeRoundId = round.id;
+    return round;
+  }
+
+  // ─── Courses ─────────────────────────────────────────────────────────────────
   window.gtShowNewCourseForm = function () {
     document.getElementById('gt-new-course-form').classList.add('open');
     document.getElementById('gt-add-course-btn').style.display = 'none';
     document.getElementById('gt-course-name').value = '';
-    // Reset par inputs to defaults
-    var fronts = document.querySelectorAll('#gt-par-front .gt-par-inp');
-    var backs  = document.querySelectorAll('#gt-par-back .gt-par-inp');
     var defPars = [4,4,3,4,5,4,3,4,4, 4,3,4,5,4,3,4,4,4];
-    fronts.forEach(function (inp, i) { inp.value = defPars[i]; });
-    backs.forEach(function  (inp, i) { inp.value = defPars[9 + i]; });
+    document.querySelectorAll('#gt-par-front .gt-par-inp').forEach(function (inp, i) { inp.value = defPars[i]; });
+    document.querySelectorAll('#gt-par-back .gt-par-inp').forEach(function  (inp, i) { inp.value = defPars[9 + i]; });
   };
 
   window.gtCancelCourse = function () {
@@ -1835,21 +2176,13 @@ sitemap: true
     var name = document.getElementById('gt-course-name').value.trim();
     if (!name) { gtNotice('Enter a course name.', 'error'); return; }
     var pars = [];
-    document.querySelectorAll('#gt-par-front .gt-par-inp').forEach(function (inp) {
-      pars.push(parseInt(inp.value) || 4);
-    });
-    document.querySelectorAll('#gt-par-back .gt-par-inp').forEach(function (inp) {
-      pars.push(parseInt(inp.value) || 4);
-    });
-    var course = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      name: name,
-      pars: pars
-    };
-    courses.push(course);
+    document.querySelectorAll('#gt-par-front .gt-par-inp').forEach(function (inp) { pars.push(parseInt(inp.value) || 4); });
+    document.querySelectorAll('#gt-par-back .gt-par-inp').forEach(function  (inp) { pars.push(parseInt(inp.value) || 4); });
+    var c = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name, pars: pars };
+    courses.push(c);
     saveCourses(courses);
     gtRenderCoursesList();
-    populateCourseDropdown();
+    populateCourseCtxDropdown(c.id);
     gtCancelCourse();
     gtNotice('Course saved.', 'success');
   };
@@ -1859,7 +2192,7 @@ sitemap: true
     courses = courses.filter(function (c) { return c.id !== id; });
     saveCourses(courses);
     gtRenderCoursesList();
-    populateCourseDropdown();
+    populateCourseCtxDropdown();
   };
 
   function gtRenderCoursesList() {
@@ -1880,61 +2213,10 @@ sitemap: true
   }
 
   // ─── Rounds ──────────────────────────────────────────────────────────────────
-  window.gtShowNewRoundForm = function () {
-    document.getElementById('gt-new-round-form').style.display = 'block';
-    document.getElementById('gt-round-date').value = today();
-    populateCourseDropdown();
-  };
-
   window.gtShowRoundsList = function () {
     document.getElementById('gt-rounds-list-view').style.display = '';
     document.getElementById('gt-scorecard-view').style.display = 'none';
   };
-
-  window.gtCreateRound = function () {
-    var date     = document.getElementById('gt-round-date').value || today();
-    var courseId = document.getElementById('gt-round-course').value || null;
-    var notes    = document.getElementById('gt-round-notes').value.trim();
-    var round = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      date: date,
-      courseId: courseId,
-      notes: notes
-    };
-    rounds.push(round);
-    saveRounds(rounds);
-    activeRoundId = round.id;
-    document.getElementById('gt-new-round-form').style.display = 'none';
-    gtUpdateActiveRoundBar();
-    gtRenderRoundsList();
-    // Switch to Log Shot tab
-    document.querySelectorAll('.gt-tab').forEach(function (t) { t.classList.remove('active'); });
-    document.querySelectorAll('.gt-panel').forEach(function (p) { p.classList.remove('active'); });
-    document.querySelectorAll('.gt-tab')[0].classList.add('active');
-    document.getElementById('gt-panel-log').classList.add('active');
-    gtNotice('Round started! Log your shots.', 'success');
-  };
-
-  window.gtEndRound = function () {
-    activeRoundId = null;
-    gtUpdateActiveRoundBar();
-    gtNotice('Round ended. Shots without a round will be practice shots.', 'success');
-  };
-
-  function gtUpdateActiveRoundBar() {
-    var bar = document.getElementById('gt-active-round-bar');
-    if (!bar) return;
-    if (!activeRoundId) {
-      bar.classList.remove('shown');
-      return;
-    }
-    var round = rounds.find(function (r) { return r.id === activeRoundId; });
-    if (!round) { bar.classList.remove('shown'); return; }
-    var course = round.courseId ? courses.find(function (c) { return c.id === round.courseId; }) : null;
-    var label = 'Round: ' + round.date + (course ? ' · ' + course.name : '') + (round.notes ? ' · ' + round.notes : '');
-    document.getElementById('gt-active-round-label').textContent = label;
-    bar.classList.add('shown');
-  }
 
   function gtRoundShotCount(roundId) {
     return shots.filter(function (s) { return s.roundId === roundId; }).length;
@@ -1943,23 +2225,17 @@ sitemap: true
   function gtRoundScore(round) {
     var rs = shots.filter(function (s) { return s.roundId === round.id; });
     if (rs.length === 0) return null;
-    // Count holes played (holes that have at least 1 shot + were "holed")
     var holesPlayed = {};
-    rs.forEach(function (s) {
-      if (s.hole != null) holesPlayed[s.hole] = (holesPlayed[s.hole] || 0) + 1;
-    });
-    // Total strokes = sum of shots per hole
+    rs.forEach(function (s) { if (s.hole != null) holesPlayed[s.hole] = (holesPlayed[s.hole] || 0) + 1; });
     var totalStrokes = 0;
     Object.keys(holesPlayed).forEach(function (h) { totalStrokes += holesPlayed[h]; });
     var course = round.courseId ? courses.find(function (c) { return c.id === round.courseId; }) : null;
     var holesCount = Object.keys(holesPlayed).length;
     var totalPar = 0;
     if (course) {
-      Object.keys(holesPlayed).forEach(function (h) {
-        totalPar += course.pars[parseInt(h) - 1] || 4;
-      });
+      Object.keys(holesPlayed).forEach(function (h) { totalPar += course.pars[parseInt(h) - 1] || 4; });
     } else {
-      totalPar = holesCount * 4; // default par 4
+      totalPar = holesCount * 4;
     }
     return { strokes: totalStrokes, par: totalPar, holes: holesCount, diff: totalStrokes - totalPar };
   }
@@ -1968,15 +2244,15 @@ sitemap: true
     var el = document.getElementById('gt-rounds-list');
     if (!el) return;
     if (rounds.length === 0) {
-      el.innerHTML = '<p class="gt-empty">No rounds logged yet. Start a new round to track your scorecard.</p>';
+      el.innerHTML = '<p class="gt-empty">No rounds yet — log a shot on hole 1 to start one.</p>';
       return;
     }
     var sorted = rounds.slice().sort(function (a, b) { return b.date < a.date ? -1 : 1; });
     el.innerHTML = sorted.map(function (r) {
-      var course = r.courseId ? courses.find(function (c) { return c.id === r.courseId; }) : null;
-      var sc = gtRoundScore(r);
+      var course  = r.courseId ? courses.find(function (c) { return c.id === r.courseId; }) : null;
+      var sc      = gtRoundScore(r);
       var isActive = r.id === activeRoundId;
-      var diffStr = '';
+      var diffStr  = '';
       var strokeStr = '—';
       if (sc) {
         strokeStr = sc.strokes;
@@ -1984,10 +2260,11 @@ sitemap: true
         var diffColor = sc.diff < 0 ? '#2a7a2a' : sc.diff === 0 ? '#555' : '#c0392b';
         diffStr = '<div class="gt-round-score-diff" style="color:' + diffColor + '">' + sign + sc.diff + ' (' + sc.holes + ' holes)</div>';
       }
+      var activeBadge = isActive ? ' <span style="font-size:0.72rem;background:#2a7a2a;color:#fff;padding:0.1rem 0.4rem;border-radius:3px;vertical-align:middle;">ACTIVE</span>' : '';
       return '<div class="gt-round-card' + (isActive ? ' active-round' : '') + '">' +
         '<div class="gt-round-card-info">' +
-          '<div class="gt-round-card-title">' + r.date + (course ? ' · ' + esc(course.name) : '') + (isActive ? ' <span style="font-size:0.75rem;background:#2a7a2a;color:#fff;padding:0.1rem 0.4rem;border-radius:3px;vertical-align:middle;">ACTIVE</span>' : '') + '</div>' +
-          '<div class="gt-round-card-sub">' + (r.notes ? esc(r.notes) + ' · ' : '') + gtRoundShotCount(r.id) + ' shots logged</div>' +
+          '<div class="gt-round-card-title">' + r.date + (course ? ' · ' + esc(course.name) : '') + activeBadge + '</div>' +
+          '<div class="gt-round-card-sub">' + (r.notes ? esc(r.notes) + ' · ' : '') + gtRoundShotCount(r.id) + ' shots</div>' +
         '</div>' +
         '<div>' +
           '<div class="gt-round-score">' + strokeStr + '</div>' +
@@ -1995,33 +2272,19 @@ sitemap: true
         '</div>' +
         '<div class="gt-round-card-actions">' +
           '<button class="gt-btn gt-btn-outline" style="padding:0.35rem 0.7rem;font-size:0.82rem;" onclick="gtViewScorecard(\'' + r.id + '\')">Scorecard</button>' +
-          (isActive ? '' : '<button class="gt-btn gt-btn-primary" style="padding:0.35rem 0.7rem;font-size:0.82rem;" onclick="gtResumeRound(\'' + r.id + '\')">Resume</button>') +
           '<button class="gt-delete-btn" onclick="gtDeleteRound(\'' + r.id + '\')" title="Delete">✕</button>' +
         '</div>' +
         '</div>';
     }).join('');
   }
 
-  window.gtResumeRound = function (id) {
-    activeRoundId = id;
-    gtUpdateActiveRoundBar();
-    gtRenderRoundsList();
-    // Switch to log tab
-    document.querySelectorAll('.gt-tab').forEach(function (t) { t.classList.remove('active'); });
-    document.querySelectorAll('.gt-panel').forEach(function (p) { p.classList.remove('active'); });
-    document.querySelectorAll('.gt-tab')[0].classList.add('active');
-    document.getElementById('gt-panel-log').classList.add('active');
-    gtNotice('Resumed round. Shots will be added to this round.', 'success');
-  };
-
   window.gtDeleteRound = function (id) {
-    if (!confirm('Delete this round? Shots logged during this round will be kept as practice shots.')) return;
-    // Detach shots from round
+    if (!confirm('Delete this round? Shots will be kept as practice shots.')) return;
     shots.forEach(function (s) { if (s.roundId === id) s.roundId = null; });
     save(shots);
     rounds = rounds.filter(function (r) { return r.id !== id; });
     saveRounds(rounds);
-    if (activeRoundId === id) { activeRoundId = null; gtUpdateActiveRoundBar(); }
+    if (activeRoundId === id) { activeRoundId = null; gtUpdateRoundCtxLabel(); }
     gtRenderRoundsList();
     gtNotice('Round deleted.', 'success');
   };
