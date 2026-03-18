@@ -11,8 +11,11 @@ async function openGolf(page) {
 }
 
 async function loadExampleData(page) {
+  const exampleJson = fs.readFileSync('assets/data/golf-example-data.json', 'utf8');
   await openTab(page, 'Settings');
-  await page.getByRole('button', { name: 'Load Example Data' }).click();
+  await page.locator('#gt-import-area').evaluate(function (el, value) { el.value = value; }, exampleJson);
+  await page.getByRole('button', { name: 'Import from text area' }).click();
+  await expect(page.locator('#gt-notice')).toContainText('Imported tracker bundle');
 }
 
 function escapeRegExp(value) {
@@ -32,11 +35,22 @@ test.describe('Golf tracker', () => {
     await openGolf(page);
 
     await openTab(page, 'Settings');
-    await expect(page.getByRole('button', { name: 'Load Example Data' })).toBeVisible();
+    await expect(page.locator('a[href="/assets/data/golf-example-data.json"]')).toBeVisible();
+    await expect(page.locator('#gt-bag-pills .gt-pill.selected')).toHaveCount(16);
     await expect(page.getByText('No rounds yet')).toBeHidden();
 
     await openTab(page, 'Rounds');
     await expect(page.getByText('No rounds yet')).toBeVisible();
+  });
+
+  test('falls back to all clubs when stored settings have an empty bag', async ({ page }) => {
+    await page.addInitScript(function () {
+      localStorage.setItem('gt_settings_v1', JSON.stringify({ bag: [] }));
+    });
+    await openGolf(page);
+
+    await openTab(page, 'Settings');
+    await expect(page.locator('#gt-bag-pills .gt-pill.selected')).toHaveCount(16);
   });
 
   test('autofills distance from hole length for a new hole without overwriting manual edits', async ({ page }) => {
@@ -52,6 +66,17 @@ test.describe('Golf tracker', () => {
     await page.locator('#gt-hole-length').fill('390');
     await page.locator('#gt-hole-length').dispatchEvent('input');
     await expect(page.locator('#gt-distance')).toHaveValue('360');
+  });
+
+  test('autofills distance from hole length when mobile browsers only commit on change', async ({ page }) => {
+    await openGolf(page);
+
+    await page.locator('#gt-hole').fill('1');
+    await page.locator('#gt-hole').dispatchEvent('input');
+    await page.locator('#gt-hole-length').evaluate(function (el) { el.value = '375'; });
+    await page.locator('#gt-hole-length').dispatchEvent('change');
+
+    await expect(page.locator('#gt-distance')).toHaveValue('375');
   });
 
   test('committed hole length picks a long club instead of a wedge from partial typing', async ({ page }) => {
@@ -127,6 +152,30 @@ test.describe('Golf tracker', () => {
 
     await openTab(page, 'History');
     await expect(page.locator('#gt-history-body')).toContainText('Right');
+  });
+
+  test('quick actions fill common finish states and undo removes the last saved shot', async ({ page }) => {
+    await openGolf(page);
+
+    await page.locator('#gt-hole').fill('1');
+    await page.locator('#gt-hole').dispatchEvent('input');
+    await page.locator('#gt-distance').fill('135');
+    await clickPill(page, '#gt-club-pills', '8I');
+    await page.getByRole('button', { name: 'Green Hit' }).click();
+
+    await expect(page.locator('#gt-end-distance')).toHaveValue('8');
+    await expect(page.locator('#gt-endLie')).toHaveValue('Green');
+    await expect(page.locator('#gt-result')).toHaveValue('On Target');
+
+    await page.getByRole('button', { name: 'Save Shot' }).click();
+    await openTab(page, 'History');
+    await expect(page.locator('#gt-history-count')).toContainText('1 shot');
+
+    await openTab(page, 'Log');
+    await page.getByRole('button', { name: 'Undo Last' }).click();
+    await expect(page.locator('#gt-notice')).toContainText('Last shot removed.');
+
+    await expect(page.locator('#gt-history-body')).toContainText('No shots match the filters.');
   });
 
   test('creates a course and round from the log flow, then prefills the next shot', async ({ page }) => {

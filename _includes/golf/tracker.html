@@ -3,34 +3,38 @@
   <div id="gt-notice" class="gt-notice"></div>
 
   <div class="gt-tabs" role="tablist" aria-label="Golf tracker sections">
-    <button type="button" class="gt-tab active" data-gt-tab="log" aria-pressed="true">Log</button>
-    <button type="button" class="gt-tab" data-gt-tab="rounds" aria-pressed="false">Rounds</button>
-    <button type="button" class="gt-tab" data-gt-tab="history" aria-pressed="false">History</button>
-    <button type="button" class="gt-tab" data-gt-tab="stats" aria-pressed="false">Stats</button>
-    <button type="button" class="gt-tab" data-gt-tab="settings" aria-pressed="false">Settings</button>
+    <button type="button" class="gt-tab active" data-gt-tab="log" aria-pressed="true" aria-label="Log"><span class="gt-tab-full">Log Shot</span><span class="gt-tab-short">Log</span></button>
+    <button type="button" class="gt-tab" data-gt-tab="rounds" aria-pressed="false" aria-label="Rounds"><span class="gt-tab-full">Rounds</span><span class="gt-tab-short">Rounds</span></button>
+    <button type="button" class="gt-tab" data-gt-tab="history" aria-pressed="false" aria-label="History"><span class="gt-tab-full">History</span><span class="gt-tab-short">History</span></button>
+    <button type="button" class="gt-tab" data-gt-tab="stats" aria-pressed="false" aria-label="Stats"><span class="gt-tab-full">Stats</span><span class="gt-tab-short">Stats</span></button>
+    <button type="button" class="gt-tab" data-gt-tab="settings" aria-pressed="false" aria-label="Settings"><span class="gt-tab-full">Settings</span><span class="gt-tab-short">Setup</span></button>
   </div>
 
   <!-- LOG SHOT -->
   <div id="gt-panel-log" class="gt-panel active">
 
     <!-- Course context: always visible, drives auto-round creation -->
-    <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;background:#f9f9f9;border:1px solid #e4e4e4;border-radius:6px;padding:0.55rem 0.8rem;margin-bottom:0.8rem;font-size:0.88rem;">
-      <span style="font-weight:700;color:#555;white-space:nowrap;">Playing at:</span>
-      <select id="gt-course-ctx" onchange="gtCourseCtxChange()" style="flex:1;min-width:140px;padding:0.3rem 0.5rem;border:1px solid #ccc;border-radius:4px;font-size:0.88rem;background:#fff;">
+    <div class="gt-course-bar">
+      <span class="gt-course-bar-label">Playing at:</span>
+      <select id="gt-course-ctx" class="gt-course-bar-control" onchange="gtCourseCtxChange()">
         <option value="">Practice (no round)</option>
       </select>
-      <input type="text" id="gt-new-course-inline" placeholder="New course name…" style="display:none;flex:1;min-width:140px;padding:0.3rem 0.5rem;border:1px solid #2a7a2a;border-radius:4px;font-size:0.88rem;">
+      <input type="text" id="gt-new-course-inline" class="gt-course-bar-control gt-course-bar-new" placeholder="New course name…" style="display:none;">
       <select id="gt-tee-ctx" class="gt-tee-ctx-sel" onchange="gtTeeCtxChange()" style="display:none;" title="Select tees"></select>
-      <span id="gt-round-ctx-label" style="font-size:0.8rem;color:#666;white-space:nowrap;"></span>
+      <span id="gt-round-ctx-label" class="gt-course-bar-meta"></span>
       <button type="button" id="gt-indoor-toggle" class="gt-indoor-btn" onclick="gtToggleIndoor(this)" title="Toggle indoor/outdoor round">Outdoor</button>
     </div>
 
-    <div id="gt-shot-status" style="display:none;font-size:0.85rem;color:#444;background:#f0f7f0;border:1px solid #b6d9b6;border-radius:4px;padding:0.5rem 0.8rem;margin-bottom:0.8rem;"></div>
+    <div class="gt-shot-status-card" id="gt-shot-progress-card">
+      <div class="gt-shot-progress-kicker">Current shot</div>
+      <div class="gt-shot-progress-main" id="gt-shot-progress-main">Start a hole to begin logging.</div>
+      <div id="gt-shot-status" style="display:none;"></div>
+    </div>
     <form id="gt-shot-form" onsubmit="gtSaveShot(event)">
       <div class="gt-form">
 
         <!-- Hole + Par + Hole Length -->
-        <div class="gt-row" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="gt-row gt-shot-meta-row" style="grid-template-columns:1fr 1fr 1fr;">
           <div class="gt-field">
             <label>Hole</label>
             <div class="gt-num-input">
@@ -54,9 +58,9 @@
         </div>
 
         <!-- Shot Distance -->
-        <div class="gt-field">
-          <label>Distance (m) <span style="font-size:0.75rem;font-weight:400;color:#888;">— this shot</span></label>
-          <input type="number" id="gt-distance" min="0" step="1" placeholder="e.g. 150" inputmode="decimal" onchange="gtAutoSelectClub(this.value)">
+        <div class="gt-field gt-field-primary">
+          <label>To Hole Now <span class="gt-unit">m</span></label>
+          <input type="number" id="gt-distance" class="gt-distance-input" min="0" step="1" placeholder="e.g. 150" inputmode="decimal" onchange="gtAutoSelectClub(this.value)">
           <div class="gt-dist-hint" id="gt-dist-hint"></div>
         </div>
 
@@ -64,10 +68,12 @@
         <div class="gt-field">
           <label>Club</label>
           <div class="gt-club-grid" id="gt-club-pills">
+            <div class="gt-club-group-label">Top</div>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">Driver</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">3W</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">5W</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">7W</span>
+            <div class="gt-club-group-label">Middle</div>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">H</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">4I</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">5I</span>
@@ -75,10 +81,12 @@
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">7I</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">8I</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">9I</span>
+            <div class="gt-club-group-label">Scoring</div>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">PW</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">GW</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">SW</span>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">LW</span>
+            <div class="gt-club-group-label">Green</div>
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">Putter</span>
           </div>
           <input type="hidden" id="gt-club">
@@ -118,9 +126,16 @@
         <!-- Ball finish -->
         <div class="gt-section-sub">Where did it finish?</div>
 
-        <div class="gt-field">
-          <label>End distance (m)</label>
-          <input type="number" id="gt-end-distance" min="0" step="0.5" placeholder="0 = holed" inputmode="decimal">
+        <div class="gt-quick-actions">
+          <button type="button" class="gt-btn gt-btn-outline gt-quick-btn" onclick="gtApplyQuickAction('green-hit')">Green Hit</button>
+          <button type="button" class="gt-btn gt-btn-outline gt-quick-btn" onclick="gtApplyQuickAction('holed')">Holed</button>
+          <button type="button" class="gt-btn gt-btn-outline gt-quick-btn" onclick="gtApplyQuickAction('penalty')">Penalty</button>
+          <button type="button" class="gt-btn gt-btn-outline gt-quick-btn" onclick="gtApplyQuickAction('recovery')">Recovery</button>
+        </div>
+
+        <div class="gt-field gt-field-primary">
+          <label>Left After Shot <span class="gt-unit">m</span></label>
+          <input type="number" id="gt-end-distance" class="gt-distance-input" min="0" step="0.5" placeholder="0 = holed" inputmode="decimal">
         </div>
 
         <div class="gt-field">
@@ -146,9 +161,9 @@
 
         <!-- Fixed putting: proximity input (shown for indoor rounds with fixed putting enabled) -->
         <div class="gt-field" id="gt-proximity-row" style="display:none;">
-          <label>Proximity to hole (m) <span style="font-weight:400;font-size:0.78rem;color:#888;">— fixed putting</span></label>
+          <label>Proximity to hole (m) <span class="gt-unit">— fixed putting</span></label>
           <input type="number" id="gt-proximity" min="0" step="0.5" placeholder="e.g. 8.5 → 2 putts" inputmode="decimal" oninput="gtProximityHint(this.value)">
-          <span id="gt-proximity-hint" style="font-size:0.78rem;color:#2a7a2a;margin-top:0.15rem;font-style:italic;"></span>
+          <span id="gt-proximity-hint" class="gt-help-text-small" style="color:var(--gt-accent);font-style:italic;"></span>
         </div>
 
         <!-- Result (direction) -->
@@ -210,9 +225,10 @@
 
       </div><!-- gt-form -->
 
-      <div class="gt-actions">
-        <button type="submit" class="gt-btn gt-btn-primary" style="flex:1;">Save Shot</button>
+      <div class="gt-actions gt-actions-sticky">
+        <button type="button" class="gt-btn gt-btn-outline" onclick="gtUndoLastShot()">Undo Last</button>
         <button type="button" class="gt-btn gt-btn-outline" onclick="gtResetForm()">Clear</button>
+        <button type="submit" class="gt-btn gt-btn-primary" style="flex:1;">Save Shot</button>
       </div>
 
     </form>
@@ -225,7 +241,7 @@
     <div id="gt-rounds-list-view">
       <div style="margin-bottom:0.75rem;">
         <h3 style="margin:0 0 0.25rem;font-size:1rem;">Rounds</h3>
-        <p style="margin:0;font-size:0.82rem;color:#888;">Rounds start automatically when you log your first shot on hole 1. Select a course in the "Playing at" bar on the Log Shot tab first.</p>
+        <p class="gt-help-text">Rounds start automatically when you log your first shot on hole 1. Select a course in the "Playing at" bar on the Log Shot tab first.</p>
       </div>
       <div id="gt-rounds-list">
         <p class="gt-empty">No rounds yet — log a shot on hole 1 to start one.</p>
@@ -289,7 +305,7 @@
         </tbody>
       </table>
     </div>
-    <p id="gt-history-count" style="font-size:0.85rem;color:#888;margin-top:0.5rem;"></p>
+    <p id="gt-history-count" class="gt-help-text" style="margin-top:0.5rem;"></p>
   </div><!-- panel-history -->
 
   <!-- STATS -->
@@ -301,9 +317,9 @@
     </div>
     <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
       <label style="font-size:0.82rem;font-weight:600;color:#555;">From</label>
-      <input type="date" id="gt-stats-from" onchange="gtSetStatsDates()" style="padding:0.3rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+      <input type="date" id="gt-stats-from" onchange="gtSetStatsDates()" style="padding:0.3rem 0.4rem;border:1px solid var(--gt-border);border-radius:4px;font-size:0.85rem;background:var(--gt-surface);color:var(--gt-text);">
       <label style="font-size:0.82rem;font-weight:600;color:#555;">To</label>
-      <input type="date" id="gt-stats-to" onchange="gtSetStatsDates()" style="padding:0.3rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+      <input type="date" id="gt-stats-to" onchange="gtSetStatsDates()" style="padding:0.3rem 0.4rem;border:1px solid var(--gt-border);border-radius:4px;font-size:0.85rem;background:var(--gt-surface);color:var(--gt-text);">
       <button class="gt-btn gt-btn-outline" onclick="gtClearStatsDates()" style="font-size:0.8rem;padding:0.3rem 0.6rem;min-height:0;">Clear dates</button>
     </div>
     <div id="gt-stats-content">
@@ -324,7 +340,7 @@
       <div class="gt-field">
         <label>Target HCP</label>
         <input type="number" id="gt-target-hcp" min="0" max="54" step="0.1" placeholder="e.g. 10.0" inputmode="decimal">
-        <span style="font-size:0.75rem;color:#888;margin-top:0.2rem;">SG benchmarks in Stats will show what you need to reach this goal.</span>
+        <span class="gt-note-inline">SG benchmarks in Stats will show what you need to reach this goal.</span>
       </div>
     </div>
 
@@ -344,32 +360,32 @@
         <input type="checkbox" id="gt-fixed-putting" style="width:auto;">
         <span style="font-size:0.9rem;font-weight:600;color:#444;">Fixed putting (simulator)</span>
       </label>
-      <p style="font-size:0.78rem;color:#888;margin:0.3rem 0 0;">When enabled: after hitting the green, enter your proximity and putts are auto-assigned (≤ 3 m → 1 putt; 3–20 m → 2 putts; &gt; 20 m → 3 putts). Fixed putts count toward your score but are excluded from putting SG stats.</p>
+      <p class="gt-help-text-small">When enabled: after hitting the green, enter your proximity and putts are auto-assigned (≤ 3 m → 1 putt; 3–20 m → 2 putts; &gt; 20 m → 3 putts). Fixed putts count toward your score but are excluded from putting SG stats.</p>
     </div>
 
     <p class="gt-section-title" style="margin-top:1.5rem;">Your Bag</p>
-    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Tap to toggle clubs you carry. Only selected clubs appear in the shot logger.</p>
+    <p class="gt-help-text" style="margin:0 0 0.75rem;">All clubs are enabled by default. Tap any club to disable the ones you do not carry. Only enabled clubs appear in the shot logger.</p>
     <div class="gt-club-grid" id="gt-bag-pills" style="max-width:420px;">
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">Driver</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">3W</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">5W</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">7W</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">H</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">4I</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">5I</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">6I</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">7I</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">8I</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">9I</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">PW</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">GW</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">SW</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">LW</span>
-      <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">Putter</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">Driver</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">3W</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">5W</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">7W</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">H</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">4I</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">5I</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">6I</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">7I</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">8I</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">9I</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">PW</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">GW</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">SW</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">LW</span>
+      <span class="gt-pill gt-club-pill selected" onclick="this.classList.toggle('selected')">Putter</span>
     </div>
 
     <p class="gt-section-title" style="margin-top:1.5rem;">Club Distances (m)</p>
-    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Enter your typical carry distances. The closest club is auto-selected when you type a distance on the Log Shot tab.</p>
+    <p class="gt-help-text" style="margin:0 0 0.75rem;">Enter your typical carry distances. The closest club is auto-selected when you type a distance on the Log Shot tab.</p>
     <div class="gt-club-dist-wrap">
       <table class="gt-club-dist-table" id="gt-club-dist-table">
         <!-- populated by JS -->
@@ -377,7 +393,7 @@
     </div>
 
     <p class="gt-section-title" style="margin-top:1rem;">Wedge Matrix (m)</p>
-    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Enter carry distances for each wedge swing length. Selecting a distance will auto-pick the closest wedge + swing combination.</p>
+    <p class="gt-help-text" style="margin:0 0 0.75rem;">Enter carry distances for each wedge swing length. Selecting a distance will auto-pick the closest wedge + swing combination.</p>
     <div class="gt-club-dist-wrap">
       <table class="gt-club-dist-table" id="gt-wedge-matrix-table">
         <!-- populated by JS -->
@@ -387,18 +403,11 @@
     <div class="gt-actions">
       <button class="gt-btn gt-btn-primary" onclick="gtSaveSettings()">Save Settings</button>
     </div>
-    <p id="gt-settings-notice" style="display:none;font-size:0.85rem;color:#2a7a2a;margin-top:0.5rem;"></p>
-
-    <p class="gt-section-title" style="margin-top:2rem;">Example Data</p>
-    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Load a realistic demo dataset into this browser to preview rounds, scorecards, history, and stats with meaningful data.</p>
-    <div class="gt-actions" style="flex-wrap:wrap;">
-      <button class="gt-btn gt-btn-primary" onclick="gtLoadExampleData()">Load Example Data</button>
-      <button class="gt-btn gt-btn-outline" onclick="gtResetAllData()">Reset Tracker</button>
-    </div>
+    <p id="gt-settings-notice" class="gt-help-text" style="display:none;color:var(--gt-accent);margin-top:0.5rem;"></p>
 
     <!-- Courses -->
     <p class="gt-section-title" style="margin-top:2rem;">Courses</p>
-    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Add courses to track scorecards with accurate par per hole.</p>
+    <p class="gt-help-text" style="margin:0 0 0.75rem;">Add courses to track scorecards with accurate par per hole.</p>
 
     <div id="gt-courses-list"></div>
 
@@ -409,7 +418,7 @@
         <input type="text" id="gt-course-name" placeholder="e.g. Augusta National">
       </div>
       <div style="margin-bottom:0.5rem;">
-        <p style="font-size:0.8rem;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.3rem;">Front 9 Par (holes 1–9)</p>
+        <p class="gt-help-text" style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.3rem;">Front 9 Par (holes 1–9)</p>
         <div class="gt-par-hole-labels">
           <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
         </div>
@@ -426,7 +435,7 @@
         </div>
       </div>
       <div style="margin-bottom:0.75rem;">
-        <p style="font-size:0.8rem;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.3rem;">Back 9 Par (holes 10–18)</p>
+        <p class="gt-help-text" style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.3rem;">Back 9 Par (holes 10–18)</p>
         <div class="gt-par-hole-labels">
           <span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span>
         </div>
@@ -443,8 +452,8 @@
         </div>
       </div>
       <div style="margin-top:0.75rem;">
-        <p style="font-size:0.8rem;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.3rem;">Tees (optional)</p>
-        <p style="font-size:0.82rem;color:#666;margin:0 0 0.5rem;">Add tee sets with hole lengths for auto-fill when logging shots.</p>
+        <p class="gt-help-text" style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.3rem;">Tees (optional)</p>
+        <p class="gt-help-text" style="margin:0 0 0.5rem;">Add tee sets with hole lengths for auto-fill when logging shots.</p>
         <div id="gt-tee-rows"></div>
         <button type="button" class="gt-btn gt-btn-secondary" onclick="gtAddTeeRow()" style="font-size:0.82rem;padding:0.3rem 0.7rem;">+ Add Tee</button>
       </div>
@@ -458,14 +467,15 @@
 
     <!-- Data -->
     <p class="gt-section-title" style="margin-top:2rem;">Export Data</p>
-    <p style="font-size:0.85rem;color:#555;margin:0 0 0.75rem;">Download all shots as JSON or CSV. Data is stored only in this browser.</p>
+    <p class="gt-help-text" style="margin:0 0 0.75rem;">Download all shots as JSON or CSV. Data is stored only in this browser.</p>
     <div class="gt-actions">
       <button class="gt-btn gt-btn-primary" onclick="gtExportJSON()">Download JSON</button>
       <button class="gt-btn gt-btn-secondary" onclick="gtExportCSV()">Download CSV</button>
     </div>
 
     <p class="gt-section-title" style="margin-top:1.5rem;">Import Data</p>
-    <p style="font-size:0.85rem;color:#555;margin:0 0 0.75rem;">Import shots from a previously exported JSON file. Existing shots are kept; duplicates are skipped.</p>
+    <p class="gt-help-text" style="margin:0 0 0.45rem;">Import either a JSON array of shots or a full tracker bundle with settings, courses, rounds, and shots.</p>
+    <p class="gt-help-text" style="margin:0 0 0.75rem;">Sample file in the repo: <a href="/assets/data/golf-example-data.json" target="_blank" rel="noopener">/assets/data/golf-example-data.json</a></p>
     <div class="gt-io">
       <textarea id="gt-import-area" placeholder='Paste JSON here, or use the file picker below…'></textarea>
     </div>
@@ -477,8 +487,11 @@
       <button class="gt-btn gt-btn-primary" onclick="gtImportJSON()">Import from text area</button>
     </div>
 
-    <p class="gt-section-title" style="margin-top:1.5rem;color:#c0392b;">Danger Zone</p>
-    <button class="gt-btn gt-btn-danger" onclick="gtClearAll()">Delete all shots</button>
+    <p class="gt-section-title" style="margin-top:1.5rem;color:var(--gt-danger);">Danger Zone</p>
+    <div class="gt-actions" style="flex-wrap:wrap;">
+      <button class="gt-btn gt-btn-outline" onclick="gtResetAllData()">Reset Tracker</button>
+      <button class="gt-btn gt-btn-danger" onclick="gtClearAll()">Delete all shots</button>
+    </div>
 
   </div>
 

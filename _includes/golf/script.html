@@ -9,14 +9,11 @@
   var SG_HCP_WEIGHTS = core.SG_HCP_WEIGHTS;
   var SG_HCP_REF_SHOTS = core.SG_HCP_REF_SHOTS;
   var defaultSettings = core.defaultSettings;
+  var normalizeSettings = core.normalizeSettings;
   var calcSG = core.calcSG;
   var sgCategory = core.sgCategory;
   var sgTargetPerShot = core.sgTargetPerShot;
   var gtTeeLengths = core.teeLengths;
-  var gtBuildExampleSettings = core.buildExampleSettings;
-  var gtBuildExampleCourses = core.buildExampleCourses;
-  var gtBuildExampleRounds = core.buildExampleRounds;
-  var gtBuildExampleShots = core.buildExampleShots;
 
   function fmtSG(val, decimals) {
     if (val == null) return '<span class="sg-zero">—</span>';
@@ -44,13 +41,13 @@
   function loadSettings() {
     try {
       var s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-      return s || defaultSettings();
+      return normalizeSettings(s);
     }
     catch (e) { return defaultSettings(); }
   }
 
   function saveSettings(settings) {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(normalizeSettings(settings)));
   }
 
   function loadRounds() {
@@ -99,9 +96,9 @@
   function gtResetFormUI() {
     clearForm();
     document.getElementById('gt-date').value = today();
-    document.getElementById('gt-shot-status').style.display = 'none';
     document.getElementById('gt-more-section').style.display = 'none';
     document.getElementById('gt-more-btn').textContent = '▸ Strike, shape & notes';
+    gtUpdateShotProgress();
   }
 
   function gtRefreshTrackerUI() {
@@ -172,7 +169,9 @@
 
     distEl.value = nextVal;
     distEl.dataset.gtHoleLengthAutofillValue = nextVal;
+    setSuggestedState(distEl, !!nextVal);
     if (options.autoSelectClub) gtAutoSelectClub(nextVal);
+    gtUpdateShotProgress();
   }
 
   function selectedClubStockDistance() {
@@ -209,6 +208,7 @@
     if (canReplaceEndDist) {
       endDistEl.value = nextEndDist;
       endDistEl.dataset.gtClubAutofillValue = nextEndDist;
+      setSuggestedState(endDistEl, true);
     }
 
     var currentEndLie = pillState.endLie || '';
@@ -217,6 +217,7 @@
     if (canReplaceEndLie) {
       selectPill('gt-end-lie-pills', 'endLie', suggestedLie);
       endDistEl.dataset.gtClubAutofillLie = suggestedLie;
+      setSuggestedPill('gt-end-lie-pills', suggestedLie, true);
     }
   }
 
@@ -347,6 +348,42 @@
   var sortKey = 'date';
   var sortDir = -1; // -1 = desc, 1 = asc
   var pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
+  var lastSavedShotIds = [];
+
+  function setSuggestedState(el, isSuggested) {
+    if (!el) return;
+    el.classList.toggle('gt-suggested', !!isSuggested);
+  }
+
+  function setSuggestedPill(containerId, value, isSuggested) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll('.gt-pill').forEach(function (p) {
+      p.classList.toggle('gt-suggested', !!isSuggested && p.textContent.trim() === value);
+    });
+  }
+
+  function setSuggestedDpad(value, isSuggested) {
+    var pad = document.querySelector('.gt-dpad');
+    if (!pad) return;
+    pad.querySelectorAll('.gt-dpad-btn').forEach(function (b) {
+      b.classList.toggle('gt-suggested', !!isSuggested && b.dataset.value === value);
+    });
+  }
+
+  function gtUpdateShotProgress() {
+    var hole = document.getElementById('gt-hole').value.trim();
+    var dist = document.getElementById('gt-distance').value.trim();
+    var lie = pillState.lie || '';
+    var shotsOnHole = hole ? shotsForCurrentHole(parseInt(hole, 10)).length : 0;
+    var main = 'Start a hole to begin logging.';
+    if (hole) {
+      main = 'Hole ' + hole + ' · Shot ' + (shotsOnHole + 1);
+      if (dist) main += ' · ' + dist + ' m';
+      if (lie) main += ' · ' + lie;
+    }
+    document.getElementById('gt-shot-progress-main').textContent = main;
+  }
 
   // ─── Init ────────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
@@ -392,12 +429,16 @@
 
     var holeLengthInput = document.getElementById('gt-hole-length');
     if (holeLengthInput) {
-      holeLengthInput.addEventListener('input', function () {
-        syncDistanceFromHoleLength(this.value);
-      });
-      holeLengthInput.addEventListener('change', function () {
-        syncDistanceFromHoleLength(this.value, { autoSelectClub: true });
-      });
+      var syncHoleLengthLive = function () {
+        syncDistanceFromHoleLength(holeLengthInput.value);
+      };
+      var syncHoleLengthCommit = function () {
+        syncDistanceFromHoleLength(holeLengthInput.value, { autoSelectClub: true });
+      };
+      holeLengthInput.addEventListener('input', syncHoleLengthLive);
+      holeLengthInput.addEventListener('keyup', syncHoleLengthLive);
+      holeLengthInput.addEventListener('change', syncHoleLengthCommit);
+      holeLengthInput.addEventListener('blur', syncHoleLengthCommit);
     }
 
     var distanceInput = document.getElementById('gt-distance');
@@ -406,12 +447,15 @@
         var currentVal = this.value.trim();
         if (currentVal === '' || currentVal !== (this.dataset.gtHoleLengthAutofillValue || '')) {
           this.dataset.gtHoleLengthAutofillValue = '';
+          setSuggestedState(this, false);
         }
         syncEndFromSelectedClub();
+        gtUpdateShotProgress();
       });
       distanceInput.addEventListener('change', function () {
         gtAutoSelectClub(this.value);
         syncEndFromSelectedClub();
+        gtUpdateShotProgress();
       });
     }
 
@@ -421,6 +465,7 @@
         var currentVal = this.value.trim();
         if (currentVal === '' || currentVal !== (this.dataset.gtClubAutofillValue || '')) {
           this.dataset.gtClubAutofillValue = '';
+          setSuggestedState(this, false);
         }
       });
     }
@@ -489,6 +534,7 @@
       selectPill('gt-lie-pills', 'lie', 'Tee');
     }
     syncDistanceFromHoleLength(length != null ? String(length) : (hl ? hl.value : ''), { autoSelectClub: true });
+    gtUpdateShotProgress();
   };
 
   function selectDpadValue(group, value) {
@@ -500,6 +546,7 @@
     pad.querySelectorAll('.gt-dpad-btn').forEach(function (b) {
       var isMatch = b.dataset.value === value;
       b.classList.toggle('selected', isMatch);
+      if (!isMatch) b.classList.remove('gt-suggested');
       if (isMatch) matched = true;
     });
     pillState[group] = matched ? value : '';
@@ -513,6 +560,37 @@
     } else {
       selectDpadValue(group, val);
     }
+  };
+
+  window.gtApplyQuickAction = function (action) {
+    if (action === 'green-hit') {
+      selectPill('gt-end-lie-pills', 'endLie', 'Green');
+      setSuggestedPill('gt-end-lie-pills', 'Green', true);
+      if (!document.getElementById('gt-end-distance').value.trim()) {
+        document.getElementById('gt-end-distance').value = '8';
+        document.getElementById('gt-end-distance').dataset.gtClubAutofillValue = '8';
+        setSuggestedState(document.getElementById('gt-end-distance'), true);
+      }
+      selectDpadValue('result', 'On Target');
+      setSuggestedDpad('On Target', true);
+    } else if (action === 'holed') {
+      document.getElementById('gt-end-distance').value = '0';
+      document.getElementById('gt-end-distance').dataset.gtClubAutofillValue = '0';
+      setSuggestedState(document.getElementById('gt-end-distance'), true);
+      selectPill('gt-end-lie-pills', 'endLie', 'Holed');
+      setSuggestedPill('gt-end-lie-pills', 'Holed', true);
+      selectDpadValue('result', 'On Target');
+      setSuggestedDpad('On Target', true);
+    } else if (action === 'penalty') {
+      selectPill('gt-end-lie-pills', 'endLie', 'Penalty area');
+      selectDpadValue('result', 'Right');
+    } else if (action === 'recovery') {
+      if (!pillState.lie) selectPill('gt-lie-pills', 'lie', 'Rough');
+      document.getElementById('gt-more-section').style.display = 'block';
+      document.getElementById('gt-more-btn').textContent = '▾ Hide strike, shape & notes';
+      selectPill('gt-shape-pills', 'shape', 'Punch');
+    }
+    gtUpdateShotProgress();
   };
 
   window.gtToggleMore = function () {
@@ -553,7 +631,10 @@
   // ─── Pills ───────────────────────────────────────────────────────────────────
   window.gtTogglePill = function (el, group) {
     var pills = el.parentElement.querySelectorAll('.gt-pill');
-    pills.forEach(function (p) { p.classList.remove('selected'); });
+    pills.forEach(function (p) {
+      p.classList.remove('selected');
+      p.classList.remove('gt-suggested');
+    });
     if (pillState[group] === el.textContent) {
       pillState[group] = '';
     } else {
@@ -566,6 +647,7 @@
     if (group === 'endLie' && pillState[group] !== (document.getElementById('gt-end-distance').dataset.gtClubAutofillLie || '')) {
       document.getElementById('gt-end-distance').dataset.gtClubAutofillLie = '';
     }
+    if (group === 'lie' || group === 'endLie' || group === 'club' || group === 'swing') gtUpdateShotProgress();
   };
 
   // Show/hide swing selector based on selected club
@@ -660,6 +742,9 @@
       hint.textContent = '↑ ' + label + ' (' + refDist + ' m stock)';
     }
 
+    setSuggestedPill('gt-club-pills', best.club, true);
+    if (best.swing) setSuggestedPill('gt-swing-pills', best.swing, true);
+
     syncEndFromSelectedClub();
   };
 
@@ -747,6 +832,7 @@
     };
     shot.sg = calcSG(shot);
     shots.push(shot);
+    lastSavedShotIds = [shot.id];
     save(shots);
     populateClubFilter();
     gtUpdateRoundCtxLabel();
@@ -780,6 +866,7 @@
           };
           synShot.sg = null;
           shots.push(synShot);
+          lastSavedShotIds = [shot.id, synShot.id];
           save(shots);
           gtNotice(fp + ' putt' + (fp !== 1 ? 's' : '') + ' assigned (' + prox + ' m proximity).', 'success');
           gtPrefillNext(synShot);
@@ -796,7 +883,15 @@
 
   function clearForm() {
     document.getElementById('gt-shot-form').reset();
-    document.querySelectorAll('.gt-pill.selected, .gt-dpad-btn.selected').forEach(function (p) { p.classList.remove('selected'); });
+    document.querySelectorAll(
+      '#gt-lie-pills .gt-pill.selected, ' +
+      '#gt-end-lie-pills .gt-pill.selected, ' +
+      '#gt-club-pills .gt-pill.selected, ' +
+      '#gt-swing-pills .gt-pill.selected, ' +
+      '#gt-strike-pills .gt-pill.selected, ' +
+      '#gt-shape-pills .gt-pill.selected, ' +
+      '.gt-dpad-btn.selected'
+    ).forEach(function (p) { p.classList.remove('selected'); });
     pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
     gtOnClubSelected(''); // hide swing row
     document.getElementById('gt-dist-hint').textContent = '';
@@ -805,14 +900,39 @@
     document.getElementById('gt-distance').dataset.gtHoleLengthAutofillValue = '';
     document.getElementById('gt-end-distance').dataset.gtClubAutofillValue = '';
     document.getElementById('gt-end-distance').dataset.gtClubAutofillLie = '';
+    setSuggestedState(document.getElementById('gt-distance'), false);
+    setSuggestedState(document.getElementById('gt-end-distance'), false);
+    setSuggestedDpad('On Target', false);
     var hl = document.getElementById('gt-hole-length');
     if (hl) hl.value = '';
     selectDpadValue('result', 'On Target');
+    gtUpdateShotProgress();
   }
 
   // Called by the Clear button — wipes everything
   window.gtResetForm = function () {
     gtResetFormUI();
+  };
+
+  window.gtUndoLastShot = function () {
+    if (!lastSavedShotIds.length) {
+      gtNotice('No recent shot to undo.', 'error');
+      return;
+    }
+    var before = shots.length;
+    shots = shots.filter(function (s) { return lastSavedShotIds.indexOf(s.id) === -1; });
+    if (shots.length === before) {
+      gtNotice('No recent shot to undo.', 'error');
+      return;
+    }
+    save(shots);
+    populateClubFilter();
+    gtRenderHistory();
+    gtRenderRoundsList();
+    gtRenderStats();
+    lastSavedShotIds = [];
+    gtResetFormUI();
+    gtNotice('Last shot removed.', 'success');
   };
 
   // Called after a save — resets then pre-fills from the shot just saved
@@ -875,6 +995,7 @@
     pillState[group] = '';
     container.querySelectorAll('.gt-pill').forEach(function (p) {
       p.classList.remove('selected');
+      p.classList.remove('gt-suggested');
       if (p.textContent.trim() === value) {
         p.classList.add('selected');
         pillState[group] = value;
@@ -883,13 +1004,15 @@
     var input = document.getElementById('gt-' + group);
     if (input) input.value = pillState[group] || '';
     if (group === 'club') gtOnClubSelected(pillState[group] || '');
+    if (group === 'lie' || group === 'endLie' || group === 'club' || group === 'swing') gtUpdateShotProgress();
   }
 
   function updateShotStatus(el, msg) {
     var bar = document.getElementById('gt-shot-status');
-    if (!msg) { bar.style.display = 'none'; return; }
+    if (!msg) { bar.style.display = 'none'; gtUpdateShotProgress(); return; }
     bar.textContent = msg;
     bar.style.display = 'block';
+    gtUpdateShotProgress();
   }
 
 
@@ -1253,25 +1376,59 @@
     try { imported = JSON.parse(raw); } catch (err) {
       gtNotice('Invalid JSON: ' + err.message, 'error'); return;
     }
-    if (!Array.isArray(imported)) { gtNotice('Expected a JSON array of shots.', 'error'); return; }
+    if (Array.isArray(imported)) {
+      var existingIds = new Set(shots.map(function (s) { return s.id; }));
+      var added = 0;
+      imported.forEach(function (s, idx) {
+        if (!s || typeof s !== 'object') return;
+        var next = Object.assign({}, s);
+        next.id = normalizeImportId(next.id, idx);
+        if (existingIds.has(next.id)) return;
+        shots.push(next);
+        existingIds.add(next.id);
+        added++;
+      });
+      save(shots);
+      populateClubFilter();
+      gtRenderHistory();
+      document.getElementById('gt-import-area').value = '';
+      gtNotice('Imported ' + added + ' shot' + (added !== 1 ? 's' : '') + '. ' +
+        (imported.length - added) + ' duplicate(s) skipped.', 'success');
+      return;
+    }
 
-    var existingIds = new Set(shots.map(function (s) { return s.id; }));
-    var added = 0;
-    imported.forEach(function (s, idx) {
+    if (!imported || typeof imported !== 'object' || !Array.isArray(imported.shots)) {
+      gtNotice('Expected either a JSON array of shots or a tracker bundle object.', 'error');
+      return;
+    }
+
+    if (gtHasStoredData() && !confirm('Replace current tracker data in this browser with the imported tracker bundle?')) return;
+
+    var bundleShots = [];
+    var seenShotIds = new Set();
+    imported.shots.forEach(function (s, idx) {
       if (!s || typeof s !== 'object') return;
       var next = Object.assign({}, s);
       next.id = normalizeImportId(next.id, idx);
-      if (existingIds.has(next.id)) return;
-      shots.push(next);
-      existingIds.add(next.id);
-      added++;
+      if (seenShotIds.has(next.id)) return;
+      seenShotIds.add(next.id);
+      bundleShots.push(next);
     });
+
+    shots = bundleShots;
+    rounds = Array.isArray(imported.rounds) ? imported.rounds.filter(function (r) { return r && typeof r === 'object'; }).map(function (r) { return Object.assign({}, r); }) : [];
+    courses = Array.isArray(imported.courses) ? imported.courses.filter(function (c) { return c && typeof c === 'object'; }).map(function (c) { return Object.assign({}, c); }) : [];
+    activeRoundId = null;
+    activeRoundType = 'outdoor';
+
     save(shots);
-    populateClubFilter();
-    gtRenderHistory();
+    saveRounds(rounds);
+    saveCourses(courses);
+    saveSettings(imported.settings);
+
+    gtRefreshTrackerUI();
     document.getElementById('gt-import-area').value = '';
-    gtNotice('Imported ' + added + ' shot' + (added !== 1 ? 's' : '') + '. ' +
-      (imported.length - added) + ' duplicate(s) skipped.', 'success');
+    gtNotice('Imported tracker bundle: ' + rounds.length + ' rounds, ' + shots.length + ' shots, ' + courses.length + ' courses.', 'success');
   };
 
   window.gtClearAll = function () {
@@ -1281,29 +1438,6 @@
     populateClubFilter();
     gtRenderHistory();
     gtNotice('All shots deleted.', 'success');
-  };
-
-  window.gtLoadExampleData = function () {
-    if (gtHasStoredData() && !confirm('Replace all current tracker data in this browser with example data?')) return;
-    var exampleSettings = gtBuildExampleSettings();
-    var exampleCourses = gtBuildExampleCourses();
-    var exampleRounds = gtBuildExampleRounds(exampleCourses);
-    var exampleShots = gtBuildExampleShots(exampleRounds, exampleCourses);
-
-    shots = exampleShots;
-    rounds = exampleRounds;
-    courses = exampleCourses;
-    activeRoundId = null;
-    activeRoundType = 'outdoor';
-
-    save(shots);
-    saveRounds(rounds);
-    saveCourses(courses);
-    saveSettings(exampleSettings);
-
-    gtRefreshTrackerUI();
-    gtNotice('Loaded example data: ' + rounds.length + ' rounds, ' + shots.length + ' shots, ' + courses.length + ' courses.', 'success');
-    gtShowSettingsNotice('Example data loaded.');
   };
 
   window.gtResetAllData = function () {

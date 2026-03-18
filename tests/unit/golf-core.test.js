@@ -29,6 +29,16 @@ run('defaultSettings returns a fresh default settings object', () => {
   assert.notStrictEqual(a.bag, b.bag);
 });
 
+run('normalizeSettings restores the full bag when bag is missing or empty', () => {
+  const missingBag = core.normalizeSettings({ hcp: 12.4 });
+  const emptyBag = core.normalizeSettings({ bag: [] });
+  const partialBag = core.normalizeSettings({ bag: ['Driver', '7I', 'Nope'] });
+
+  assert.deepEqual(missingBag.bag, core.ALL_CLUBS);
+  assert.deepEqual(emptyBag.bag, core.ALL_CLUBS);
+  assert.deepEqual(partialBag.bag, ['Driver', '7I']);
+});
+
 run('sgExpected handles green, fairway-like, and penalty lies', () => {
   assert.equal(core.sgExpected(0, 'Holed'), 0);
   assert.equal(core.sgExpected(-1, 'Fairway'), null);

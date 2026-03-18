@@ -104,6 +104,20 @@
     return { hcp: null, targetHcp: null, hcpIndoor: null, targetHcpIndoor: null, fixedPutting: false, bag: ALL_CLUBS.slice(), clubDistances: {} };
   }
 
+  function normalizeSettings(raw) {
+    var base = defaultSettings();
+    if (!raw || typeof raw !== 'object') return base;
+
+    var next = Object.assign({}, base, raw);
+    var bag = Array.isArray(raw.bag) ? raw.bag.filter(function (club) {
+      return ALL_CLUBS.indexOf(club) !== -1;
+    }) : [];
+    next.bag = bag.length > 0 ? bag : ALL_CLUBS.slice();
+    next.clubDistances = raw.clubDistances && typeof raw.clubDistances === 'object' ? raw.clubDistances : {};
+    next.fixedPutting = !!raw.fixedPutting;
+    return next;
+  }
+
   function teeLengths(course, teeName) {
     if (!course || !course.tees || course.tees.length === 0) return [];
     var tee = course.tees.find(function (t) { return t.name === teeName; }) || course.tees[0];
@@ -387,6 +401,7 @@
     SG_HCP_WEIGHTS: SG_HCP_WEIGHTS,
     SG_HCP_REF_SHOTS: SG_HCP_REF_SHOTS,
     defaultSettings: defaultSettings,
+    normalizeSettings: normalizeSettings,
     lerp: lerp,
     sgExpected: sgExpected,
     calcSG: calcSG,
