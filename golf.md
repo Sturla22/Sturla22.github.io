@@ -745,6 +745,54 @@ sitemap: true
     padding: 0.6rem 0.8rem;
     margin-bottom: 1rem;
   }
+
+  /* Club distances */
+  .gt-club-dist-wrap { overflow-x: auto; margin-bottom: 0.75rem; }
+
+  .gt-club-dist-table {
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .gt-club-dist-table th {
+    background: #f0f0f0;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+    text-align: center;
+    border: 1px solid #ddd;
+    white-space: nowrap;
+  }
+
+  .gt-club-dist-table td {
+    padding: 0.25rem 0.3rem;
+    border: 1px solid #eee;
+    text-align: center;
+  }
+
+  .gt-club-dist-table input {
+    width: 52px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.25rem 0.2rem;
+    font-size: 0.88rem;
+    box-sizing: border-box;
+  }
+
+  .gt-wedge-hdr { background: #f0f7f0 !important; color: #2a7a2a !important; font-weight: 700 !important; }
+
+  /* Swing pills in shot form */
+  .gt-swing-row { display: none; }
+  .gt-swing-row.visible { display: block; }
+
+  /* Auto-select hint */
+  .gt-dist-hint {
+    font-size: 0.75rem;
+    color: #2a7a2a;
+    margin-top: 0.2rem;
+    min-height: 1em;
+    font-style: italic;
+  }
 </style>
 
 <div class="golf-tracker">
@@ -789,7 +837,8 @@ sitemap: true
           </div>
           <div class="gt-field">
             <label>Distance (m)</label>
-            <input type="number" id="gt-distance" min="0" step="1" placeholder="e.g. 150" inputmode="decimal">
+            <input type="number" id="gt-distance" min="0" step="1" placeholder="e.g. 150" inputmode="decimal" oninput="gtAutoSelectClub(this.value)">
+            <div class="gt-dist-hint" id="gt-dist-hint"></div>
           </div>
         </div>
 
@@ -815,6 +864,18 @@ sitemap: true
             <span class="gt-pill gt-club-pill" onclick="gtTogglePill(this,'club')">Putter</span>
           </div>
           <input type="hidden" id="gt-club">
+        </div>
+
+        <!-- Swing (wedge only) -->
+        <div class="gt-field gt-swing-row" id="gt-swing-row">
+          <label>Swing</label>
+          <div class="gt-pills" id="gt-swing-pills">
+            <span class="gt-pill" onclick="gtTogglePill(this,'swing')">¼</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'swing')">½</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'swing')">¾</span>
+            <span class="gt-pill" onclick="gtTogglePill(this,'swing')">Full</span>
+          </div>
+          <input type="hidden" id="gt-swing">
         </div>
 
         <!-- Lie -->
@@ -987,6 +1048,7 @@ sitemap: true
             <th onclick="gtSort('date')" id="gt-th-date">Date</th>
             <th onclick="gtSort('hole')" id="gt-th-hole">Hole</th>
             <th onclick="gtSort('club')" id="gt-th-club">Club</th>
+            <th>Swing</th>
             <th onclick="gtSort('distance')" id="gt-th-distance">Dist (m)</th>
             <th onclick="gtSort('lie')" id="gt-th-lie">Lie</th>
             <th onclick="gtSort('result')" id="gt-th-result">Result</th>
@@ -998,7 +1060,7 @@ sitemap: true
           </tr>
         </thead>
         <tbody id="gt-history-body">
-          <tr><td colspan="11" class="gt-empty">No shots logged yet.</td></tr>
+          <tr><td colspan="12" class="gt-empty">No shots logged yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1073,6 +1135,22 @@ sitemap: true
       <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">SW</span>
       <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">LW</span>
       <span class="gt-pill gt-club-pill" onclick="this.classList.toggle('selected')">Putter</span>
+    </div>
+
+    <p class="gt-section-title" style="margin-top:1.5rem;">Club Distances (m)</p>
+    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Enter your typical carry distances. The closest club is auto-selected when you type a distance on the Log Shot tab.</p>
+    <div class="gt-club-dist-wrap">
+      <table class="gt-club-dist-table" id="gt-club-dist-table">
+        <!-- populated by JS -->
+      </table>
+    </div>
+
+    <p class="gt-section-title" style="margin-top:1rem;">Wedge Matrix (m)</p>
+    <p style="font-size:0.85rem;color:#666;margin:0 0 0.75rem;">Enter carry distances for each wedge swing length. Selecting a distance will auto-pick the closest wedge + swing combination.</p>
+    <div class="gt-club-dist-wrap">
+      <table class="gt-club-dist-table" id="gt-wedge-matrix-table">
+        <!-- populated by JS -->
+      </table>
     </div>
 
     <div class="gt-actions">
@@ -1232,6 +1310,8 @@ sitemap: true
   var ROUNDS_KEY   = 'gt_rounds_v1';
   var COURSES_KEY  = 'gt_courses_v1';
   var ALL_CLUBS = ['Driver','3W','5W','7W','H','4I','5I','6I','7I','8I','9I','PW','GW','SW','LW','Putter'];
+  var WEDGES    = ['PW','GW','SW','LW'];
+  var SWINGS    = ['¼','½','¾','Full'];
 
   function load() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
@@ -1245,9 +1325,9 @@ sitemap: true
   function loadSettings() {
     try {
       var s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-      return s || { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice() };
+      return s || { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice(), clubDistances: {} };
     }
-    catch (e) { return { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice() }; }
+    catch (e) { return { hcp: null, targetHcp: null, bag: ALL_CLUBS.slice(), clubDistances: {} }; }
   }
 
   function saveSettings(settings) {
@@ -1279,6 +1359,54 @@ sitemap: true
     });
   }
 
+  // Render club distance inputs and wedge matrix in Settings
+  function gtRenderClubDistTables() {
+    var settings = loadSettings();
+    var bag = settings.bag || ALL_CLUBS;
+    var cd  = settings.clubDistances || {};
+
+    // ── Non-wedge club distances ──────────────────────────────────────────────
+    var nonWedge = bag.filter(function (c) { return WEDGES.indexOf(c) === -1 && c !== 'Putter'; });
+    var tbl = document.getElementById('gt-club-dist-table');
+    if (tbl) {
+      if (nonWedge.length === 0) {
+        tbl.innerHTML = '';
+      } else {
+        var hdrs = nonWedge.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('');
+        var inps = nonWedge.map(function (c) {
+          var v = (typeof cd[c] === 'number' && cd[c] > 0) ? cd[c] : '';
+          return '<td><input class="gt-cdist-inp" type="number" min="1" max="400" step="1" ' +
+            'data-club="' + c + '" value="' + v + '" placeholder="—" inputmode="decimal"></td>';
+        }).join('');
+        tbl.innerHTML = '<thead><tr><th style="text-align:left;padding-right:0.75rem;">Club</th>' + hdrs + '</tr></thead>' +
+          '<tbody><tr><td style="font-size:0.75rem;color:#888;white-space:nowrap;">Distance (m)</td>' + inps + '</tr></tbody>';
+      }
+    }
+
+    // ── Wedge matrix ─────────────────────────────────────────────────────────
+    var bagWedges = WEDGES.filter(function (w) { return bag.indexOf(w) !== -1; });
+    var wTbl = document.getElementById('gt-wedge-matrix-table');
+    if (wTbl) {
+      if (bagWedges.length === 0) {
+        wTbl.innerHTML = '<tr><td style="font-size:0.85rem;color:#888;padding:0.5rem;">No wedges in bag.</td></tr>';
+      } else {
+        var wHdr = '<thead><tr><th style="text-align:left;">Club</th>' +
+          SWINGS.map(function (s) { return '<th class="gt-wedge-hdr">' + s + '</th>'; }).join('') +
+          '</tr></thead>';
+        var wBody = '<tbody>' + bagWedges.map(function (w) {
+          var wcd = (typeof cd[w] === 'object' && cd[w] !== null) ? cd[w] : {};
+          var cells = SWINGS.map(function (s) {
+            var v = (wcd[s] > 0) ? wcd[s] : '';
+            return '<td><input class="gt-wdist-inp" type="number" min="1" max="200" step="1" ' +
+              'data-club="' + w + '" data-swing="' + s + '" value="' + v + '" placeholder="—" inputmode="decimal"></td>';
+          }).join('');
+          return '<tr><td style="font-weight:700;padding-right:0.5rem;">' + w + '</td>' + cells + '</tr>';
+        }).join('') + '</tbody>';
+        wTbl.innerHTML = wHdr + wBody;
+      }
+    }
+  }
+
   window.gtSaveSettings = function () {
     var hcpVal = document.getElementById('gt-hcp').value;
     var targetHcpVal = document.getElementById('gt-target-hcp').value;
@@ -1287,13 +1415,40 @@ sitemap: true
       bag.push(p.textContent.trim());
     });
     if (bag.length === 0) bag = ALL_CLUBS.slice();
+
+    // Collect club distances from the rendered table inputs
+    var cd = {};
+    document.querySelectorAll('.gt-cdist-inp').forEach(function (inp) {
+      var club = inp.dataset.club;
+      var val  = parseFloat(inp.value);
+      if (club && !isNaN(val) && val > 0) {
+        if (WEDGES.indexOf(club) !== -1) {
+          // handled by wedge matrix inputs
+        } else {
+          cd[club] = val;
+        }
+      }
+    });
+    // Collect wedge matrix distances
+    document.querySelectorAll('.gt-wdist-inp').forEach(function (inp) {
+      var club  = inp.dataset.club;
+      var swing = inp.dataset.swing;
+      var val   = parseFloat(inp.value);
+      if (club && swing && !isNaN(val) && val > 0) {
+        if (!cd[club]) cd[club] = {};
+        cd[club][swing] = val;
+      }
+    });
+
     var settings = {
-      hcp: hcpVal !== '' ? parseFloat(hcpVal) : null,
-      targetHcp: targetHcpVal !== '' ? parseFloat(targetHcpVal) : null,
-      bag: bag
+      hcp:           hcpVal      !== '' ? parseFloat(hcpVal)      : null,
+      targetHcp:     targetHcpVal !== '' ? parseFloat(targetHcpVal) : null,
+      bag:           bag,
+      clubDistances: cd
     };
     saveSettings(settings);
     applyBag(bag);
+    gtRenderClubDistTables(); // refresh so new bag clubs appear
     var notice = document.getElementById('gt-settings-notice');
     notice.textContent = 'Settings saved.';
     notice.style.display = 'block';
@@ -1307,7 +1462,7 @@ sitemap: true
   var activeRoundId = null; // set when a round is started
   var sortKey = 'date';
   var sortDir = -1; // -1 = desc, 1 = asc
-  var pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '' };
+  var pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
 
   // ─── Init ────────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
@@ -1326,6 +1481,7 @@ sitemap: true
       if (settings.bag.indexOf(p.textContent.trim()) !== -1) p.classList.add('selected');
     });
     applyBag(settings.bag);
+    gtRenderClubDistTables();
     populateCourseCtxDropdown();
     gtUpdateRoundCtxLabel();
   });
@@ -1383,6 +1539,77 @@ sitemap: true
       el.classList.add('selected');
     }
     document.getElementById('gt-' + group).value = pillState[group];
+    if (group === 'club') gtOnClubSelected(pillState[group]);
+  };
+
+  // Show/hide swing selector based on selected club
+  function gtOnClubSelected(club) {
+    var row = document.getElementById('gt-swing-row');
+    if (!row) return;
+    var isWedge = WEDGES.indexOf(club) !== -1;
+    if (isWedge) {
+      row.classList.add('visible');
+    } else {
+      row.classList.remove('visible');
+      // clear swing state
+      document.querySelectorAll('#gt-swing-pills .gt-pill').forEach(function (p) { p.classList.remove('selected'); });
+      pillState.swing = '';
+      var sw = document.getElementById('gt-swing');
+      if (sw) sw.value = '';
+    }
+  }
+
+  // Auto-select closest club (+swing for wedges) based on distance typed
+  window.gtAutoSelectClub = function (distStr) {
+    var dist = parseFloat(distStr);
+    var hint = document.getElementById('gt-dist-hint');
+    if (!dist || isNaN(dist) || dist <= 0) { if (hint) hint.textContent = ''; return; }
+
+    var settings = loadSettings();
+    var cd = settings.clubDistances;
+    if (!cd || Object.keys(cd).length === 0) { if (hint) hint.textContent = ''; return; }
+
+    var bag = settings.bag || ALL_CLUBS;
+    var best = null, bestDiff = Infinity;
+
+    bag.forEach(function (club) {
+      if (club === 'Putter') return;
+      var d = cd[club];
+      if (!d) return;
+      if (WEDGES.indexOf(club) !== -1 && typeof d === 'object') {
+        SWINGS.forEach(function (swing) {
+          var dv = d[swing];
+          if (dv == null || dv <= 0) return;
+          var diff = Math.abs(dist - dv);
+          if (diff < bestDiff) { bestDiff = diff; best = { club: club, swing: swing }; }
+        });
+      } else if (typeof d === 'number' && d > 0) {
+        var diff = Math.abs(dist - d);
+        if (diff < bestDiff) { bestDiff = diff; best = { club: club, swing: null }; }
+      }
+    });
+
+    if (!best) { if (hint) hint.textContent = ''; return; }
+
+    // Only auto-select if within 20 % of club distance (avoids wild suggestions)
+    var refDist = best.swing ? cd[best.club][best.swing] : cd[best.club];
+    if (refDist && bestDiff / refDist > 0.25) { if (hint) hint.textContent = ''; return; }
+
+    // Apply selection
+    selectPill('gt-club-pills', 'club', best.club);
+    gtOnClubSelected(best.club);
+    if (best.swing) {
+      selectPill('gt-swing-pills', 'swing', best.swing);
+      pillState.swing = best.swing;
+      var sw = document.getElementById('gt-swing');
+      if (sw) sw.value = best.swing;
+    }
+
+    // Show hint
+    if (hint) {
+      var label = best.club + (best.swing ? ' ' + best.swing : '');
+      hint.textContent = '↑ ' + label + ' (' + refDist + ' m stock)';
+    }
   };
 
   // ─── Save shot ───────────────────────────────────────────────────────────────
@@ -1449,6 +1676,7 @@ sitemap: true
       hole: holeNum,
       distance: v('gt-distance') ? parseFloat(v('gt-distance')) : null,
       club: pillState.club,
+      swing: pillState.swing || null,
       lie: pillState.lie,
       result: pillState.result,
       strike: pillState.strike,
@@ -1472,7 +1700,9 @@ sitemap: true
   function clearForm() {
     document.getElementById('gt-shot-form').reset();
     document.querySelectorAll('.gt-pill.selected, .gt-dpad-btn.selected').forEach(function (p) { p.classList.remove('selected'); });
-    pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '' };
+    pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
+    gtOnClubSelected(''); // hide swing row
+    document.getElementById('gt-dist-hint').textContent = '';
   }
 
   // Called by the Clear button — wipes everything
@@ -1517,6 +1747,7 @@ sitemap: true
       // Auto-select Putter when arriving on green
       if (shot.end_lie === 'Green') {
         selectPill('gt-club-pills', 'club', 'Putter');
+        gtOnClubSelected('Putter');
       }
 
       var holeShots = shots.filter(function (s) { return s.date === shot.date && s.hole === shot.hole; }).length;
@@ -1574,7 +1805,7 @@ sitemap: true
 
     var tbody = document.getElementById('gt-history-body');
     if (filteredShots.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="11" class="gt-empty">No shots match the filters.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" class="gt-empty">No shots match the filters.</td></tr>';
       document.getElementById('gt-history-count').textContent = '';
       return;
     }
@@ -1585,6 +1816,7 @@ sitemap: true
         '<td>' + (s.date || '') + '</td>' +
         '<td>' + (s.hole != null ? s.hole : '') + '</td>' +
         '<td>' + esc(s.club) + '</td>' +
+        '<td>' + esc(s.swing || '') + '</td>' +
         '<td>' + (s.distance != null ? s.distance : '') + '</td>' +
         '<td>' + esc(s.lie) + '</td>' +
         '<td>' + esc(s.result) + '</td>' +
@@ -1763,7 +1995,7 @@ sitemap: true
   };
 
   window.gtExportCSV = function () {
-    var cols = ['date', 'hole', 'club', 'distance', 'lie', 'end_distance', 'end_lie', 'result', 'strike', 'shape', 'sg', 'notes'];
+    var cols = ['date', 'hole', 'club', 'swing', 'distance', 'lie', 'end_distance', 'end_lie', 'result', 'strike', 'shape', 'sg', 'notes'];
     var rows = [cols.join(',')].concat(shots.map(function (s) {
       return cols.map(function (c) {
         var val = s[c] == null ? '' : String(s[c]);
