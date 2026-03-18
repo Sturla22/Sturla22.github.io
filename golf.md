@@ -1107,10 +1107,17 @@ sitemap: true
 
   <!-- STATS -->
   <div id="gt-panel-stats" class="gt-panel">
-    <div style="display:flex;gap:0.4rem;margin-bottom:1rem;flex-wrap:wrap;">
+    <div style="display:flex;gap:0.4rem;margin-bottom:0.5rem;flex-wrap:wrap;">
       <button class="gt-btn gt-btn-outline gt-stats-filter-btn active" onclick="gtSetStatsFilter('all',this)">All rounds</button>
       <button class="gt-btn gt-btn-outline gt-stats-filter-btn" onclick="gtSetStatsFilter('outdoor',this)">Outdoor</button>
       <button class="gt-btn gt-btn-outline gt-stats-filter-btn" onclick="gtSetStatsFilter('indoor',this)">Indoor</button>
+    </div>
+    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
+      <label style="font-size:0.82rem;font-weight:600;color:#555;">From</label>
+      <input type="date" id="gt-stats-from" onchange="gtSetStatsDates()" style="padding:0.3rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+      <label style="font-size:0.82rem;font-weight:600;color:#555;">To</label>
+      <input type="date" id="gt-stats-to" onchange="gtSetStatsDates()" style="padding:0.3rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+      <button class="gt-btn gt-btn-outline" onclick="gtClearStatsDates()" style="font-size:0.8rem;padding:0.3rem 0.6rem;min-height:0;">Clear dates</button>
     </div>
     <div id="gt-stats-content">
       <p class="gt-empty">Log some shots to see statistics.</p>
@@ -1541,6 +1548,8 @@ sitemap: true
   var activeRoundId = null; // set when a round is started
   var activeRoundType = 'outdoor'; // 'outdoor' | 'indoor'
   var statsFilter = 'all'; // 'all' | 'outdoor' | 'indoor'
+  var statsDateFrom = '';
+  var statsDateTo   = '';
   var sortKey = 'date';
   var sortDir = -1; // -1 = desc, 1 = asc
   var pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
@@ -2066,22 +2075,49 @@ sitemap: true
     gtRenderStats();
   };
 
+  window.gtSetStatsDates = function () {
+    statsDateFrom = document.getElementById('gt-stats-from').value || '';
+    statsDateTo   = document.getElementById('gt-stats-to').value   || '';
+    gtRenderStats();
+  };
+
+  window.gtClearStatsDates = function () {
+    statsDateFrom = '';
+    statsDateTo   = '';
+    document.getElementById('gt-stats-from').value = '';
+    document.getElementById('gt-stats-to').value   = '';
+    gtRenderStats();
+  };
+
   window.gtRenderStats = function () {
     var el = document.getElementById('gt-stats-content');
 
-    // Filter shots: exclude synthetic, apply indoor/outdoor filter
+    // Filter rounds by type and date range
+    var filteredRounds = rounds.filter(function (r) {
+      if (statsFilter !== 'all') {
+        var t = r.type || 'outdoor';
+        if (t !== statsFilter) return false;
+      }
+      if (statsDateFrom && r.date < statsDateFrom) return false;
+      if (statsDateTo   && r.date > statsDateTo)   return false;
+      return true;
+    });
+    var filteredRoundIds = filteredRounds.map(function (r) { return r.id; });
+
+    // Filter shots: exclude synthetic, apply type + date range
     var filteredShots;
-    if (statsFilter === 'all') {
+    if (statsFilter === 'all' && !statsDateFrom && !statsDateTo) {
       filteredShots = shots.filter(function (s) { return !s.synthetic; });
     } else {
-      var typeRoundIds = rounds
-        .filter(function (r) {
-          var t = r.type || 'outdoor';
-          return t === statsFilter;
-        })
-        .map(function (r) { return r.id; });
       filteredShots = shots.filter(function (s) {
-        return !s.synthetic && typeRoundIds.indexOf(s.roundId) !== -1;
+        if (s.synthetic) return false;
+        if (s.roundId) return filteredRoundIds.indexOf(s.roundId) !== -1;
+        // Practice shots (no round): filter by shot date
+        if (statsFilter !== 'all') return false; // practice shots have no type
+        var d = s.date || '';
+        if (statsDateFrom && d < statsDateFrom) return false;
+        if (statsDateTo   && d > statsDateTo)   return false;
+        return true;
       });
     }
 
@@ -2100,6 +2136,56 @@ sitemap: true
 
     var onTarget = filteredShots.filter(function (s) { return s.result === 'On Target'; }).length;
     var onTargetRate = filteredShots.length ? Math.round(onTarget / filteredShots.length * 100) : 0;
+
+    // ── Traditional stats (GIR, FIR, putts, up&down, sand save) ───────────────
+    var trad = { girOpp:0, girHit:0, firOpp:0, firHit:0, putts:0, holes:0,
+                 udOpp:0, udHit:0, ssOpp:0, ssHit:0, scoreDiff:0, scoredHoles:0 };
+    filteredRounds.forEach(function (round) {
+      var course = courses.find(function (c) { return c.id === round.courseId; });
+      var courseParsArr = course ? course.pars : defaultPars();
+      var rs = shots.filter(function (s) { return s.roundId === round.id; });
+      for (var h = 1; h <= 18; h++) {
+        var hs = rs.filter(function (s) { return s.hole === h; });
+        if (hs.length === 0) continue;
+        var shotWithPar = hs.find(function (s) { return s.par != null && !s.synthetic; });
+        var par = shotWithPar ? shotWithPar.par : courseParsArr[h - 1];
+        var hd = computeHoleStats(hs, par);
+        if (!hd || !hd.holed) continue;
+        trad.holes++;
+        trad.girOpp++;
+        if (hd.gir) trad.girHit++;
+        trad.putts += hd.putts;
+        if (hd.fir !== null) { trad.firOpp++; if (hd.fir) trad.firHit++; }
+        if (hd.updown !== null) { trad.udOpp++; if (hd.updown) trad.udHit++; }
+        if (hd.sandSave !== null) { trad.ssOpp++; if (hd.sandSave) trad.ssHit++; }
+        if (hd.diff !== null) { trad.scoreDiff += hd.diff; trad.scoredHoles++; }
+      }
+    });
+
+    function pct(hit, opp) {
+      return opp > 0 ? Math.round(hit / opp * 100) + '%' : '—';
+    }
+    function sub(hit, opp) {
+      return opp > 0 ? hit + ' / ' + opp + ' holes' : 'no round data';
+    }
+
+    var tradSection = '';
+    if (trad.holes > 0) {
+      var avgPutts = trad.holes > 0 ? (trad.putts / trad.holes).toFixed(2) : '—';
+      var avgScore = trad.scoredHoles > 0
+        ? (trad.scoreDiff >= 0 ? '+' : '') + (trad.scoreDiff / trad.scoredHoles).toFixed(2)
+        : '—';
+      tradSection =
+        '<p class="gt-section-title">Traditional Stats (' + trad.holes + ' holes from ' + filteredRounds.length + ' round' + (filteredRounds.length !== 1 ? 's' : '') + ')</p>' +
+        '<div class="gt-stats-grid">' +
+          stat('GIR', pct(trad.girHit, trad.girOpp), sub(trad.girHit, trad.girOpp)) +
+          stat('FIR', pct(trad.firHit, trad.firOpp), sub(trad.firHit, trad.firOpp) + (trad.firOpp === 0 ? '' : '')) +
+          stat('Avg putts', avgPutts, 'per hole') +
+          stat('Avg score', avgScore, 'vs par per hole') +
+          (trad.udOpp > 0 ? stat('Up & Down', pct(trad.udHit, trad.udOpp), sub(trad.udHit, trad.udOpp)) : '') +
+          (trad.ssOpp > 0 ? stat('Sand Save', pct(trad.ssHit, trad.ssOpp), sub(trad.ssHit, trad.ssOpp)) : '') +
+        '</div>';
+    }
 
     // ── Strokes Gained computation ─────────────────────────────────────────────
     var CATS = ['Off the Tee', 'Approach', 'Around the Green', 'Putting'];
@@ -2164,6 +2250,7 @@ sitemap: true
         stat('Solid strike', pureRate + '%', pure + ' shots') +
         stat('On target', onTargetRate + '%', onTarget + ' shots') +
       '</div>' +
+      tradSection +
       '<p class="gt-section-title">Strokes Gained vs Scratch</p>' +
       sgSection +
       targetHcpSection +
