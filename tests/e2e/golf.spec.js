@@ -129,6 +129,17 @@ test.describe('Golf tracker', () => {
       await expect(page.locator('#gt-distance')).toHaveValue('375');
     });
 
+    test('fresh tracker defaults can auto-select a club without importing example data', async ({ page }) => {
+      await openGolf(page);
+
+      await setHole(page, 1);
+      await page.locator('#gt-hole-length').fill('433');
+      await page.locator('#gt-hole-length').dispatchEvent('change');
+
+      await expect(page.locator('#gt-distance')).toHaveValue('433');
+      await expect(page.locator('#gt-club-pills .gt-pill.selected')).toHaveText('Driver');
+    });
+
     test('committed hole length picks a long club instead of a wedge from partial typing', async ({ page }) => {
       await openGolf(page);
       await loadExampleData(page);
@@ -171,6 +182,92 @@ test.describe('Golf tracker', () => {
       await expect(page.locator('#gt-club-pills .gt-pill.selected')).toHaveText('6I');
       await expect(page.locator('#gt-end-distance')).toHaveValue('1');
       await expect(page.locator('#gt-endLie')).toHaveValue('Green');
+    });
+
+    test('typing distance updates club auto-selection without waiting for blur', async ({ page }) => {
+      await openGolf(page);
+      await loadExampleData(page);
+
+      await openLog(page);
+      await setHole(page, 1);
+      await page.locator('#gt-distance').fill('150');
+      await page.locator('#gt-distance').dispatchEvent('input');
+
+      await expect(page.locator('#gt-club-pills .gt-pill.selected')).toHaveText('6I');
+      await expect(page.locator('#gt-end-distance')).toHaveValue('1');
+    });
+
+    test('caddie assist suggests a stronger club and lets the user accept it', async ({ page }) => {
+      await openGolf(page);
+      await loadExampleData(page);
+
+      await openLog(page);
+      await setHole(page, 1);
+      await setDistance(page, 150, 'commit');
+      await expect(page.locator('#gt-club-pills .gt-pill.selected')).toHaveText('6I');
+
+      await page.getByRole('button', { name: 'Caddie assist' }).click();
+      await page.selectOption('#gt-caddie-wind-dir', 'into');
+      await page.selectOption('#gt-caddie-wind-strength', '9');
+      await page.selectOption('#gt-caddie-slope', 'uphill');
+      await page.selectOption('#gt-caddie-lie-quality', 'poor');
+
+      await expect(page.locator('#gt-caddie-plays-like')).toContainText('179.2');
+      await expect(page.locator('#gt-caddie-apply')).toContainText('Use 7W');
+
+      await page.locator('#gt-caddie-apply').click();
+      await expect(page.locator('#gt-club-pills .gt-pill.selected')).toHaveText('7W');
+      await expect(page.locator('#gt-dist-hint')).toContainText('plays like 179.2');
+    });
+
+    test('caddie assist makes downhill helping wind play shorter than an equivalent headwind hurts', async ({ page }) => {
+      await openGolf(page);
+      await loadExampleData(page);
+
+      await openLog(page);
+      await setHole(page, 1);
+      await setDistance(page, 150, 'commit');
+      await expect(page.locator('#gt-club-pills .gt-pill.selected')).toHaveText('6I');
+
+      await page.getByRole('button', { name: 'Caddie assist' }).click();
+      await page.selectOption('#gt-caddie-wind-dir', 'helping');
+      await page.selectOption('#gt-caddie-wind-strength', '9');
+      await page.selectOption('#gt-caddie-slope', 'downhill');
+      await page.selectOption('#gt-caddie-lie-quality', 'good');
+
+      await expect(page.locator('#gt-caddie-plays-like')).toContainText('130.2');
+      await expect(page.locator('#gt-caddie-apply')).toContainText('Use 8I');
+    });
+
+    test('caddie assist disables wind speed when wind is calm', async ({ page }) => {
+      await openGolf(page);
+      await openLog(page);
+
+      await page.getByRole('button', { name: 'Caddie assist' }).click();
+      await expect(page.locator('#gt-caddie-wind-strength')).toBeDisabled();
+
+      await page.selectOption('#gt-caddie-wind-dir', 'into');
+      await expect(page.locator('#gt-caddie-wind-strength')).toBeEnabled();
+    });
+
+    test('putt assist appears on the green and shows plays-like distance plus aim', async ({ page }) => {
+      await openGolf(page);
+
+      await setHole(page, 1);
+      await setDistance(page, 6, 'input');
+      await clickPill(page, '#gt-lie-pills', 'Green');
+      await clickPill(page, '#gt-club-pills', 'Putter');
+
+      await expect(page.locator('#gt-putt-section')).toBeVisible();
+      await expect(page.locator('#gt-putt-plays-like')).toContainText('6 m');
+      await expect(page.locator('#gt-putt-aim')).toContainText('Straight start line');
+
+      await page.selectOption('#gt-putt-slope', 'downhill');
+      await page.selectOption('#gt-putt-speed', 'fast');
+      await page.selectOption('#gt-putt-break', 'left');
+
+      await expect(page.locator('#gt-putt-plays-like')).toContainText('4.4');
+      await expect(page.locator('#gt-putt-aim')).toContainText('2.3 cups left');
     });
 
     test('defaults result to on target unless a direction is explicitly selected', async ({ page }) => {

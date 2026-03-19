@@ -64,6 +64,54 @@
           <div class="gt-dist-hint" id="gt-dist-hint"></div>
         </div>
 
+        <button type="button" class="gt-more-toggle gt-caddie-toggle" id="gt-caddie-btn" aria-expanded="false">▸ Caddie assist</button>
+        <div id="gt-caddie-section" class="gt-more-section gt-caddie-section gt-hidden">
+          <div class="gt-caddie-grid">
+            <div class="gt-field">
+              <label>Wind</label>
+              <select id="gt-caddie-wind-dir" class="gt-caddie-select">
+                <option value="calm">Calm</option>
+                <option value="into">Into</option>
+                <option value="helping">Helping</option>
+                <option value="left-to-right">L → R</option>
+                <option value="right-to-left">R → L</option>
+              </select>
+            </div>
+            <div class="gt-field">
+              <label>Speed</label>
+              <select id="gt-caddie-wind-strength" class="gt-caddie-select">
+                <option value="3">3 m/s</option>
+                <option value="6">6 m/s</option>
+                <option value="9">9 m/s</option>
+              </select>
+            </div>
+            <div class="gt-field">
+              <label>Slope</label>
+              <select id="gt-caddie-slope" class="gt-caddie-select">
+                <option value="flat">Flat</option>
+                <option value="uphill">Uphill</option>
+                <option value="downhill">Downhill</option>
+              </select>
+            </div>
+            <div class="gt-field">
+              <label>Lie quality</label>
+              <select id="gt-caddie-lie-quality" class="gt-caddie-select">
+                <option value="normal">Normal</option>
+                <option value="good">Good</option>
+                <option value="poor">Poor</option>
+              </select>
+            </div>
+          </div>
+          <div class="gt-caddie-summary">
+            <div class="gt-caddie-metric">
+              <span class="gt-caddie-label">Plays like</span>
+              <span class="gt-caddie-value" id="gt-caddie-plays-like">-</span>
+            </div>
+            <div class="gt-caddie-meta" id="gt-caddie-context">Optional. Add context and use the suggestion if it looks right.</div>
+            <button type="button" class="gt-btn gt-btn-outline gt-caddie-apply" id="gt-caddie-apply" onclick="gtUseCaddieSuggestion()" disabled>Use suggested club</button>
+          </div>
+        </div>
+
         <!-- Club -->
         <div class="gt-field">
           <label>Club</label>
@@ -124,6 +172,43 @@
             <span class="gt-pill" onclick="gtTogglePill(this,'lie')">Green</span>
           </div>
           <input type="hidden" id="gt-lie">
+        </div>
+
+        <div id="gt-putt-section" class="gt-putt-section gt-hidden">
+          <div class="gt-section-sub gt-putt-section-sub">Putt Assist</div>
+          <div class="gt-caddie-grid">
+            <div class="gt-field">
+              <label>Green speed</label>
+              <select id="gt-putt-speed" class="gt-caddie-select">
+                <option value="medium">Medium</option>
+                <option value="slow">Slow</option>
+                <option value="fast">Fast</option>
+              </select>
+            </div>
+            <div class="gt-field">
+              <label>Slope</label>
+              <select id="gt-putt-slope" class="gt-caddie-select">
+                <option value="flat">Flat</option>
+                <option value="uphill">Uphill</option>
+                <option value="downhill">Downhill</option>
+              </select>
+            </div>
+            <div class="gt-field">
+              <label>Break</label>
+              <select id="gt-putt-break" class="gt-caddie-select">
+                <option value="straight">Straight</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+          <div class="gt-caddie-summary">
+            <div class="gt-caddie-metric">
+              <span class="gt-caddie-label">Plays like</span>
+              <span class="gt-caddie-value" id="gt-putt-plays-like">-</span>
+            </div>
+            <div class="gt-caddie-meta" id="gt-putt-aim">Set a distance on the green to get a pace and aim hint.</div>
+          </div>
         </div>
 
         <!-- Ball finish -->

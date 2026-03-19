@@ -16,17 +16,19 @@ run('defaultSettings returns a fresh default settings object', () => {
   const a = core.defaultSettings();
   const b = core.defaultSettings();
 
-  assert.deepEqual(a, {
-    hcp: null,
-    targetHcp: null,
-    hcpIndoor: null,
-    targetHcpIndoor: null,
-    fixedPutting: false,
-    bag: core.ALL_CLUBS,
-    clubDistances: {}
-  });
+  assert.equal(a.hcp, null);
+  assert.equal(a.targetHcp, null);
+  assert.equal(a.hcpIndoor, null);
+  assert.equal(a.targetHcpIndoor, null);
+  assert.equal(a.fixedPutting, false);
+  assert.deepEqual(a.bag, core.ALL_CLUBS);
+  assert.equal(a.clubDistances.Driver, 228);
+  assert.equal(a.clubDistances['6I'], 149);
+  assert.deepEqual(a.clubDistances.PW, { '¼': 42, '½': 68, '¾': 92, 'Full': 112 });
   assert.notStrictEqual(a, b);
   assert.notStrictEqual(a.bag, b.bag);
+  assert.notStrictEqual(a.clubDistances, b.clubDistances);
+  assert.notStrictEqual(a.clubDistances.PW, b.clubDistances.PW);
 });
 
 run('normalizeSettings restores the full bag when bag is missing or empty', () => {
@@ -37,6 +39,14 @@ run('normalizeSettings restores the full bag when bag is missing or empty', () =
   assert.deepEqual(missingBag.bag, core.ALL_CLUBS);
   assert.deepEqual(emptyBag.bag, core.ALL_CLUBS);
   assert.deepEqual(partialBag.bag, ['Driver', '7I']);
+  assert.equal(missingBag.clubDistances.Driver, 228);
+  assert.equal(emptyBag.clubDistances['7I'], 141);
+  assert.deepEqual(core.normalizeSettings({ clubDistances: { '6I': 151, PW: { 'Full': 115 } } }).clubDistances.PW, {
+    '¼': 42,
+    '½': 68,
+    '¾': 92,
+    'Full': 115
+  });
 });
 
 run('sgExpected handles green, fairway-like, and penalty lies', () => {

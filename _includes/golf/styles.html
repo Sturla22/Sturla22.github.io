@@ -422,6 +422,91 @@
 
   .gt-more-toggle:active { background: var(--gt-bg-hover); }
 
+  .gt-caddie-toggle {
+    margin-top: -0.1rem;
+  }
+
+  .gt-caddie-section {
+    padding: 0.9rem 0 0.2rem;
+  }
+
+  .gt-caddie-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .gt-caddie-select {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--gt-border);
+    border-radius: 8px;
+    background: var(--gt-surface);
+    color: var(--gt-text);
+    font: inherit;
+  }
+
+  .gt-caddie-select:disabled,
+  .gt-caddie-select-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .gt-caddie-summary {
+    margin-top: 0.8rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--gt-border-soft);
+    border-radius: 12px;
+    background: var(--gt-bg-muted);
+  }
+
+  .gt-caddie-metric {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .gt-caddie-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gt-text-faint);
+  }
+
+  .gt-caddie-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--gt-text);
+  }
+
+  .gt-caddie-meta {
+    margin-top: 0.4rem;
+    font-size: 0.88rem;
+    color: var(--gt-text-soft);
+  }
+
+  .gt-caddie-apply {
+    margin-top: 0.75rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .gt-caddie-apply:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  .gt-putt-section {
+    margin-top: 0.2rem;
+  }
+
+  .gt-putt-section-sub {
+    margin-bottom: 0.55rem;
+  }
+
   .gt-shot-status-card {
     background: var(--gt-surface);
     border: 1px solid var(--gt-border-soft);
@@ -1659,6 +1744,7 @@
   @media (max-width: 480px) {
     .golf-tracker { max-width: 100%; }
     .gt-club-grid { grid-template-columns: repeat(4, 1fr); }
+    .gt-caddie-grid { grid-template-columns: 1fr; }
     .gt-pill { font-size: 0.85rem; padding: 0.5rem 0.7rem; }
     .gt-shot-meta-row { grid-template-columns: 1fr 1fr !important; }
     .gt-shot-meta-row .gt-field:last-child { grid-column: 1 / -1; }
@@ -1710,7 +1796,8 @@
   .gt-hidden { display: none; }
   .gt-shot-status { display: none; }
   .gt-proximity-hint { color: var(--gt-accent); font-style: italic; }
-  .gt-more-section { display: none; }
+  .gt-more-section { display: block; }
+  .gt-more-section.gt-hidden { display: none; }
   .gt-more-form { margin-top: 0.75rem; }
   .gt-btn-grow { flex: 1; }
 

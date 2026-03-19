@@ -39,6 +39,26 @@
   var WEDGES = ['PW','GW','SW','LW'];
   var SWINGS = ['¼','½','¾','Full'];
 
+  function defaultClubDistances() {
+    return {
+      'Driver': 228,
+      '3W': 210,
+      '5W': 196,
+      '7W': 182,
+      'H': 172,
+      '4I': 166,
+      '5I': 158,
+      '6I': 149,
+      '7I': 141,
+      '8I': 132,
+      '9I': 122,
+      'PW': { '¼': 42, '½': 68, '¾': 92, 'Full': 112 },
+      'GW': { '¼': 36, '½': 58, '¾': 81, 'Full': 101 },
+      'SW': { '¼': 28, '½': 47, '¾': 67, 'Full': 84 },
+      'LW': { '¼': 20, '½': 36, '¾': 54, 'Full': 70 }
+    };
+  }
+
   // Category allocation for handicap-based amateur SG targets.
   // This remains a heuristic, but is shaped to match public benchmark
   // patterns better than the original even-ish split:
@@ -106,7 +126,15 @@
   }
 
   function defaultSettings() {
-    return { hcp: null, targetHcp: null, hcpIndoor: null, targetHcpIndoor: null, fixedPutting: false, bag: ALL_CLUBS.slice(), clubDistances: {} };
+    return {
+      hcp: null,
+      targetHcp: null,
+      hcpIndoor: null,
+      targetHcpIndoor: null,
+      fixedPutting: false,
+      bag: ALL_CLUBS.slice(),
+      clubDistances: defaultClubDistances()
+    };
   }
 
   function normalizeSettings(raw) {
@@ -118,7 +146,18 @@
       return ALL_CLUBS.indexOf(club) !== -1;
     }) : [];
     next.bag = bag.length > 0 ? bag : ALL_CLUBS.slice();
-    next.clubDistances = raw.clubDistances && typeof raw.clubDistances === 'object' ? raw.clubDistances : {};
+    if (!raw.clubDistances || typeof raw.clubDistances !== 'object' || Object.keys(raw.clubDistances).length === 0) {
+      next.clubDistances = defaultClubDistances();
+    } else {
+      next.clubDistances = Object.assign({}, defaultClubDistances(), raw.clubDistances);
+      WEDGES.forEach(function (club) {
+        var defaults = defaultClubDistances()[club];
+        var current = raw.clubDistances[club];
+        if (current && typeof current === 'object') {
+          next.clubDistances[club] = Object.assign({}, defaults, current);
+        }
+      });
+    }
     next.fixedPutting = !!raw.fixedPutting;
     return next;
   }
@@ -137,23 +176,7 @@
       targetHcpIndoor: 8,
       fixedPutting: true,
       bag: ALL_CLUBS.slice(),
-      clubDistances: {
-        'Driver': 228,
-        '3W': 210,
-        '5W': 196,
-        '7W': 182,
-        'H': 172,
-        '4I': 166,
-        '5I': 158,
-        '6I': 149,
-        '7I': 141,
-        '8I': 132,
-        '9I': 122,
-        'PW': { '¼': 42, '½': 68, '¾': 92, 'Full': 112 },
-        'GW': { '¼': 36, '½': 58, '¾': 81, 'Full': 101 },
-        'SW': { '¼': 28, '½': 47, '¾': 67, 'Full': 84 },
-        'LW': { '¼': 20, '½': 36, '¾': 54, 'Full': 70 }
-      }
+      clubDistances: defaultClubDistances()
     };
   }
 

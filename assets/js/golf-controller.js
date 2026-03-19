@@ -70,6 +70,7 @@
     byId('date').value = today();
     setVisible(byId('moreSection'), false);
     byId('moreButton').textContent = '▸ Strike, shape & notes';
+    resetCaddieUI();
     gtUpdateShotProgress();
   }
 
@@ -306,7 +307,10 @@
   var sortKey = 'date';
   var sortDir = -1; // -1 = desc, 1 = asc
   var pillState = { lie: '', result: '', strike: '', endLie: '', club: '', shape: '', swing: '' };
+  var defaultCaddieState = { windDir: 'calm', windStrength: '3', slope: 'flat', lieQuality: 'normal' };
+  var defaultPuttState = { speed: 'medium', slope: 'flat', break: 'straight' };
   var lastSavedShotIds = [];
+  var distanceAutoSelectTimer = null;
 
   function setSuggestedState(el, isSuggested) {
     if (!el) return;
@@ -341,6 +345,274 @@
       if (lie) main += ' · ' + lie;
     }
     document.getElementById('gt-shot-progress-main').textContent = main;
+    updatePuttAssist();
+  }
+
+  function isPuttingContext() {
+    return (pillState.lie || '') === 'Green' || (pillState.club || '') === 'Putter';
+  }
+
+  function getPuttInputs() {
+    return {
+      speed: byId('puttSpeed') ? byId('puttSpeed').value : defaultPuttState.speed,
+      slope: byId('puttSlope') ? byId('puttSlope').value : defaultPuttState.slope,
+      breakDir: byId('puttBreak') ? byId('puttBreak').value : defaultPuttState.break
+    };
+  }
+
+  function computePuttAssist(distance, inputs) {
+    var speedMul = { slow: 1.08, medium: 1.0, fast: 0.9 }[inputs.speed] || 1.0;
+    var slopeMul = { uphill: 1.18, flat: 1.0, downhill: 0.82 }[inputs.slope] || 1.0;
+    var playsLike = Math.max(0, Math.round(distance * speedMul * slopeMul * 10) / 10);
+
+    var breakBase = { slow: 0.14, medium: 0.2, fast: 0.28 }[inputs.speed] || 0.2;
+    var breakSlopeMul = { uphill: 0.8, flat: 1.0, downhill: 1.35 }[inputs.slope] || 1.0;
+    var cups = Math.round(distance * breakBase * breakSlopeMul * 10) / 10;
+    return {
+      playsLike: playsLike,
+      aimText: inputs.breakDir === 'straight'
+        ? 'Straight start line'
+        : cups + ' cup' + (cups === 1 ? '' : 's') + ' ' + inputs.breakDir
+    };
+  }
+
+  function resetPuttAssistUI() {
+    if (byId('puttSpeed')) byId('puttSpeed').value = defaultPuttState.speed;
+    if (byId('puttSlope')) byId('puttSlope').value = defaultPuttState.slope;
+    if (byId('puttBreak')) byId('puttBreak').value = defaultPuttState.break;
+    if (byId('puttPlaysLike')) byId('puttPlaysLike').textContent = '-';
+    if (byId('puttAim')) byId('puttAim').textContent = 'Set a distance on the green to get a pace and aim hint.';
+    setVisible(byId('puttSection'), false, 'block');
+  }
+
+  function updatePuttAssist() {
+    var section = byId('puttSection');
+    var playsLikeEl = byId('puttPlaysLike');
+    var aimEl = byId('puttAim');
+    if (!section || !playsLikeEl || !aimEl) return;
+
+    if (!isPuttingContext()) {
+      setVisible(section, false, 'block');
+      return;
+    }
+
+    setVisible(section, true, 'block');
+    var distance = parseFloat(byId('distance').value);
+    if (!distance || isNaN(distance) || distance < 0) {
+      playsLikeEl.textContent = '-';
+      aimEl.textContent = 'Set a distance on the green to get a pace and aim hint.';
+      return;
+    }
+
+    var result = computePuttAssist(distance, getPuttInputs());
+    playsLikeEl.textContent = result.playsLike + ' m';
+    aimEl.textContent = result.aimText;
+  }
+
+  function getCaddieInputs() {
+    var windDir = byId('caddieWindDir') ? byId('caddieWindDir').value : defaultCaddieState.windDir;
+    var windStrength = byId('caddieWindStrength') ? byId('caddieWindStrength').value : defaultCaddieState.windStrength;
+    return {
+      windDir: windDir,
+      windStrength: windDir === 'calm' ? '0' : windStrength,
+      slope: byId('caddieSlope') ? byId('caddieSlope').value : defaultCaddieState.slope,
+      lieQuality: byId('caddieLieQuality') ? byId('caddieLieQuality').value : defaultCaddieState.lieQuality
+    };
+  }
+
+  function syncCaddieWindControls() {
+    var windDir = byId('caddieWindDir');
+    var windStrength = byId('caddieWindStrength');
+    if (!windDir || !windStrength) return;
+    var isCalm = windDir.value === 'calm';
+    windStrength.disabled = isCalm;
+    windStrength.setAttribute('aria-disabled', isCalm ? 'true' : 'false');
+    windStrength.classList.toggle('gt-caddie-select-disabled', isCalm);
+  }
+
+  function describeCaddieInputs(inputs) {
+    var bits = [];
+    var windLabel = inputs.windStrength + ' m/s';
+    if (inputs.windDir === 'into') bits.push(windLabel + ' headwind');
+    if (inputs.windDir === 'helping') bits.push(windLabel + ' helping breeze');
+    if (inputs.windDir === 'left-to-right') bits.push(windLabel + ' L→R wind');
+    if (inputs.windDir === 'right-to-left') bits.push(windLabel + ' R→L wind');
+    if (inputs.slope === 'uphill') bits.push('uphill lie');
+    if (inputs.slope === 'downhill') bits.push('downhill lie');
+    if (inputs.lieQuality === 'good') bits.push('clean strike');
+    if (inputs.lieQuality === 'poor') bits.push('poor lie');
+    return bits.length ? bits.join(' · ') : 'No extra adjustment';
+  }
+
+  function computePlaysLikeDistance(baseDistance, inputs) {
+    var adjustment = 0;
+    var windSpeed = parseFloat(inputs.windStrength) || 0;
+    var windMultiplier = 1;
+    if (inputs.slope === 'downhill') windMultiplier = 1.2;
+    if (inputs.slope === 'uphill') windMultiplier = 0.9;
+
+    if (inputs.windDir === 'into') adjustment += windSpeed * 2.0 * windMultiplier;
+    if (inputs.windDir === 'helping') adjustment -= windSpeed * 1.0 * windMultiplier;
+    if (inputs.slope === 'uphill') adjustment += 6;
+    if (inputs.slope === 'downhill') adjustment -= 6;
+    if (inputs.lieQuality === 'good') adjustment -= 3;
+    if (inputs.lieQuality === 'poor') adjustment += 7;
+    var playsLike = Math.max(0, Math.round((baseDistance + adjustment) * 10) / 10);
+    return {
+      adjustment: adjustment,
+      playsLike: playsLike,
+      description: describeCaddieInputs(inputs)
+    };
+  }
+
+  function clearClubSelection() {
+    queryAll('clubPills').forEach(function (p) {
+      p.classList.remove('selected');
+      p.classList.remove('gt-suggested');
+    });
+    queryAll('swingPills').forEach(function (p) {
+      p.classList.remove('selected');
+      p.classList.remove('gt-suggested');
+    });
+    pillState.club = '';
+    pillState.swing = '';
+    var clubInput = byId('club');
+    var swingInput = byId('swing');
+    if (clubInput) clubInput.value = '';
+    if (swingInput) swingInput.value = '';
+    gtOnClubSelected('');
+  }
+
+  function getClubSuggestion(dist) {
+    if (!dist || isNaN(dist) || dist <= 0) return null;
+    var settings = loadSettings();
+    var cd = settings.clubDistances;
+    if (!cd || Object.keys(cd).length === 0) return null;
+
+    var bag = settings.bag || ALL_CLUBS;
+    var best = null;
+    var bestDiff = Infinity;
+    var longest = null;
+
+    bag.forEach(function (club) {
+      if (club === 'Putter') return;
+      var clubData = cd[club];
+      if (!clubData) return;
+      if (WEDGES.indexOf(club) !== -1 && typeof clubData === 'object') {
+        SWINGS.forEach(function (swing) {
+          var dv = clubData[swing];
+          if (dv == null || dv <= 0) return;
+          if (!longest || dv > longest.distance) longest = { club: club, swing: swing, distance: dv };
+          var diff = Math.abs(dist - dv);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            best = { club: club, swing: swing, distance: dv };
+          }
+        });
+      } else if (typeof clubData === 'number' && clubData > 0) {
+        if (!longest || clubData > longest.distance) longest = { club: club, swing: null, distance: clubData };
+        var clubDiff = Math.abs(dist - clubData);
+        if (clubDiff < bestDiff) {
+          bestDiff = clubDiff;
+          best = { club: club, swing: null, distance: clubData };
+        }
+      }
+    });
+
+    if (!best) return null;
+
+    if (best.distance && bestDiff / best.distance > 0.25) {
+      var teeLie = (pillState.lie || '') === 'Tee';
+      if (teeLie && longest && dist >= longest.distance) {
+        best = longest;
+      } else {
+        return null;
+      }
+    }
+
+    return {
+      club: best.club,
+      swing: best.swing,
+      refDist: best.distance,
+      label: best.club + (best.swing ? ' ' + best.swing : '')
+    };
+  }
+
+  function applyClubSuggestion(suggestion, options) {
+    options = options || {};
+    if (!suggestion) return false;
+
+    selectPill('gt-club-pills', 'club', suggestion.club);
+    gtOnClubSelected(suggestion.club);
+    if (suggestion.swing) {
+      selectPill('gt-swing-pills', 'swing', suggestion.swing);
+      pillState.swing = suggestion.swing;
+      var swingInput = byId('swing');
+      if (swingInput) swingInput.value = suggestion.swing;
+    }
+
+    if (options.markSuggested) {
+      setSuggestedPill('gt-club-pills', suggestion.club, true);
+      if (suggestion.swing) setSuggestedPill('gt-swing-pills', suggestion.swing, true);
+    }
+    if (options.hintText != null && byId('clubHint')) {
+      byId('clubHint').textContent = options.hintText;
+    }
+
+    syncEndFromSelectedClub();
+    return true;
+  }
+
+  function updateCaddieSuggestion() {
+    var playsLikeEl = byId('caddiePlaysLike');
+    var contextEl = byId('caddieContext');
+    var applyBtn = byId('caddieApply');
+    var dist = parseFloat(byId('distance').value);
+    if (!playsLikeEl || !contextEl || !applyBtn) return null;
+
+    if (!dist || isNaN(dist) || dist <= 0) {
+      playsLikeEl.textContent = '-';
+      contextEl.textContent = 'Add a start distance to get a plays-like number and club suggestion.';
+      applyBtn.textContent = 'Use suggested club';
+      applyBtn.disabled = true;
+      delete applyBtn.dataset.club;
+      delete applyBtn.dataset.swing;
+      return null;
+    }
+
+    var inputs = getCaddieInputs();
+    var result = computePlaysLikeDistance(dist, inputs);
+    var suggestion = getClubSuggestion(result.playsLike);
+    playsLikeEl.textContent = result.playsLike + ' m';
+    contextEl.textContent = result.description + (result.adjustment ? ' · ' + (result.adjustment > 0 ? '+' : '') + result.adjustment + ' m' : '');
+
+    if (!suggestion) {
+      applyBtn.textContent = 'No club suggestion';
+      applyBtn.disabled = true;
+      delete applyBtn.dataset.club;
+      delete applyBtn.dataset.swing;
+      return { playsLike: result.playsLike, suggestion: null };
+    }
+
+    applyBtn.textContent = 'Use ' + suggestion.label;
+    applyBtn.disabled = false;
+    applyBtn.dataset.club = suggestion.club;
+    applyBtn.dataset.swing = suggestion.swing || '';
+    return { playsLike: result.playsLike, suggestion: suggestion };
+  }
+
+  function resetCaddieUI() {
+    if (byId('caddieWindDir')) byId('caddieWindDir').value = defaultCaddieState.windDir;
+    if (byId('caddieWindStrength')) byId('caddieWindStrength').value = defaultCaddieState.windStrength;
+    if (byId('caddieSlope')) byId('caddieSlope').value = defaultCaddieState.slope;
+    if (byId('caddieLieQuality')) byId('caddieLieQuality').value = defaultCaddieState.lieQuality;
+    syncCaddieWindControls();
+    setVisible(byId('caddieSection'), false, 'block');
+    if (byId('caddieButton')) {
+      byId('caddieButton').textContent = '▸ Caddie assist';
+      byId('caddieButton').setAttribute('aria-expanded', 'false');
+    }
+    updateCaddieSuggestion();
   }
 
   // ─── Init ────────────────────────────────────────────────────────────────────
@@ -407,12 +679,21 @@
           this.dataset.gtHoleLengthAutofillValue = '';
           setSuggestedState(this, false);
         }
+        clearTimeout(distanceAutoSelectTimer);
+        if (currentVal) {
+          distanceAutoSelectTimer = setTimeout(function () {
+            if (distanceInput.value.trim() === currentVal) gtAutoSelectClub(currentVal);
+          }, 220);
+        }
         syncEndFromSelectedClub();
+        updateCaddieSuggestion();
         gtUpdateShotProgress();
       });
       distanceInput.addEventListener('change', function () {
+        clearTimeout(distanceAutoSelectTimer);
         gtAutoSelectClub(this.value);
         syncEndFromSelectedClub();
+        updateCaddieSuggestion();
         gtUpdateShotProgress();
       });
     }
@@ -429,6 +710,31 @@
       });
       endDistanceInput.addEventListener('change', function () {
         syncEndLieFromEndDistance(this.value.trim());
+      });
+    }
+
+    ['caddieWindDir', 'caddieWindStrength', 'caddieSlope', 'caddieLieQuality'].forEach(function (name) {
+      var el = byId(name);
+      if (!el) return;
+      el.addEventListener('change', function () {
+        if (name === 'caddieWindDir') syncCaddieWindControls();
+        updateCaddieSuggestion();
+      });
+    });
+
+    ['puttSpeed', 'puttSlope', 'puttBreak'].forEach(function (name) {
+      var el = byId(name);
+      if (!el) return;
+      el.addEventListener('change', function () {
+        updatePuttAssist();
+      });
+    });
+
+    var caddieButton = byId('caddieButton');
+    if (caddieButton) {
+      caddieButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        gtToggleCaddie();
       });
     }
 
@@ -563,6 +869,31 @@
     btn.textContent = open ? '▸ Strike, shape & notes' : '▾ Hide strike, shape & notes';
   };
 
+  window.gtToggleCaddie = function () {
+    var sec = byId('caddieSection');
+    var btn = byId('caddieButton');
+    if (!sec || !btn) return;
+    var open = !sec.classList.contains('gt-hidden');
+    setVisible(sec, !open, 'block');
+    btn.textContent = open ? '▸ Caddie assist' : '▾ Caddie assist';
+    btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+    if (!open) updateCaddieSuggestion();
+    if (!open) {
+      requestAnimationFrame(function () {
+        sec.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+    }
+  };
+
+  window.gtUseCaddieSuggestion = function () {
+    var result = updateCaddieSuggestion();
+    if (!result || !result.suggestion) return;
+    applyClubSuggestion(result.suggestion, {
+      markSuggested: true,
+      hintText: '↑ ' + result.suggestion.label + ' (' + result.suggestion.refDist + ' m stock, plays like ' + result.playsLike + ' m)'
+    });
+  };
+
   function today() {
     var d = new Date();
     return d.getFullYear() + '-' +
@@ -634,80 +965,19 @@
     var dist = parseFloat(distStr);
     var hint = document.getElementById('gt-dist-hint');
     if (!dist || isNaN(dist) || dist <= 0) { if (hint) hint.textContent = ''; return; }
-
-    var settings = loadSettings();
-    var cd = settings.clubDistances;
-    if (!cd || Object.keys(cd).length === 0) { if (hint) hint.textContent = ''; return; }
-
-    var bag = settings.bag || ALL_CLUBS;
-    var best = null, bestDiff = Infinity;
-    var longest = null;
-
-    bag.forEach(function (club) {
-      if (club === 'Putter') return;
-      var d = cd[club];
-      if (!d) return;
-      if (WEDGES.indexOf(club) !== -1 && typeof d === 'object') {
-        SWINGS.forEach(function (swing) {
-          var dv = d[swing];
-          if (dv == null || dv <= 0) return;
-          if (!longest || dv > longest.distance) longest = { club: club, swing: swing, distance: dv };
-          var diff = Math.abs(dist - dv);
-          if (diff < bestDiff) { bestDiff = diff; best = { club: club, swing: swing }; }
-        });
-      } else if (typeof d === 'number' && d > 0) {
-        if (!longest || d > longest.distance) longest = { club: club, swing: null, distance: d };
-        var diff = Math.abs(dist - d);
-        if (diff < bestDiff) { bestDiff = diff; best = { club: club, swing: null }; }
-      }
-    });
-
-    if (!best) { if (hint) hint.textContent = ''; return; }
-
-    // Only auto-select if within 25% of club distance (avoids wild suggestions)
-    var refDist = best.swing ? cd[best.club][best.swing] : cd[best.club];
-    if (refDist && bestDiff / refDist > 0.25) {
-      var teeLie = (pillState.lie || '') === 'Tee';
-      if (teeLie && longest && dist >= longest.distance) {
-        best = { club: longest.club, swing: longest.swing };
-        refDist = longest.distance;
-      } else {
-        if (hint) hint.textContent = '';
-        // Clear any stale auto-selection so a bad intermediate value doesn't stick
-        document.querySelectorAll('#gt-club-pills .gt-pill.selected').forEach(function (p) {
-          p.classList.remove('selected');
-        });
-        pillState.club = '';
-        return;
-      }
-    }
-
-    if (!refDist) {
+    var suggestion = getClubSuggestion(dist);
+    if (!suggestion) {
       if (hint) hint.textContent = '';
-      pillState.club = '';
+      clearClubSelection();
+      updateCaddieSuggestion();
       return;
     }
 
-    // Apply selection
-    selectPill('gt-club-pills', 'club', best.club);
-    gtOnClubSelected(best.club);
-    if (best.swing) {
-      selectPill('gt-swing-pills', 'swing', best.swing);
-      pillState.swing = best.swing;
-      var sw = document.getElementById('gt-swing');
-      if (sw) sw.value = best.swing;
-    }
-
-    // Show hint
-    if (hint) {
-      var label = best.club + (best.swing ? ' ' + best.swing : '');
-      hint.textContent = '↑ ' + label + ' (' + refDist + ' m stock)';
-    }
-
-    setSuggestedPill('gt-club-pills', best.club, true);
-    if (best.swing) setSuggestedPill('gt-swing-pills', best.swing, true);
-
-    syncEndFromSelectedClub();
+    applyClubSuggestion(suggestion, {
+      markSuggested: true,
+      hintText: '↑ ' + suggestion.label + ' (' + suggestion.refDist + ' m stock)'
+    });
+    updateCaddieSuggestion();
   };
 
   // ─── Save shot ───────────────────────────────────────────────────────────────
@@ -870,6 +1140,8 @@
     var hl = document.getElementById('gt-hole-length');
     if (hl) hl.value = '';
     selectDpadValue('result', 'On Target');
+    resetCaddieUI();
+    resetPuttAssistUI();
     gtUpdateShotProgress();
   }
 
