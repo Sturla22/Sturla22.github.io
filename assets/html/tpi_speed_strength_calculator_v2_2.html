@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TPI-Inspired Golf Physical Calculator v2.2</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111827;
+      --panel2:#182235;
+      --panel3:#0f172a;
+      --text:#ecf2ff;
+      --muted:#b8c4e0;
+      --line:#2a3854;
+      --accent:#7dd3fc;
+      --accent2:#86efac;
+      --warn:#fbbf24;
+      --bad:#f87171;
+      --good:#34d399;
+      --chip:#22314f;
+      --shadow: 0 14px 30px rgba(0,0,0,.25);
+      --input:#0d1528;
+    }
+    * { box-sizing:border-box; }
+    html,body{ margin:0; padding:0; background:linear-gradient(180deg,var(--bg),#0d1730 42%, #0a1224); color:var(--text); font-family: "IBM Plex Sans", "Segoe UI", ui-sans-serif, system-ui, sans-serif; }
+    body{ line-height:1.52; }
+    a{ color:var(--accent); }
+    .wrap{ max-width:1280px; margin:0 auto; padding:24px; }
+    .hero{
+      background:linear-gradient(180deg, rgba(125,211,252,.10), rgba(134,239,172,.05));
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:24px;
+      box-shadow:var(--shadow);
+      margin-bottom:22px;
+    }
+    h1,h2,h3,h4{ margin:0 0 8px; line-height:1.14; }
+    h1{ font-size:clamp(2rem, 3vw, 3rem); }
+    h2{ font-size:1.35rem; margin-bottom:12px; }
+    h3{ font-size:1.05rem; margin-bottom:8px; }
+    p, li{ color:var(--muted); }
+    .sub{ font-size:1.03rem; max-width:980px; }
+    .grid{
+      display:grid;
+      grid-template-columns: minmax(0,1.34fr) minmax(300px,.8fr);
+      gap:18px;
+      align-items:start;
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .card + .card{ margin-top:16px; }
+    .stack > * + *{ margin-top:16px; }
+    .kpis{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+      margin-top:16px;
+    }
+    .kpi{
+      background:rgba(0,0,0,.16);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+    }
+    .kpi .label{ color:var(--muted); font-size:.85rem; margin-bottom:4px; }
+    .kpi .value{ font-size:1.35rem; font-weight:700; }
+    .section-head{
+      display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px;
+    }
+    .chipbar{ display:flex; flex-wrap:wrap; gap:8px; }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--chip);
+      border:1px solid var(--line);
+      color:var(--text);
+      font-size:.8rem;
+      white-space:nowrap;
+    }
+    .chip.good{ background:rgba(52,211,153,.12); border-color:rgba(52,211,153,.35); }
+    .chip.warn{ background:rgba(251,191,36,.10); border-color:rgba(251,191,36,.35); }
+    .chip.bad{ background:rgba(248,113,113,.10); border-color:rgba(248,113,113,.35); }
+    .chip.info{ background:rgba(125,211,252,.10); border-color:rgba(125,211,252,.35); }
+    .evi{ font-weight:700; font-size:.7rem; letter-spacing:.03em; text-transform:uppercase; }
+    .evi.tpi{ color:#9ad7ff; }
+    .evi.strong{ color:#8ff0be; }
+    .evi.moderate{ color:#ffd77d; }
+    .evi.heuristic{ color:#ffb3b3; }
+    .two{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .three{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .four{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    label{ display:block; font-size:.86rem; color:var(--muted); margin:0 0 6px; }
+    input, select, button, textarea{
+      width:100%;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:var(--input);
+      color:var(--text);
+      padding:11px 12px;
+      font:inherit;
+    }
+    button{
+      background:linear-gradient(180deg, rgba(125,211,252,.18), rgba(125,211,252,.11));
+      cursor:pointer;
+      transition:.16s ease;
+      font-weight:600;
+    }
+    button:hover{ transform:translateY(-1px); }
+    button.secondary{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+    }
+    .toolbar{
+      display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;
+    }
+    .toolbar button{ width:auto; min-width:140px; }
+    .test-grid{
+      display:grid;
+      grid-template-columns: 1.35fr .85fr .8fr .8fr;
+      gap:10px;
+      align-items:end;
+    }
+    .test-row{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:rgba(255,255,255,.02);
+      margin-bottom:10px;
+    }
+    .test-meta{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+    .tiny{ font-size:.8rem; color:var(--muted); }
+    .small{ font-size:.9rem; }
+    .bar{
+      height:10px; background:#0c1426; border:1px solid var(--line); border-radius:999px; overflow:hidden;
+    }
+    .bar > span{ display:block; height:100%; background:linear-gradient(90deg, var(--bad), var(--warn), var(--good)); }
+    .scoreline{
+      display:grid;
+      grid-template-columns: 120px 1fr 72px;
+      gap:10px; align-items:center; margin-bottom:10px;
+    }
+    .result{
+      border-radius:20px;
+      padding:18px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(125,211,252,.08), rgba(255,255,255,.02));
+    }
+    .result .headline{ font-size:1.5rem; font-weight:800; margin-bottom:4px; }
+    .pill{
+      display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.03); margin-right:8px; margin-bottom:8px; color:var(--muted);
+    }
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ border-bottom:1px solid var(--line); padding:10px 8px; text-align:left; vertical-align:top; }
+    th{ color:#dbe6ff; font-size:.88rem; }
+    td{ color:var(--muted); font-size:.9rem; }
+    details{ border:1px solid var(--line); border-radius:16px; padding:12px 14px; background:rgba(255,255,255,.02); }
+    summary{ cursor:pointer; font-weight:700; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .footer{ margin-top:18px; font-size:.85rem; color:var(--muted); }
+    .nowrap{ white-space:nowrap; }
+
+    .guide-grid{ display:grid; grid-template-columns:1fr; gap:12px; }
+    .guide-top{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .guide-note{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:rgba(255,255,255,.025);
+    }
+    .guide-list{ margin:8px 0 0 18px; padding:0; }
+    .guide-list li{ margin:4px 0; }
+    .guide-block{ margin-top:10px; }
+    .guide-label{ font-size:.8rem; color:#dbe6ff; font-weight:700; margin-bottom:4px; }
+
+    @media (max-width: 1024px){
+      .grid{ grid-template-columns:1fr; }
+      .kpis{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .test-grid{ grid-template-columns:1fr 1fr; }
+      .three, .four{ grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width: 680px){
+      .wrap{ padding:14px; }
+      .kpis, .two, .three, .four, .test-grid{ grid-template-columns:1fr; }
+      .scoreline{ grid-template-columns:1fr; }
+    }
+
+    .workflow-intro{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:12px; }
+    .step-card{
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+      box-shadow:var(--shadow);
+      margin-bottom:14px;
+    }
+    .step-head{
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    .step-title{ display:flex; align-items:center; gap:10px; }
+    .step-num{
+      width:32px; height:32px; border-radius:999px;
+      display:grid; place-items:center;
+      font-weight:800; color:#06101f;
+      background:linear-gradient(180deg,var(--accent),#dff6ff);
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,.15);
+      flex:0 0 auto;
+    }
+    .step-sub{ font-size:.84rem; color:var(--muted); margin-top:2px; }
+    .step-layout{
+      display:grid;
+      grid-template-columns:minmax(240px,320px) minmax(280px,360px);
+      grid-template-areas:
+        "art input"
+        "content content";
+      gap:14px;
+      align-items:start;
+    }
+    .art-panel,.content-panel,.input-panel{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.02);
+      padding:14px;
+    }
+    .art-panel{ grid-area:art; }
+    .content-panel{ grid-area:content; }
+    .input-panel{ grid-area:input; }
+    .art-panel{ background:linear-gradient(180deg, rgba(125,211,252,.08), rgba(255,255,255,.02)); }
+    .diagram-wrap{
+      min-height:210px;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;
+      background:linear-gradient(180deg, rgba(8,18,38,.65), rgba(16,31,60,.55));
+      padding:8px;
+      display:grid; place-items:center;
+      margin-bottom:10px;
+    }
+    .diagram-wrap svg{ width:100%; height:auto; max-height:240px; }
+    .diagram-caption{ font-size:.84rem; color:var(--muted); }
+    .section-label{ font-size:.8rem; letter-spacing:.02em; color:#dbe6ff; font-weight:800; text-transform:uppercase; margin-bottom:6px; }
+    .step-list{ margin:8px 0 0 18px; padding:0; color:var(--muted); }
+    .step-list li{ margin:6px 0; }
+    .meta-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 18px; }
+    .input-stack > * + *{ margin-top:12px; }
+    .input-card{ border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:12px; background:rgba(7,15,31,.35); }
+    .input-card label{ font-weight:700; color:#dbe6ff; }
+    .inline-help{ font-size:.82rem; color:var(--muted); margin-top:6px; line-height:1.45; }
+    .pair-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .score-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+    .quick-note{ font-size:.84rem; color:var(--muted); margin-top:10px; line-height:1.5; }
+    .compact-guide > * + *{ margin-top:10px; }
+    @media (max-width: 1440px){
+      .grid{ grid-template-columns:1fr; }
+    }
+    @media (max-width: 1180px){
+      .step-layout{ grid-template-columns:1fr; }
+      .step-layout{ grid-template-areas:"art" "input" "content"; }
+      .workflow-intro{ grid-template-columns:1fr; }
+    }
+    @media (max-width: 680px){
+      .pair-grid, .score-grid, .meta-grid{ grid-template-columns:1fr; }
+      .step-title{ align-items:flex-start; }
+    }
+
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="chipbar">
+      <span class="chip info"><strong>Model:</strong> v2.1</span>
+      <span class="chip info"><strong>Type:</strong> transparent TPI-inspired calculator</span>
+      <span class="chip warn"><strong>Not official TPI Rx</strong></span>
+    </div>
+    <h1>TPI-Inspired Speed vs Strength Calculator</h1>
+    <p class="sub">
+      This version moves beyond a loose heuristic by separating <strong>public TPI screen logic</strong>, <strong>golf-performance evidence</strong>, and <strong>transparent house rules</strong>.
+      It still is <strong>not</strong> an official TPI calculator, because TPI publicly says its Pro / Rx system uses advanced algorithms but does not publish those formulas.
+    </p>
+    <div class="kpis">
+      <div class="kpi"><div class="label">Movement Gate</div><div class="value" id="kpiMovement">—</div></div>
+      <div class="kpi"><div class="label">Power Index</div><div class="value" id="kpiPower">—</div></div>
+      <div class="kpi"><div class="label">Strength Index</div><div class="value" id="kpiStrength">—</div></div>
+      <div class="kpi"><div class="label">Primary Recommendation</div><div class="value" id="kpiPrimary" style="font-size:1rem;">—</div></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="stack">
+      <div class="card">
+        <div class="section-head">
+          <h2>Profile + model controls</h2>
+          <div class="chipbar">
+            <span class="chip info">Editable benchmarks</span>
+            <span class="chip info">Local save/load</span>
+          </div>
+        </div>
+        <div class="four">
+          <div>
+            <label for="sex">Sex</label>
+            <select id="sex">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label for="age">Age</label>
+            <input id="age" type="number" min="10" max="100" placeholder="e.g. 38" />
+          </div>
+          <div>
+            <label for="bodymass">Body mass (kg)</label>
+            <input id="bodymass" type="number" step="0.1" min="20" placeholder="e.g. 84" />
+          </div>
+          <div>
+            <label for="driverSpeed">Driver clubhead speed (mph, optional)</label>
+            <input id="driverSpeed" type="number" step="0.1" min="30" placeholder="e.g. 102" />
+          </div>
+        </div>
+        <div class="toolbar">
+          <button id="calcBtn">Calculate</button>
+          <button class="secondary" id="saveBtn">Save locally</button>
+          <button class="secondary" id="loadBtn">Load saved</button>
+          <button class="secondary" id="demoBtn">Load demo values</button>
+          <button class="secondary" id="resetBtn">Clear form</button>
+          <button class="secondary" id="exportBtn">Export JSON</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <h2>1) Movement screen</h2>
+          <div class="chipbar">
+            <span class="chip"><span class="evi tpi">TPI Screen Rule</span></span>
+            <span class="chip"><span class="evi heuristic">Model gate</span></span>
+          </div>
+        </div>
+        <p class="small">Scored as <span class="mono">Fail = 0</span>, <span class="mono">Limited = 50</span>, <span class="mono">Pass = 100</span>. Two or more critical failures trigger a movement-first recommendation.</p>
+
+        <div id="movementTests"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <h2>2) Power tests</h2>
+          <div class="chipbar">
+            <span class="chip"><span class="evi strong">Strong golf evidence</span></span>
+            <span class="chip"><span class="evi tpi">TPI power protocol</span></span>
+          </div>
+        </div>
+        <p class="small">Power is weighted slightly more heavily than strength because the golf literature links jump impulse, jump power, and upper-body explosive strength strongly with clubhead speed.</p>
+
+        <div id="powerTests"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <h2>3) Strength tests</h2>
+          <div class="chipbar">
+            <span class="chip"><span class="evi tpi">TPI public protocol</span></span>
+            <span class="chip"><span class="evi moderate">Moderate golf evidence</span></span>
+          </div>
+        </div>
+        <p class="small">Where possible, the model prefers bodyweight-normalized values. IMTP is optional but gets high weight if entered.</p>
+
+        <div id="strengthTests"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <h2>4) Testing workflow notes</h2>
+          <div class="chipbar">
+            <span class="chip info">Detailed setup + execution</span>
+            <span class="chip warn">Home-friendly standardization</span>
+          </div>
+        </div>
+        <p class="small">
+          The detailed instructions now live directly inside each test card above, right next to the input fields. This section is just the overall testing workflow and consistency guidance.
+        </p>
+        <div id="testGuides"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <h2>5) Benchmark editor</h2>
+          <div class="chipbar">
+            <span class="chip warn">Default values are transparent starter bands</span>
+          </div>
+        </div>
+        <p class="small">These are <strong>not official TPI cutoffs</strong>. They are editable bands used to convert raw scores into a 0–100 model score.</p>
+        <div id="benchmarkEditor"></div>
+      </div>
+
+      <div class="card">
+        <h2>6) Evidence map + model notes</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Test / rule</th>
+              <th>Evidence label</th>
+              <th>Why it is in the model</th>
+              <th>How the model uses it</th>
+            </tr>
+          </thead>
+          <tbody id="evidenceTable"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <details open>
+          <summary>7) Sources used to build this model</summary>
+          <div class="footer">
+            <p><strong>Official / public TPI sources</strong></p>
+            <ul>
+              <li><a href="https://www.mytpi.com/proapp" target="_blank" rel="noopener">TPI Pro app overview</a></li>
+              <li><a href="https://www.mytpi.com/articles/fitness/body-swing-connection-case-study-helping-fredrik-lindblom-build-a-training-program-for-more-speed?search=Fitness" target="_blank" rel="noopener">Fredrik Lindblom case study</a></li>
+              <li><a href="https://www.mytpi.com/articles/screening/the-90-90-test" target="_blank" rel="noopener">The 90/90 Test</a></li>
+              <li><a href="https://www.mytpi.com/articles/screening/the-torso-rotation-test" target="_blank" rel="noopener">The Torso Rotation Test</a></li>
+              <li><a href="https://www.mytpi.com/articles/screening/the-bridge-with-leg-extension-test" target="_blank" rel="noopener">The Bridge with Leg Extension Test</a></li>
+              <li><a href="https://www.mytpi.com/articles/swing/understanding-and-assessing-pelvic-tilt-in-the-golf-swing" target="_blank" rel="noopener">Understanding and Assessing Pelvic Tilt</a></li>
+              <li><a href="https://www.mytpi.com/articles/health/offseason_golf_performance_program_case_study_it%27s_never_too_late_to_improve_your_body" target="_blank" rel="noopener">Offseason case study with pelvic rotation notes</a></li>
+            </ul>
+
+            <p><strong>Golf-performance literature</strong></p>
+            <ul>
+              <li><a href="https://pubmed.ncbi.nlm.nih.gov/38424374/" target="_blank" rel="noopener">Systematic review and meta-analysis on physical characteristics and clubhead speed</a></li>
+              <li><a href="https://pubmed.ncbi.nlm.nih.gov/30572804/" target="_blank" rel="noopener">Challenge Tour golfers: CHV, CMJ and IMTP</a></li>
+              <li><a href="https://pubmed.ncbi.nlm.nih.gov/37585706/" target="_blank" rel="noopener">National-level golfers: strength, power, RFD and CHS</a></li>
+              <li><a href="https://pubmed.ncbi.nlm.nih.gov/36165843/" target="_blank" rel="noopener">Elite golfers: hip/trunk strength, CMJ, medicine-ball throw and CHS</a></li>
+            </ul>
+
+            <p><strong>Interpretation note</strong><br/>
+              TPI describes the philosophy, screen structure, and several public protocols, but it does not publish the full scoring formulas used in TPI Rx. This tool therefore uses a <strong>versioned, transparent model</strong> that you can tune as you collect your own data.
+            </p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card result">
+        <div class="section-head">
+          <h2>Result</h2>
+          <div class="chipbar">
+            <span class="chip info">Model v2.1</span>
+          </div>
+        </div>
+        <div class="headline" id="primaryResult">Enter your numbers</div>
+        <p id="primaryReason">The calculator will separate movement limitation, force limitation, explosive/velocity limitation, and imbalance.</p>
+        <div id="tagCloud" style="margin-top:10px;"></div>
+        <div style="margin-top:14px;">
+          <h3>What to work on first</h3>
+          <div id="prescription"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Score breakdown</h2>
+        <div id="scoreBreakdown"></div>
+      </div>
+
+      <div class="card">
+        <h2>Regional profile</h2>
+        <p class="small">Transparent body-region view inferred from the public TPI body-swing connection, not an official TPI score.</p>
+        <div id="regionalBreakdown"></div>
+      </div>
+
+      <div class="card">
+        <h2>Asymmetry and imbalance</h2>
+        <div id="asymmetryBox"></div>
+      </div>
+
+      <div class="card">
+        <h2>Model logic</h2>
+        <ol class="small">
+          <li><strong>Movement gate first.</strong> If the screen is poor, the model caps a pure speed-first recommendation.</li>
+          <li><strong>Power next.</strong> Jump and medicine-ball outputs drive the Power Index.</li>
+          <li><strong>Strength next.</strong> Lunge, cable push/pull, and optional IMTP drive the Strength Index.</li>
+          <li><strong>Decision rule.</strong> Movement deficit beats everything; then compare power versus strength.</li>
+          <li><strong>Transparent override.</strong> If your physical scores are decent but driver speed is still lagging, the model points you toward speed skill / intent / technique work.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h2>Version history</h2>
+        <ul class="small">
+          <li><strong>v2.1:</strong> evidence labels, editable benchmarks, power-biased weighting, optional IMTP, asymmetry analysis, transparent rule table.</li>
+          <li><strong>v1.0:</strong> simple heuristic score.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MOVEMENT_TESTS = [
+  { id:'pelvicTilt', name:'Pelvic Tilt', critical:true, label:'TPI Screen Rule', evidence:'tpi', why:'Public TPI material describes pelvic tilt as foundational for pelvis control, posture, and lower-to-upper power transfer.' },
+  { id:'pelvicRotation', name:'Pelvic Rotation', critical:true, label:'TPI Screen Rule', evidence:'tpi', why:'Public TPI case material describes pelvic rotation as important for sequencing, separation, speed, and power.' },
+  { id:'torsoRotation', name:'Torso Rotation', critical:true, label:'TPI Screen Rule', evidence:'tpi', why:'TPI describes this as the ability to rotate the upper body independently from the lower body.' },
+  { id:'bridge', name:'Bridge with Leg Extension', critical:false, label:'TPI Screen Rule', evidence:'tpi', why:'TPI uses this to assess pelvis/lumbar/core stability, especially gluteal control.' },
+  { id:'shoulder9090', name:'Shoulder 90/90', critical:true, label:'TPI Screen Rule', evidence:'tpi', why:'TPI uses this to assess shoulder external rotation and scapular stability in golf posture.' }
+];
+
+const POWER_TESTS = [
+  { id:'vertJump', name:'Vertical Jump (cm)', unit:'cm', benchmarkKey:'vertJump', sides:false, label:'Strong golf evidence', evidence:'strong', why:'Jump variables, especially impulse and peak power, show strong associations with clubhead speed.' },
+  { id:'chestPass', name:'Seated Chest Pass (m)', unit:'m', benchmarkKey:'chestPass', sides:false, label:'Strong golf evidence + TPI protocol', evidence:'strong', why:'Upper-body explosive strength shows strong association with clubhead speed; TPI publicly uses medicine-ball throws in the power test.' },
+  { id:'shotPutR', name:'Standing Shot Put Right (m)', unit:'m', benchmarkKey:'shotPut', sides:true, pair:'shotPutL', label:'Strong golf evidence + TPI protocol', evidence:'strong', why:'Rotational / unilateral medicine-ball throw capacity is relevant to golf power expression and side-to-side imbalance.' },
+  { id:'shotPutL', name:'Standing Shot Put Left (m)', unit:'m', benchmarkKey:'shotPut', sides:true, pair:'shotPutR', hiddenInEvidence:true, label:'', evidence:'strong', why:'' }
+];
+
+const STRENGTH_TESTS = [
+  { id:'lungeR', name:'Unilateral Lunge 8RM Right (kg)', unit:'kg', benchmarkKey:'lungePct', sides:true, pair:'lungeL', label:'TPI public protocol', evidence:'moderate', why:'TPI publicly describes unilateral lunge 8RM as part of its strength testing. Thresholds here are model bands, not official TPI cutoffs.' },
+  { id:'lungeL', name:'Unilateral Lunge 8RM Left (kg)', unit:'kg', benchmarkKey:'lungePct', sides:true, pair:'lungeR', hiddenInEvidence:true, label:'', evidence:'moderate', why:'' },
+  { id:'pushR', name:'Single-Arm Cable Push 8RM Right (kg)', unit:'kg', benchmarkKey:'pushPct', sides:true, pair:'pushL', label:'TPI public protocol', evidence:'moderate', why:'TPI publicly describes single-arm cable push 8RM as part of its strength testing. TPI commentary suggests elite golfers may be around 25% of body mass on 8RM cable press.' },
+  { id:'pushL', name:'Single-Arm Cable Push 8RM Left (kg)', unit:'kg', benchmarkKey:'pushPct', sides:true, pair:'pushR', hiddenInEvidence:true, label:'', evidence:'moderate', why:'' },
+  { id:'pullR', name:'Single-Arm Cable Pull 8RM Right (kg)', unit:'kg', benchmarkKey:'pullPct', sides:true, pair:'pullL', label:'TPI public protocol', evidence:'moderate', why:'TPI publicly describes single-arm cable pull 8RM as part of its strength testing. TPI commentary suggests elite golfers may be around 30% of body mass on 8RM row / pull.' },
+  { id:'pullL', name:'Single-Arm Cable Pull 8RM Left (kg)', unit:'kg', benchmarkKey:'pullPct', sides:true, pair:'pullR', hiddenInEvidence:true, label:'', evidence:'moderate', why:'' },
+  { id:'imtp', name:'Optional IMTP Peak Force (kg)', unit:'kg', benchmarkKey:'imtpBw', sides:false, label:'Moderate-to-strong golf evidence', evidence:'moderate', why:'IMTP variables correlate with clubhead speed in several golf studies; optional because most golfers do not have access to force plates.' }
+];
+
+
+const TEST_GUIDES = [
+  {
+    category: 'Before you start',
+    evidence: 'heuristic',
+    name: 'Testing rules for consistency',
+    purpose: 'Make your numbers comparable from one session to the next.',
+    equipment: 'Notebook or phone, tape measure, same ball and same setup every time, optional helper.',
+    setup: 'Do the tests when you are reasonably fresh. Use the same shoes, same medicine-ball weight, same chair height, and same gym setup whenever possible.',
+    steps: [
+      'Warm up for 8-12 minutes: brisk movement, hip/torso mobility, a few bodyweight squats/lunges, and 2-3 progressive jumps or throws.',
+      'Do movement screens first, then power tests, then strength tests.',
+      'For power tests, take 1-2 practice reps, then record 2-3 good efforts with 45-90 seconds rest. Use the best clean rep.',
+      'For strength tests, take progressive warm-up sets, then find a load you believe is an honest 8-rep max with clean form.',
+      'Stop any test that causes sharp pain, numbness, dizziness, or back/shoulder symptoms.'
+    ],
+    record: 'Keep notes on conditions: soreness, sleep, ball weight, chair used, cable station, and any obvious compensations.',
+    calculatorRule: 'This is a calculator standard, not an official TPI scoring rule.',
+    mistakes: ['Changing the setup between sessions', 'Testing while fatigued from golf or gym work', 'Counting ugly reps'],
+    note: 'For best trend data, repeat under similar conditions each time.'
+  },
+
+  {
+    category: 'Movement screen',
+    evidence: 'tpi',
+    name: 'Pelvic Tilt',
+    purpose: 'Checks whether you can move and control the pelvis, which TPI links to posture and lower-to-upper power transfer.',
+    equipment: 'Mirror or phone video from face-on and down-the-line helps.',
+    setup: 'Assume a normal 5-iron address posture with feet about shoulder width and arms folded across the chest or hanging naturally if that helps you feel the pelvis.',
+    steps: [
+      'Without standing up or moving the shoulders much, arch the lower back slightly to tip the pelvis forward (anterior tilt).',
+      'Then flatten or gently tuck the pelvis under to tip it backward (posterior tilt), like “tipping a bucket of water” forward and back.',
+      'Repeat slowly a few times in posture and watch whether the motion is actually coming from the pelvis rather than the chest or knees.',
+      'Test both directions; many golfers are much better in one direction than the other.'
+    ],
+    record: 'Record pass if you can clearly move between anterior and posterior tilt while staying in posture; limited if the motion is small or full of compensation; fail if you cannot create the motion cleanly or it provokes pain.',
+    calculatorRule: 'TPI publicly treats the screen qualitatively and often as pass/fail; this calculator adds a limited category for home use.',
+    mistakes: ['Standing up out of posture', 'Bending mostly through the thoracic spine', 'Using knee bend instead of pelvic motion'],
+    note: 'If the movement becomes easier lying on your back or on hands and knees, that suggests a coordination/stability issue more than a raw mobility issue.'
+  },
+
+  {
+    category: 'Movement screen',
+    evidence: 'tpi',
+    name: 'Pelvic Rotation',
+    purpose: 'Checks whether you can rotate the lower body independently from the upper body for sequencing and separation.',
+    equipment: 'Mirror or phone video is very useful.',
+    setup: 'Take a normal 5-iron posture with feet about shoulder width and arms crossed over the shoulders, hands on the front of each shoulder.',
+    steps: [
+      'Keep the upper body quiet and rotate the belt line and pelvis back and forth.',
+      'Think “twist from the belt and below” while the shoulders, torso, arms, and head stay as still as possible.',
+      'Test both directions and pay attention to fluidity, not just range.',
+      'If you struggle, repeat with a helper lightly stabilizing your shoulders.'
+    ],
+    record: 'Pass = pelvis rotates with little motion above the waist. Limited = some separation is present but shoulders or torso move, or motion is jerky. Fail = you cannot separate lower from upper body, or the test is painful.',
+    calculatorRule: 'Public TPI wording says a proper pelvic rotation test has no motion above the waist and only the pelvis rotating, with slight leg/knee motion acceptable.',
+    mistakes: ['Moving the shoulders with the pelvis', 'Sliding laterally instead of rotating', 'Big knee bend/straighten instead of true rotation'],
+    note: 'If shoulder support suddenly makes it easy, TPI notes that this points more toward a torso stability problem than a pure mobility problem.'
+  },
+
+  {
+    category: 'Movement screen',
+    evidence: 'tpi',
+    name: 'Torso Rotation',
+    purpose: 'Checks whether you can rotate the upper body independently from the lower body for backswing coil and sequencing.',
+    equipment: 'Mirror or phone video.',
+    setup: 'Take a normal 5-iron posture with feet about shoulder width and arms crossed over the shoulders.',
+    steps: [
+      'Keep the lower body quiet and rotate the chest/shoulders back and forth.',
+      'Do not let the pelvis spin with you.',
+      'Watch for spinal extension or side bend masquerading as rotation.',
+      'If needed, repeat with someone stabilizing your pelvis to help you decide whether the issue is stability or mobility.'
+    ],
+    record: 'Pass = clear upper-body rotation with little or no motion below the waist. Limited = some separation but with hip motion or extension/side bend. Fail = cannot separate or pain occurs.',
+    calculatorRule: 'TPI describes a proper torso rotation test as having no motion below the waistline with only the thorax and shoulders rotating.',
+    mistakes: ['Turning the hips with the chest', 'Standing up or extending the spine', 'Forcing range instead of watching motion quality'],
+    note: 'This is one of the most useful screens for identifying whether a golfer is upper-body dominant because they cannot separate well.'
+  },
+
+  {
+    category: 'Movement screen',
+    evidence: 'tpi',
+    name: 'Bridge with Leg Extension',
+    purpose: 'Checks pelvis/lumbar/core stability and glute function.',
+    equipment: 'Floor or exercise mat.',
+    setup: 'Lie on your back with knees bent, feet flat, knees and feet together, and arms pointed upward over the chest.',
+    steps: [
+      'Lift the pelvis into a bridge and keep the belt line level.',
+      'From there, straighten one knee so that leg extends while you keep the pelvis level.',
+      'Hold for 10 seconds.',
+      'Repeat on the other side.'
+    ],
+    record: 'Pass = can hold 10 seconds each side with a level pelvis and no shaking/cramping. Limited = mild shakiness or drift but you can control it. Fail = pelvis drops, the stance leg shakes markedly, or the hamstring/lower back cramps quickly.',
+    calculatorRule: 'TPI publicly notes that a drop of the pelvis or shaking suggests instability, while hamstring or lower-back cramping suggests compensation for inhibited glutes.',
+    mistakes: ['Letting the pelvis roll or drop', 'Overarching the low back', 'Rushing the hold'],
+    note: 'When you extend the right leg, you are mainly challenging left-side pelvic stability, and vice versa.'
+  },
+
+  {
+    category: 'Movement screen',
+    evidence: 'tpi',
+    name: 'Shoulder 90/90',
+    purpose: 'Checks shoulder external rotation plus scapular stability, both standing and in golf posture.',
+    equipment: 'Mirror, phone video, or helper.',
+    setup: 'Stand tall first. Raise one arm out to the side so the shoulder is at about 90° abduction and the elbow is bent 90°.',
+    steps: [
+      'Externally rotate the shoulder by taking the hand back/up while keeping the elbow up.',
+      'Do not arch the thorax backward and do not push into pain.',
+      'Compare the forearm angle to your spine angle: less than, equal to, or more than spine angle.',
+      'Repeat on the other side.',
+      'Then repeat the same process in your normal golf posture.'
+    ],
+    record: 'For this calculator, pass if you can match or exceed spine angle without obvious compensation and you do not lose much range in golf posture; limited if range is present but reduced or scap control is poor; fail if range is clearly below spine angle or painful.',
+    calculatorRule: 'TPI publicly grades this by comparing forearm angle to spine angle and specifically compares standing vs golf-posture versions.',
+    mistakes: ['Arching the back to fake more range', 'Letting the shoulder blade shrug or flare excessively', 'Testing only standing and skipping golf posture'],
+    note: 'It is common to look better standing tall than in posture; that often points to scapular stability or posture issues rather than pure shoulder stiffness.'
+  },
+
+  {
+    category: 'Power tests',
+    evidence: 'strong',
+    name: 'Vertical Jump',
+    purpose: 'Estimates lower-body explosive ability, which the golf literature links strongly to clubhead speed.',
+    equipment: 'Jump mat, force plate, Vertec, or a simple wall/chalk/sticky-note setup.',
+    setup: 'Stand tall, warm, and fresh. Use your normal athletic stance. Decide in advance whether you will use arm swing and keep it consistent every session.',
+    steps: [
+      'Measure standing reach if you are using a wall-based method.',
+      'Dip quickly into a comfortable countermovement and jump as high as possible.',
+      'Land under control.',
+      'Take 2-3 recorded attempts with good rest.'
+    ],
+    record: 'Record jump height in cm. If using a wall method, subtract standing reach from best jump touch. Use the best clean attempt.',
+    calculatorRule: 'The calculator uses jump height because it is easy to collect, even though research suggests jump impulse and peak power are even more informative when you have force plates.',
+    mistakes: ['Mixing no-arm-swing and arm-swing sessions', 'Tucking the knees in the air to cheat height', 'Taking attempts too close together'],
+    note: 'TPI notes that a simple sticky-note vertical leap can be used at home if you do not have technology.'
+  },
+
+  {
+    category: 'Power tests',
+    evidence: 'strong',
+    name: 'Seated Chest Pass',
+    purpose: 'Estimates upper-body explosive pushing power.',
+    equipment: '6 lb / 2.7 kg medicine ball, sturdy chair, tape measure.',
+    setup: 'Sit tall in a chair with feet flat on the floor and your back in contact with the chair.',
+    steps: [
+      'Hold the ball at the chest.',
+      'Powerfully chest-pass it straight forward without letting the back peel away from the chair.',
+      'Do not bounce or rock to create extra momentum.',
+      'Take 2-3 recorded attempts with full reset each time.'
+    ],
+    record: 'Measure from where the ball first lands back to your chest, as described in TPI’s public power-testing article.',
+    calculatorRule: 'Use the same medicine-ball weight every time; this calculator assumes the public TPI standard 6 lb ball unless you deliberately create your own benchmark set.',
+    mistakes: ['Letting the back come off the chair', 'Feet lifting', 'Measuring to the chair rather than the chest'],
+    note: 'If you change the ball weight, your old benchmarks are no longer comparable.'
+  },
+
+  {
+    category: 'Power tests',
+    evidence: 'strong',
+    name: 'Standing Shot Put Right / Left',
+    purpose: 'Estimates rotational and unilateral explosive power and highlights side-to-side imbalance.',
+    equipment: '6 lb / 2.7 kg medicine ball, open space, tape measure.',
+    setup: 'Take an athletic stance. Set up so you can throw rotationally from one side at a time. Test both right and left.',
+    steps: [
+      'Load into the trail side and make a rotational shot-put style throw from chest/shoulder height.',
+      'Finish on the lead leg without stepping across in front of it.',
+      'Reset and repeat for 2-3 good efforts per side.',
+      'Keep technique similar from session to session; do not turn it into a broad jump or run-up.'
+    ],
+    record: 'Measure from where the ball first lands back to the lead hip, matching TPI’s public description. Record right and left separately.',
+    calculatorRule: 'The calculator compares both absolute distance and side-to-side asymmetry.',
+    mistakes: ['Stepping across the planted lead leg', 'Changing throw style between attempts', 'Measuring from the toes instead of the lead hip'],
+    note: 'TPI’s public article specifically says not to let the athlete step over in front of the lead foot.'
+  },
+
+  {
+    category: 'Strength tests',
+    evidence: 'tpi',
+    name: 'Unilateral Lunge 8RM',
+    purpose: 'Field estimate of lower-body unilateral strength.',
+    equipment: 'Dumbbells, kettlebells, barbell, or other repeatable load; scale for body mass.',
+    setup: 'Because TPI publicly names the test but does not publish a full open consumer protocol, this calculator uses a standardized field version: split-stance lunge or rear-foot-elevated split squat to the same depth each session, torso tall, front foot flat.',
+    steps: [
+      'Warm up with a few light sets.',
+      'Increase the load until you reach a weight you can complete for about 8 clean reps on one side with maybe 0-1 reps left in reserve.',
+      'Match depth and tempo side to side.',
+      'Record the heaviest clean 8-rep load for each side.'
+    ],
+    record: 'Enter the external load in kilograms for the best clean 8RM on each side. The calculator converts it to % body mass behind the scenes.',
+    calculatorRule: 'This calculator stores and scores the result as % body mass behind the scenes to make comparisons fairer across body sizes.',
+    mistakes: ['Changing exercise variation between sessions', 'Using shallow reps on the heavy side', 'Counting balance-loss reps'],
+    note: 'Use the same variation every time. Do not compare a split squat session to a walking-lunge session.'
+  },
+
+  {
+    category: 'Strength tests',
+    evidence: 'tpi',
+    name: 'Single-Arm Cable Push 8RM',
+    purpose: 'Field estimate of unilateral rotary pressing strength.',
+    equipment: 'Cable machine with a single handle.',
+    setup: 'Use the same cable station, handle height, stance, and range of motion every session. A half-kneeling or split-stance press is fine as long as you standardize it and keep the torso controlled.',
+    steps: [
+      'Warm up with lighter loads.',
+      'Choose a strict single-arm press variation and stick with it.',
+      'Build to the heaviest load you can press for 8 technically clean reps on each side.',
+      'No excessive torso twist, leaning, or shrugging to steal reps.'
+    ],
+    record: 'Enter the final clean 8RM load in kilograms for each side. The calculator converts it to % body mass automatically.',
+    calculatorRule: 'TPI publicly lists this as part of the strength battery; this exact field setup is a standardized calculator version for repeatability, with normalization handled automatically.',
+    mistakes: ['Changing handle height', 'Turning it into a full-body shove', 'Comparing stack numbers from different cable machines'],
+    note: 'If you switch gyms or cable systems, note it in your log because stack numbers may not transfer perfectly.'
+  },
+
+  {
+    category: 'Strength tests',
+    evidence: 'tpi',
+    name: 'Single-Arm Cable Pull 8RM',
+    purpose: 'Field estimate of unilateral pulling strength relevant to rotary control.',
+    equipment: 'Cable machine with single handle.',
+    setup: 'Use the same cable station, handle height, stance, and rowing/pulling path every session. Keep the torso as quiet as practical.',
+    steps: [
+      'Warm up gradually.',
+      'Perform a strict single-arm row or pull variation with the shoulder blade controlled.',
+      'Work up to the heaviest load you can complete for 8 clean reps per side.',
+      'Avoid heaving through the torso or shortening the range to sneak extra load.'
+    ],
+    record: 'Enter the final clean 8RM load in kilograms for each side. The calculator converts it to % body mass automatically.',
+    calculatorRule: 'This is again a standardized field version built around TPI’s publicly named test, not a claim that TPI has published a consumer-grade exact protocol.',
+    mistakes: ['Using body English', 'Different range of motion side to side', 'Not resetting posture between reps'],
+    note: 'A mirror or video can help you catch torso rotation and shoulder shrugging.'
+  },
+
+  {
+    category: 'Strength tests',
+    evidence: 'moderate',
+    name: 'Optional IMTP Peak Force',
+    purpose: 'Higher-end force test when you have access to force plates or a performance lab.',
+    equipment: 'Force plates or a lab that can run an isometric mid-thigh pull.',
+    setup: 'Use a standardized IMTP setup with fixed bar height and joint positions according to the lab’s protocol.',
+    steps: [
+      'Follow the lab’s warm-up and setup instructions.',
+      'Pull as hard and fast as possible against the fixed bar for the prescribed effort duration.',
+      'Record peak force.',
+      'Divide peak force by body weight force if your lab reports the ratio directly, or use the lab’s normalized value.'
+    ],
+    record: 'Enter peak force in kilograms if your lab reports kg or kgf. The calculator converts it to x body weight automatically.',
+    calculatorRule: 'Optional only. It gets meaningful weight if entered, but the calculator still works without it.',
+    mistakes: ['Mixing peak force with net force or another metric', 'Changing setup between tests', 'Entering Newtons without converting them first'],
+    note: 'If your lab reports Newtons, divide by 9.81 first so the entry is in kilograms-force.'
+  }
+];
+
+
+const BENCHMARK_PRESETS = {
+  male: {
+    vertJump: { low:32, ok:42, high:52 },
+    chestPass: { low:4.5, ok:5.8, high:7.0 },
+    shotPut: { low:4.8, ok:6.2, high:7.5 },
+    lungePct: { low:55, ok:80, high:105 },
+    pushPct: { low:15, ok:25, high:35 },
+    pullPct: { low:18, ok:30, high:40 },
+    imtpBw: { low:2.0, ok:2.8, high:3.4 }
+  },
+  female: {
+    vertJump: { low:22, ok:30, high:38 },
+    chestPass: { low:3.2, ok:4.2, high:5.2 },
+    shotPut: { low:3.4, ok:4.5, high:5.6 },
+    lungePct: { low:45, ok:65, high:85 },
+    pushPct: { low:10, ok:18, high:26 },
+    pullPct: { low:14, ok:22, high:30 },
+    imtpBw: { low:1.7, ok:2.3, high:2.9 }
+  }
+};
+
+const WEIGHTS = {
+  movementEach: 20,
+  power: {
+    vertJump: 38,
+    chestPass: 26,
+    shotPutAvg: 36
+  },
+  strength: {
+    lungeAvg: 32,
+    pushAvg: 22,
+    pullAvg: 22,
+    imtp: 24
+  }
+};
+
+const modelState = {
+  benchmarks: JSON.parse(JSON.stringify(BENCHMARK_PRESETS)),
+};
+
+function el(id){ return document.getElementById(id); }
+function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+function round(n, d=1){ const p = Math.pow(10,d); return Math.round((n + Number.EPSILON)*p)/p; }
+function valueOrNull(v){
+  if (v === '' || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function asymmetryPct(a,b){
+  if (!Number.isFinite(a) || !Number.isFinite(b) || a <= 0 || b <= 0) return null;
+  return Math.abs(a-b) / Math.max(a,b) * 100;
+}
+function piecewiseScore(v, band){
+  if (!Number.isFinite(v)) return null;
+  const {low, ok, high} = band;
+  if (v <= low) return clamp((v/low) * 35, 0, 35);
+  if (v <= ok) return 35 + ((v-low)/(ok-low))*30;
+  if (v <= high) return 65 + ((v-ok)/(high-ok))*35;
+  return 100;
+}
+function movementValueToScore(v){
+  if (v === 'fail') return 0;
+  if (v === 'limited') return 50;
+  if (v === 'pass') return 100;
+  return null;
+}
+function scoreText(score){
+  if (score == null) return '—';
+  if (score < 40) return 'Low';
+  if (score < 65) return 'Developing';
+  if (score < 80) return 'Good';
+  return 'High';
+}
+function evidenceBadge(type){
+  const map = {
+    tpi: '<span class="evi tpi">TPI screen / protocol</span>',
+    strong: '<span class="evi strong">Strong golf evidence</span>',
+    moderate: '<span class="evi moderate">Moderate golf evidence</span>',
+    heuristic: '<span class="evi heuristic">House rule</span>',
+  };
+  return map[type] || map.heuristic;
+}
+
+
+const TEST_GUIDE_MAP = {
+  pelvicTilt: 'Pelvic Tilt',
+  pelvicRotation: 'Pelvic Rotation',
+  torsoRotation: 'Torso Rotation',
+  bridge: 'Bridge with Leg Extension',
+  shoulder9090: 'Shoulder 90/90',
+  vertJump: 'Vertical Jump',
+  chestPass: 'Seated Chest Pass',
+  shotPutR: 'Standing Shot Put Right / Left',
+  shotPutL: 'Standing Shot Put Right / Left',
+  lungeR: 'Unilateral Lunge 8RM',
+  lungeL: 'Unilateral Lunge 8RM',
+  pushR: 'Single-Arm Cable Push 8RM',
+  pushL: 'Single-Arm Cable Push 8RM',
+  pullR: 'Single-Arm Cable Pull 8RM',
+  pullL: 'Single-Arm Cable Pull 8RM',
+  imtp: 'Optional IMTP Peak Force',
+};
+
+function guideFor(testId, fallbackName=''){
+  const guideName = TEST_GUIDE_MAP[testId] || fallbackName;
+  return TEST_GUIDES.find(g => g.name === guideName) || TEST_GUIDES.find(g => g.name === fallbackName) || null;
+}
+
+function escapeHtml(str=''){
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function diagramSVG(id, title){
+  const t = escapeHtml(title || id);
+  const baseStart = `<svg viewBox="0 0 260 180" role="img" aria-label="${t} diagram" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrow-${id}" markerWidth="4.4" markerHeight="4.4" refX="3.8" refY="2.2" orient="auto"><path d="M0,0 L4.4,2.2 L0,4.4 z" fill="#7dd3fc"/></marker></defs><rect x="8" y="8" width="244" height="164" rx="16" fill="rgba(8,18,38,.25)" stroke="rgba(125,211,252,.2)"/><g stroke-linecap="round" stroke-linejoin="round">`;
+  const baseEnd = `</g></svg>`;
+  const common = `<line x1="24" y1="148" x2="236" y2="148" stroke="#2a3854" stroke-width="2"/>`;
+  const person = (opts={}) => {
+    const x = opts.x ?? 120; const y = opts.y ?? 62; const lean = opts.lean ?? 0; const color = opts.color ?? '#ecf2ff';
+    return `
+      <circle cx="${x}" cy="${y}" r="12" fill="none" stroke="${color}" stroke-width="4"/>
+      <line x1="${x}" y1="${y+12}" x2="${x+lean}" y2="${y+54}" stroke="${color}" stroke-width="4"/>
+      <line x1="${x+lean}" y1="${y+26}" x2="${x-20+lean}" y2="${y+42}" stroke="${color}" stroke-width="4"/>
+      <line x1="${x+lean}" y1="${y+26}" x2="${x+22+lean}" y2="${y+38}" stroke="${color}" stroke-width="4"/>
+      <line x1="${x+lean}" y1="${y+54}" x2="${x-18+lean}" y2="${y+88}" stroke="${color}" stroke-width="4"/>
+      <line x1="${x+lean}" y1="${y+54}" x2="${x+18+lean}" y2="${y+88}" stroke="${color}" stroke-width="4"/>
+    `;
+  };
+  const label = (x,y,txt) => `<text x="${x}" y="${y}" fill="#dbe6ff" font-size="11" font-family="Inter,Arial" font-weight="700">${escapeHtml(txt)}</text>`;
+  const shapes = {
+    pelvicTilt: `${common}${person({x:120,y:50,lean:10})}<ellipse cx="131" cy="116" rx="20" ry="12" fill="rgba(134,239,172,.08)" stroke="#86efac" stroke-width="2.5"/><line x1="117" y1="110" x2="145" y2="122" stroke="#86efac" stroke-width="3"/><circle cx="131" cy="116" r="2.6" fill="#86efac"/>${label(28,30,'Anterior tilt')}${label(156,30,'Posterior tilt')}`,
+    pelvicRotation: `${common}<rect x="98" y="92" width="64" height="28" rx="8" fill="none" stroke="#86efac" stroke-width="3"/><rect x="88" y="54" width="84" height="20" rx="8" fill="none" stroke="#ecf2ff" stroke-width="3"/><path d="M78 110 Q64 94 78 78" fill="none" stroke="#7dd3fc" stroke-width="3" marker-end="url(#arrow-${id})"/><path d="M182 78 Q196 94 182 110" fill="none" stroke="#7dd3fc" stroke-width="3" marker-end="url(#arrow-${id})"/>${label(28,32,'Shoulders stay quiet')}${label(86,144,'Rotate belt line only')}`,
+    torsoRotation: `${common}<rect x="98" y="100" width="64" height="24" rx="8" fill="none" stroke="#86efac" stroke-width="3"/><path d="M95 58 L165 46" stroke="#ecf2ff" stroke-width="6"/><circle cx="88" cy="59" r="7" fill="#ecf2ff"/><circle cx="172" cy="45" r="7" fill="#ecf2ff"/><path d="M78 48 Q62 62 78 76" fill="none" stroke="#7dd3fc" stroke-width="3" marker-end="url(#arrow-${id})"/><path d="M182 40 Q198 56 182 72" fill="none" stroke="#7dd3fc" stroke-width="3" marker-end="url(#arrow-${id})"/>${label(34,30,'Rotate ribcage / shoulders')}${label(90,146,'Pelvis stays quiet')}`,
+    bridge: `${common}<path d="M48 118 L82 118 L108 94 L140 94 L174 118 L210 118" fill="none" stroke="#ecf2ff" stroke-width="5"/><line x1="140" y1="94" x2="188" y2="72" stroke="#ecf2ff" stroke-width="5"/><circle cx="40" cy="110" r="10" fill="none" stroke="#ecf2ff" stroke-width="4"/><path d="M116 78 Q132 66 148 78" fill="none" stroke="#86efac" stroke-width="3"/><path d="M190 66 Q206 56 224 62" fill="none" stroke="#7dd3fc" stroke-width="3" marker-end="url(#arrow-${id})"/>${label(28,30,'Keep pelvis level')}${label(156,34,'Extend one leg')}`,
+    shoulder9090: `${common}${person({x:90,y:54,lean:8})}<line x1="98" y1="92" x2="148" y2="92" stroke="#ecf2ff" stroke-width="4"/><line x1="148" y1="92" x2="148" y2="52" stroke="#ecf2ff" stroke-width="4"/><path d="M160 96 Q184 80 176 52" fill="none" stroke="#7dd3fc" stroke-width="3" marker-end="url(#arrow-${id})"/><line x1="188" y1="36" x2="224" y2="118" stroke="#86efac" stroke-width="3" stroke-dasharray="6 5"/>${label(150,28,'Forearm vs spine angle')}${label(34,30,'Avoid arching back')}`,
+    vertJump: `${common}${person({x:124,y:46,lean:0})}<path d="M124 132 Q124 108 124 82" fill="none" stroke="#7dd3fc" stroke-width="4" marker-end="url(#arrow-${id})"/><line x1="204" y1="40" x2="204" y2="148" stroke="#86efac" stroke-width="4"/><line x1="196" y1="54" x2="212" y2="54" stroke="#86efac" stroke-width="4"/><line x1="196" y1="86" x2="212" y2="86" stroke="#86efac" stroke-width="4"/><line x1="196" y1="118" x2="212" y2="118" stroke="#86efac" stroke-width="4"/>${label(24,32,'Best clean jump height')}${label(164,30,'Use same method each time')}`,
+    chestPass: `${common}<rect x="46" y="90" width="58" height="46" rx="8" fill="none" stroke="#86efac" stroke-width="3"/><circle cx="94" cy="62" r="11" fill="none" stroke="#ecf2ff" stroke-width="4"/><line x1="94" y1="74" x2="94" y2="108" stroke="#ecf2ff" stroke-width="4"/><line x1="94" y1="88" x2="124" y2="88" stroke="#ecf2ff" stroke-width="4"/><line x1="94" y1="88" x2="68" y2="88" stroke="#ecf2ff" stroke-width="4"/><line x1="94" y1="108" x2="74" y2="136" stroke="#ecf2ff" stroke-width="4"/><line x1="94" y1="108" x2="112" y2="136" stroke="#ecf2ff" stroke-width="4"/><circle cx="132" cy="88" r="9" fill="none" stroke="#fbbf24" stroke-width="4"/><path d="M144 88 Q178 84 206 88" fill="none" stroke="#7dd3fc" stroke-width="4" marker-end="url(#arrow-${id})"/>${label(24,32,'Back stays on chair')}${label(152,32,'Measure first landing')}`,
+    shotPutR: `${common}${person({x:108,y:54,lean:8})}<circle cx="132" cy="86" r="8" fill="none" stroke="#fbbf24" stroke-width="4"/><path d="M140 84 Q180 56 214 78" fill="none" stroke="#7dd3fc" stroke-width="4" marker-end="url(#arrow-${id})"/><path d="M122 146 Q150 130 170 146" fill="none" stroke="#86efac" stroke-width="3"/><line x1="170" y1="126" x2="170" y2="148" stroke="#86efac" stroke-width="4"/>${label(24,30,'Throw from one side at a time')}${label(140,34,'Finish without crossing over')}`,
+    lungeR: `${common}<circle cx="88" cy="56" r="11" fill="none" stroke="#ecf2ff" stroke-width="4"/><line x1="88" y1="68" x2="98" y2="108" stroke="#ecf2ff" stroke-width="4"/><line x1="98" y1="86" x2="74" y2="92" stroke="#ecf2ff" stroke-width="4"/><line x1="98" y1="86" x2="122" y2="92" stroke="#ecf2ff" stroke-width="4"/><line x1="98" y1="108" x2="68" y2="142" stroke="#ecf2ff" stroke-width="4"/><line x1="98" y1="108" x2="132" y2="132" stroke="#ecf2ff" stroke-width="4"/><circle cx="62" cy="94" r="7" fill="none" stroke="#fbbf24" stroke-width="4"/><circle cx="132" cy="94" r="7" fill="none" stroke="#fbbf24" stroke-width="4"/><line x1="154" y1="58" x2="154" y2="140" stroke="#86efac" stroke-width="3" stroke-dasharray="6 4"/>${label(20,30,'Use same variation each time')}${label(160,30,'Match depth side to side')}`,
+    pushR: `${common}<circle cx="92" cy="54" r="11" fill="none" stroke="#ecf2ff" stroke-width="4"/><line x1="92" y1="66" x2="92" y2="104" stroke="#ecf2ff" stroke-width="4"/><line x1="92" y1="86" x2="118" y2="86" stroke="#ecf2ff" stroke-width="4"/><line x1="92" y1="86" x2="72" y2="96" stroke="#ecf2ff" stroke-width="4"/><line x1="92" y1="104" x2="74" y2="142" stroke="#ecf2ff" stroke-width="4"/><line x1="92" y1="104" x2="114" y2="142" stroke="#ecf2ff" stroke-width="4"/><line x1="162" y1="44" x2="162" y2="144" stroke="#86efac" stroke-width="4"/><line x1="118" y1="86" x2="154" y2="86" stroke="#7dd3fc" stroke-width="4" marker-end="url(#arrow-${id})"/><circle cx="118" cy="86" r="7" fill="none" stroke="#fbbf24" stroke-width="4"/>${label(22,30,'Strict cable press')}${label(154,30,'Avoid torso twist')}`,
+    pullR: `${common}<circle cx="156" cy="54" r="11" fill="none" stroke="#ecf2ff" stroke-width="4"/><line x1="156" y1="66" x2="156" y2="104" stroke="#ecf2ff" stroke-width="4"/><line x1="156" y1="86" x2="128" y2="86" stroke="#ecf2ff" stroke-width="4"/><line x1="156" y1="86" x2="176" y2="96" stroke="#ecf2ff" stroke-width="4"/><line x1="156" y1="104" x2="138" y2="142" stroke="#ecf2ff" stroke-width="4"/><line x1="156" y1="104" x2="178" y2="142" stroke="#ecf2ff" stroke-width="4"/><line x1="88" y1="44" x2="88" y2="144" stroke="#86efac" stroke-width="4"/><line x1="124" y1="86" x2="94" y2="86" stroke="#7dd3fc" stroke-width="4" marker-end="url(#arrow-${id})"/><circle cx="124" cy="86" r="7" fill="none" stroke="#fbbf24" stroke-width="4"/>${label(24,30,'Strict cable pull')}${label(132,30,'Keep torso quiet')}`,
+    imtp: `${common}<circle cx="128" cy="50" r="11" fill="none" stroke="#ecf2ff" stroke-width="4"/><line x1="128" y1="62" x2="128" y2="104" stroke="#ecf2ff" stroke-width="4"/><line x1="128" y1="82" x2="104" y2="96" stroke="#ecf2ff" stroke-width="4"/><line x1="128" y1="82" x2="152" y2="96" stroke="#ecf2ff" stroke-width="4"/><line x1="128" y1="104" x2="108" y2="142" stroke="#ecf2ff" stroke-width="4"/><line x1="128" y1="104" x2="148" y2="142" stroke="#ecf2ff" stroke-width="4"/><line x1="92" y1="92" x2="164" y2="92" stroke="#fbbf24" stroke-width="6"/><path d="M116 86 Q128 68 140 86" fill="none" stroke="#7dd3fc" stroke-width="4" marker-end="url(#arrow-${id})"/><line x1="90" y1="64" x2="90" y2="120" stroke="#86efac" stroke-width="3" stroke-dasharray="6 4"/><line x1="166" y1="64" x2="166" y2="120" stroke="#86efac" stroke-width="3" stroke-dasharray="6 4"/>${label(22,30,'Fixed bar position')}${label(150,30,'Enter x bodyweight')}`,
+  };
+  const key = shapes[id] ? id : (id.endsWith('L') ? id.slice(0,-1)+'R' : id);
+  return baseStart + (shapes[key] || `${common}${person()}`) + baseEnd;
+}
+
+function guideSections(guide){
+  if (!guide) return '';
+  return `
+    <div class="meta-grid compact-guide">
+      <div>
+        <div class="section-label">Purpose</div>
+        <div class="small">${guide.purpose}</div>
+      </div>
+      <div>
+        <div class="section-label">Equipment</div>
+        <div class="small">${guide.equipment}</div>
+      </div>
+      <div>
+        <div class="section-label">Setup</div>
+        <div class="small">${guide.setup}</div>
+      </div>
+      <div>
+        <div class="section-label">What to record</div>
+        <div class="small">${guide.record}</div>
+      </div>
+    </div>
+    <div class="compact-guide">
+      <div>
+        <div class="section-label">How to do it</div>
+        <ol class="step-list small">${guide.steps.map(step => `<li>${step}</li>`).join('')}</ol>
+      </div>
+      <div class="meta-grid">
+        <div>
+          <div class="section-label">Common mistakes</div>
+          <ul class="step-list small">${guide.mistakes.map(m => `<li>${m}</li>`).join('')}</ul>
+        </div>
+        <div>
+          <div class="section-label">How the calculator uses it</div>
+          <div class="small">${guide.calculatorRule}</div>
+          <div class="section-label" style="margin-top:10px;">Note</div>
+          <div class="small">${guide.note}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMovementTests(){
+  const root = el('movementTests');
+  root.innerHTML = MOVEMENT_TESTS.map((t, idx) => {
+    const guide = guideFor(t.id, t.name);
+    return `
+      <div class="step-card">
+        <div class="step-head">
+          <div class="step-title">
+            <div class="step-num">${idx + 1}</div>
+            <div>
+              <div><strong>${t.name}</strong></div>
+              <div class="step-sub">Movement screen step</div>
+            </div>
+          </div>
+          <div class="chipbar">
+            <span class="chip">${evidenceBadge(t.evidence)}</span>
+            ${t.critical ? '<span class="chip bad">Critical gate test</span>' : '<span class="chip">Support screen</span>'}
+          </div>
+        </div>
+        <div class="step-layout">
+          <div class="art-panel">
+            <div class="diagram-wrap">${diagramSVG(t.id, t.name)}</div>
+            <div class="diagram-caption">Read the setup, perform the screen, then grade it immediately before moving to the next test.</div>
+          </div>
+          <div class="content-panel">${guideSections(guide)}</div>
+          <div class="input-panel input-stack">
+            <div class="input-card">
+              <label for="${t.id}">Status</label>
+              <select id="${t.id}">
+                <option value="">Select</option>
+                <option value="fail">Fail</option>
+                <option value="limited">Limited</option>
+                <option value="pass">Pass</option>
+              </select>
+              <div class="inline-help">Use <strong>Pass</strong> for clean movement, <strong>Limited</strong> for compensation or clear quality loss, and <strong>Fail</strong> for inability, major compensation, or pain.</div>
+            </div>
+            <div class="score-grid">
+              <div class="input-card">
+                <label>Model score</label>
+                <input id="${t.id}_score" value="—" disabled />
+              </div>
+              <div class="input-card">
+                <label>Role</label>
+                <input value="${t.critical ? 'Gate' : 'Support'}" disabled />
+              </div>
+            </div>
+            <div class="quick-note">Why it matters: ${t.why}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPowerTests(){
+  const groups = [
+    { key:'vertJump', title:'Vertical Jump', tests:['vertJump'] },
+    { key:'chestPass', title:'Seated Chest Pass', tests:['chestPass'] },
+    { key:'shotPut', title:'Standing Shot Put', tests:['shotPutR','shotPutL'] },
+  ];
+  const root = el('powerTests');
+  root.innerHTML = groups.map((g, idx) => {
+    const guide = guideFor(g.tests[0], g.title);
+    const chips = g.tests.map(id => POWER_TESTS.find(t => t.id === id)).filter(Boolean);
+    const inputBlock = g.tests.length === 1
+      ? `
+        <div class="input-card">
+          <label for="${g.tests[0]}">Value (${chips[0].unit})</label>
+          <input id="${g.tests[0]}" type="number" step="0.1" min="0" placeholder="Enter ${chips[0].unit}" />
+          <div class="inline-help">Enter the best clean rep using the exact method described on this card.</div>
+        </div>
+        <div class="score-grid">
+          <div class="input-card"><label>Band</label><input id="${g.tests[0]}_band" disabled value="—" /></div>
+          <div class="input-card"><label>Model score</label><input id="${g.tests[0]}_score" disabled value="—" /></div>
+        </div>`
+      : `
+        <div class="pair-grid">
+          ${g.tests.map(id => {
+            const test = POWER_TESTS.find(t => t.id === id);
+            const side = id.endsWith('R') ? 'Right' : 'Left';
+            return `<div class="input-card"><label for="${id}">${side} (${test.unit})</label><input id="${id}" type="number" step="0.1" min="0" placeholder="Enter ${test.unit}" /><div class="inline-help">Measure from first landing back to the lead hip.</div></div>`;
+          }).join('')}
+        </div>
+        <div class="score-grid">
+          ${g.tests.map(id => `<div class="input-card"><label>${id.endsWith('R') ? 'Right' : 'Left'} band</label><input id="${id}_band" disabled value="—" /></div>`).join('')}
+        </div>
+        <div class="score-grid">
+          ${g.tests.map(id => `<div class="input-card"><label>${id.endsWith('R') ? 'Right' : 'Left'} score</label><input id="${id}_score" disabled value="—" /></div>`).join('')}
+        </div>`;
+    return `
+      <div class="step-card">
+        <div class="step-head">
+          <div class="step-title">
+            <div class="step-num">${idx + 1}</div>
+            <div>
+              <div><strong>${g.title}</strong></div>
+              <div class="step-sub">Power test step</div>
+            </div>
+          </div>
+          <div class="chipbar">${chips.filter(t => !t.hiddenInEvidence).map(t => `<span class="chip">${evidenceBadge(t.evidence)}</span>`).join('')}</div>
+        </div>
+        <div class="step-layout">
+          <div class="art-panel">
+            <div class="diagram-wrap">${diagramSVG(g.tests[0], g.title)}</div>
+            <div class="diagram-caption">Perform practice reps first, then record 2–3 good attempts and enter the best clean result.</div>
+          </div>
+          <div class="content-panel">${guideSections(guide)}</div>
+          <div class="input-panel input-stack">
+            ${inputBlock}
+            <div class="quick-note">Why it matters: ${chips.filter(t => !t.hiddenInEvidence).map(t => t.why).filter(Boolean).join(' ')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderStrengthTests(){
+  const groups = [
+    { key:'lunge', title:'Unilateral Lunge 8RM', tests:['lungeR','lungeL'] },
+    { key:'push', title:'Single-Arm Cable Push 8RM', tests:['pushR','pushL'] },
+    { key:'pull', title:'Single-Arm Cable Pull 8RM', tests:['pullR','pullL'] },
+    { key:'imtp', title:'Optional IMTP Peak Force', tests:['imtp'] },
+  ];
+  const root = el('strengthTests');
+  root.innerHTML = groups.map((g, idx) => {
+    const guide = guideFor(g.tests[0], g.title);
+    const tests = g.tests.map(id => STRENGTH_TESTS.find(t => t.id === id)).filter(Boolean);
+    const inputBlock = g.tests.length === 1
+      ? `
+        <div class="input-card">
+          <label for="imtp">Value (${tests[0].unit})</label>
+          <input id="imtp" type="number" step="0.1" min="0" placeholder="Enter ${tests[0].unit}" />
+          <div class="inline-help">Enter peak force in kg. The calculator converts it to x body weight using your body mass.</div>
+        </div>
+        <div class="score-grid">
+          <div class="input-card"><label>Band</label><input id="imtp_band" disabled value="—" /></div>
+          <div class="input-card"><label>Model score</label><input id="imtp_score" disabled value="—" /></div>
+        </div>`
+      : `
+        <div class="pair-grid">
+          ${g.tests.map(id => {
+            const test = STRENGTH_TESTS.find(t => t.id === id);
+            const side = id.endsWith('R') ? 'Right' : 'Left';
+            return `<div class="input-card"><label for="${id}">${side} (${test.unit})</label><input id="${id}" type="number" step="0.1" min="0" placeholder="Enter ${test.unit}" /><div class="inline-help">Enter the actual load in kg. The calculator normalizes it using your body mass.</div></div>`;
+          }).join('')}
+        </div>
+        <div class="score-grid">
+          ${g.tests.map(id => `<div class="input-card"><label>${id.endsWith('R') ? 'Right' : 'Left'} band</label><input id="${id}_band" disabled value="—" /></div>`).join('')}
+        </div>
+        <div class="score-grid">
+          ${g.tests.map(id => `<div class="input-card"><label>${id.endsWith('R') ? 'Right' : 'Left'} score</label><input id="${id}_score" disabled value="—" /></div>`).join('')}
+        </div>`;
+    return `
+      <div class="step-card">
+        <div class="step-head">
+          <div class="step-title">
+            <div class="step-num">${idx + 1}</div>
+            <div>
+              <div><strong>${g.title}</strong></div>
+              <div class="step-sub">Strength test step</div>
+            </div>
+          </div>
+          <div class="chipbar">${tests.filter(t => !t.hiddenInEvidence).map(t => `<span class="chip">${evidenceBadge(t.evidence)}</span>`).join('')}</div>
+        </div>
+        <div class="step-layout">
+          <div class="art-panel">
+            <div class="diagram-wrap">${diagramSVG(g.tests[0], g.title)}</div>
+            <div class="diagram-caption">Keep the variation, load system, cable setup, and depth the same each session so the number stays meaningful.</div>
+          </div>
+          <div class="content-panel">${guideSections(guide)}</div>
+          <div class="input-panel input-stack">
+            ${inputBlock}
+            <div class="quick-note">Why it matters: ${tests.filter(t => !t.hiddenInEvidence).map(t => t.why).filter(Boolean).join(' ')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+
+function renderBenchmarkEditor(){
+  const sex = el('sex').value || 'male';
+  const b = modelState.benchmarks[sex];
+  const fields = [
+    ['vertJump','Vertical Jump (cm)'],
+    ['chestPass','Seated Chest Pass (m)'],
+    ['shotPut','Standing Shot Put (m)'],
+    ['lungePct','Unilateral Lunge 8RM (% body mass)'],
+    ['pushPct','Single-Arm Cable Push 8RM (% body mass)'],
+    ['pullPct','Single-Arm Cable Pull 8RM (% body mass)'],
+    ['imtpBw','IMTP Peak Force (x body weight)']
+  ];
+  el('benchmarkEditor').innerHTML = fields.map(([key, label]) => `
+    <div class="test-row">
+      <div class="three">
+        <div>
+          <label>${label} — Low</label>
+          <input id="bm_${key}_low" type="number" step="0.1" value="${b[key].low}" />
+        </div>
+        <div>
+          <label>${label} — OK</label>
+          <input id="bm_${key}_ok" type="number" step="0.1" value="${b[key].ok}" />
+        </div>
+        <div>
+          <label>${label} — High</label>
+          <input id="bm_${key}_high" type="number" step="0.1" value="${b[key].high}" />
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function syncBenchmarksFromEditor(){
+  const sex = el('sex').value || 'male';
+  const target = modelState.benchmarks[sex];
+  Object.keys(target).forEach(key => {
+    const low = valueOrNull(el(`bm_${key}_low`).value);
+    const ok = valueOrNull(el(`bm_${key}_ok`).value);
+    const high = valueOrNull(el(`bm_${key}_high`).value);
+    if (low != null && ok != null && high != null && low < ok && ok < high){
+      target[key] = { low, ok, high };
+    }
+  });
+}
+
+
+
+function renderTestGuides(){
+  const introGuide = TEST_GUIDES.find(g => g.category === 'Before you start');
+  el('testGuides').innerHTML = `
+    <div class="workflow-intro">
+      <div class="guide-note">
+        <div class="guide-label">How to use this page</div>
+        <ol class="guide-list">
+          <li>Open one card.</li>
+          <li>Read the setup and steps on that same card.</li>
+          <li>Perform the test immediately.</li>
+          <li>Enter the result before moving to the next card.</li>
+        </ol>
+      </div>
+      <div class="guide-note">
+        <div class="guide-label">Consistency rules</div>
+        <div class="small">${introGuide ? introGuide.purpose : 'Keep your setup repeatable from session to session.'}</div>
+        <ul class="guide-list">
+          ${introGuide ? introGuide.steps.map(step => `<li>${step}</li>`).join('') : ''}
+        </ul>
+      </div>
+    </div>
+    <div class="guide-note" style="margin-top:12px;">
+      <div class="guide-label">Logging advice</div>
+      <div class="small">${introGuide ? introGuide.record : ''}</div>
+      <div class="small" style="margin-top:10px;">${introGuide ? introGuide.note : ''}</div>
+    </div>
+  `;
+}
+
+
+function renderEvidenceTable(){
+  const rows = [
+    ...MOVEMENT_TESTS.map(t => ({
+      name:t.name,
+      label:t.label,
+      why:t.why,
+      use:t.critical ? 'Critical movement gate + movement score' : 'Support movement score'
+    })),
+    ...POWER_TESTS.filter(t => !t.hiddenInEvidence).map(t => ({
+      name:t.name.replace(' Right','').replace(' Left',''),
+      label:t.label,
+      why:t.why,
+      use:t.name.includes('Shot Put') ? 'Power score + left/right asymmetry' : 'Power score'
+    })),
+    ...STRENGTH_TESTS.filter(t => !t.hiddenInEvidence).map(t => ({
+      name:t.name.replace(' Right','').replace(' Left',''),
+      label:t.label,
+      why:t.why,
+      use:t.id === 'imtp' ? 'Strength score (high weight if entered)' : 'Strength score + left/right asymmetry'
+    })),
+    {
+      name:'Two or more critical movement failures',
+      label:'House rule',
+      why:'Public TPI philosophy emphasizes screening first, but not a published calculator threshold.',
+      use:'Primary movement-first override'
+    },
+    {
+      name:'Power > strength weighting',
+      label:'House rule based on literature',
+      why:'Meta-analysis suggests explosive outputs relate very strongly to clubhead speed.',
+      use:'Power weighted slightly more heavily in recommendation logic'
+    },
+    {
+      name:'>10% and >15% asymmetry flags',
+      label:'House rule',
+      why:'TPI publicly discusses strength imbalances but does not publish a universal threshold.',
+      use:'Moderate / high imbalance flag'
+    }
+  ];
+
+  el('evidenceTable').innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.name}</td>
+      <td>${r.label}</td>
+      <td>${r.why}</td>
+      <td>${r.use}</td>
+    </tr>
+  `).join('');
+}
+
+function benchmarkBandText(score){
+  if (score == null) return '—';
+  if (score < 35) return 'Below low band';
+  if (score < 65) return 'Between low and OK';
+  if (score < 100) return 'Between OK and high';
+  return 'At / above high';
+}
+
+function populateDemoValues(){
+  const demo = {
+    age: 38,
+    bodymass: 84,
+    driverSpeed: 99,
+    pelvicTilt: 'limited',
+    pelvicRotation: 'limited',
+    torsoRotation: 'pass',
+    bridge: 'pass',
+    shoulder9090: 'limited',
+    vertJump: 33,
+    chestPass: 5.1,
+    shotPutR: 5.2,
+    shotPutL: 4.8,
+    lungeR: 60.5,
+    lungeL: 57.1,
+    pushR: 16.8,
+    pushL: 15.1,
+    pullR: 20.2,
+    pullL: 18.5,
+    imtp: ''
+  };
+  for (const [k,v] of Object.entries(demo)){
+    if (el(k)) el(k).value = v;
+  }
+}
+
+function gatherInputs(){
+  syncBenchmarksFromEditor();
+  const sex = el('sex').value || 'male';
+  const benchmarks = modelState.benchmarks[sex];
+  const bodymass = valueOrNull(el('bodymass').value);
+
+  const movement = {};
+  MOVEMENT_TESTS.forEach(t => movement[t.id] = el(t.id).value || null);
+
+  const power = {};
+  POWER_TESTS.forEach(t => power[t.id] = valueOrNull(el(t.id).value));
+
+  const rawStrength = {};
+  STRENGTH_TESTS.forEach(t => rawStrength[t.id] = valueOrNull(el(t.id).value));
+  const strength = {};
+  STRENGTH_TESTS.forEach(t => {
+    if (t.id === 'imtp') strength[t.id] = bodymass && rawStrength[t.id] != null ? rawStrength[t.id] / bodymass : null;
+    else strength[t.id] = bodymass && rawStrength[t.id] != null ? (rawStrength[t.id] / bodymass) * 100 : null;
+  });
+
+  return {
+    sex,
+    age: valueOrNull(el('age').value),
+    bodymass,
+    driverSpeed: valueOrNull(el('driverSpeed').value),
+    benchmarks,
+    movement,
+    power,
+    strength,
+    rawStrength
+  };
+}
+
+function calcMovement(input){
+  let scores = [];
+  let criticalFails = 0;
+  let missing = 0;
+  for (const t of MOVEMENT_TESTS){
+    const score = movementValueToScore(input.movement[t.id]);
+    if (score == null) missing++;
+    else scores.push(score);
+    if (t.critical && input.movement[t.id] === 'fail') criticalFails++;
+    el(`${t.id}_score`).value = score == null ? '—' : String(score);
+  }
+  const avg = scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : null;
+  return { score: avg, criticalFails, missing };
+}
+
+function calcPower(input){
+  const b = input.benchmarks;
+  const s = {};
+
+  s.vertJump = piecewiseScore(input.power.vertJump, b.vertJump);
+  s.chestPass = piecewiseScore(input.power.chestPass, b.chestPass);
+  s.shotPutR = piecewiseScore(input.power.shotPutR, b.shotPut);
+  s.shotPutL = piecewiseScore(input.power.shotPutL, b.shotPut);
+  const shotPutAvg = average([s.shotPutR, s.shotPutL]);
+
+  [['vertJump','vertJump'], ['chestPass','chestPass'], ['shotPutR','shotPut'], ['shotPutL','shotPut']].forEach(([id, key]) => {
+    const sc = s[id];
+    el(`${id}_score`).value = sc == null ? '—' : String(round(sc,0));
+    el(`${id}_band`).value = benchmarkBandText(sc);
+  });
+
+  let num = 0, den = 0;
+  if (s.vertJump != null){ num += s.vertJump * WEIGHTS.power.vertJump; den += WEIGHTS.power.vertJump; }
+  if (s.chestPass != null){ num += s.chestPass * WEIGHTS.power.chestPass; den += WEIGHTS.power.chestPass; }
+  if (shotPutAvg != null){ num += shotPutAvg * WEIGHTS.power.shotPutAvg; den += WEIGHTS.power.shotPutAvg; }
+  return { score: den ? num/den : null, sub:s, shotPutAvg };
+}
+
+function calcStrength(input){
+  const b = input.benchmarks;
+  const s = {};
+  s.lungeR = piecewiseScore(input.strength.lungeR, b.lungePct);
+  s.lungeL = piecewiseScore(input.strength.lungeL, b.lungePct);
+  s.pushR = piecewiseScore(input.strength.pushR, b.pushPct);
+  s.pushL = piecewiseScore(input.strength.pushL, b.pushPct);
+  s.pullR = piecewiseScore(input.strength.pullR, b.pullPct);
+  s.pullL = piecewiseScore(input.strength.pullL, b.pullPct);
+  s.imtp = piecewiseScore(input.strength.imtp, b.imtpBw);
+
+  [['lungeR','lungePct'], ['lungeL','lungePct'], ['pushR','pushPct'], ['pushL','pushPct'], ['pullR','pullPct'], ['pullL','pullPct'], ['imtp','imtpBw']].forEach(([id, key]) => {
+    const sc = s[id];
+    el(`${id}_score`).value = sc == null ? '—' : String(round(sc,0));
+    el(`${id}_band`).value = benchmarkBandText(sc);
+  });
+
+  const lungeAvg = average([s.lungeR,s.lungeL]);
+  const pushAvg = average([s.pushR,s.pushL]);
+  const pullAvg = average([s.pullR,s.pullL]);
+
+  let num = 0, den = 0;
+  if (lungeAvg != null){ num += lungeAvg * WEIGHTS.strength.lungeAvg; den += WEIGHTS.strength.lungeAvg; }
+  if (pushAvg != null){ num += pushAvg * WEIGHTS.strength.pushAvg; den += WEIGHTS.strength.pushAvg; }
+  if (pullAvg != null){ num += pullAvg * WEIGHTS.strength.pullAvg; den += WEIGHTS.strength.pullAvg; }
+  if (s.imtp != null){ num += s.imtp * WEIGHTS.strength.imtp; den += WEIGHTS.strength.imtp; }
+
+  return { score: den ? num/den : null, sub:s, lungeAvg, pushAvg, pullAvg };
+}
+
+function average(arr){
+  const vals = arr.filter(v => Number.isFinite(v));
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+}
+
+function calcAsymmetry(input){
+  const a = {
+    shotPut: asymmetryPct(input.power.shotPutR, input.power.shotPutL),
+    lunge: asymmetryPct(input.strength.lungeR, input.strength.lungeL),
+    push: asymmetryPct(input.strength.pushR, input.strength.pushL),
+    pull: asymmetryPct(input.strength.pullR, input.strength.pullL)
+  };
+  const vals = Object.values(a).filter(v => Number.isFinite(v));
+  const avg = vals.length ? vals.reduce((x,y)=>x+y,0)/vals.length : null;
+  const high = vals.some(v => v > 15);
+  const moderate = !high && vals.some(v => v > 10);
+  return { ...a, avg, high, moderate };
+}
+
+function lowestRegionalBucket(regional){
+  const entries = [
+    ['lower body', regional.lower],
+    ['core / trunk', regional.core],
+    ['upper body', regional.upper]
+  ].filter(([, score]) => Number.isFinite(score));
+  if (!entries.length) return null;
+  entries.sort((a,b) => a[1] - b[1]);
+  return { name: entries[0][0], score: entries[0][1] };
+}
+
+function recommend(input, movement, power, strength, regional, asym){
+  const movementPoor = movement.score != null && (movement.score < 65 || movement.criticalFails >= 2);
+  const powerLow = power.score != null && power.score < 60;
+  const strengthLow = strength.score != null && strength.score < 60;
+  const powerGood = power.score != null && power.score >= 70;
+  const strengthGood = strength.score != null && strength.score >= 70;
+  const driverLagging = Number.isFinite(input.driverSpeed) && powerGood && strengthGood && input.driverSpeed < (input.sex === 'male' ? 100 : 80);
+  const weakestRegion = lowestRegionalBucket(regional);
+  const regionTag = weakestRegion ? `${weakestRegion.name} limiter` : null;
+
+  let primary = 'Incomplete';
+  let reason = 'Add more values to improve the recommendation.';
+  let tags = [];
+  let plan = [];
+
+  if (movementPoor){
+    primary = 'Mobility / stability first';
+    reason = `Your movement screen is limiting what you can express. In this model, movement overrides a pure speed recommendation.${weakestRegion ? ` The weakest regional pattern currently looks ${weakestRegion.name}-driven.` : ''}`;
+    tags = ['clear movement restriction', `${movement.criticalFails} critical fail(s)`, 'screen first', regionTag].filter(Boolean);
+    plan = [
+      'Prioritize failed critical screens first: pelvic tilt, pelvic rotation, torso rotation, and 90/90 usually matter most.',
+      weakestRegion ? `Bias your first corrective block toward ${weakestRegion.name} limitations while still cleaning up the failed screen items.` : '',
+      'Use low-load mobility, stability, and dissociation work 3–5x/week.',
+      'Keep 1–2 low-volume power exposures each week so you do not detrain speed.',
+      'Re-test movement before committing to a dedicated speed block.'
+    ].filter(Boolean);
+  } else if (powerLow && strengthLow){
+    primary = weakestRegion ? `${weakestRegion.name} strength-first block` : 'Strength-first block';
+    reason = `Both the engine and the force base are under target. The model recommends building force capacity first, then layering speed work on top.${weakestRegion ? ` The lowest regional bucket is ${weakestRegion.name}.` : ''}`;
+    tags = ['low power', 'low strength', 'build base', regionTag].filter(Boolean);
+    plan = [
+      weakestRegion === null ? 'Run a 4–8 week strength block focused on lower-body, unilateral, and rotary pressing/pulling strength.' :
+        weakestRegion.name === 'lower body' ? 'Run a 4–8 week block centered on lower-body force production: unilateral leg strength, jump prep, and rotational force from the ground up.' :
+        weakestRegion.name === 'core / trunk' ? 'Run a 4–8 week block centered on trunk control: pelvic control, anti-rotation, separation drills, and force transfer between lower and upper body.' :
+        'Run a 4–8 week block centered on upper-body output: chest-pass power plus single-arm push and pull strength with clean torso control.',
+      'Keep 1 short speed session per week with light med-ball throws or overspeed swings.',
+      'Re-test jump and medicine-ball outputs after the block.'
+    ];
+  } else if (powerLow && !strengthLow){
+    primary = weakestRegion ? `${weakestRegion.name} speed / ballistic block` : 'Speed / ballistic block';
+    reason = `Your strength appears adequate relative to your explosive outputs. The model reads this as a velocity-expression problem more than a force problem.${weakestRegion ? ` The softest region right now is ${weakestRegion.name}.` : ''}`;
+    tags = ['adequate force', 'low explosive output', 'train fast', regionTag].filter(Boolean);
+    plan = [
+      weakestRegion === 'lower body' ? 'Prioritize 2–3 speed exposures each week centered on lower-body pop: jumps, bounds, and ground-up rotational throw work.' :
+        weakestRegion === 'core / trunk' ? 'Prioritize 2–3 speed exposures each week centered on trunk sequencing: separation drills, step-behind throws, and fast rotational intent without losing posture.' :
+        weakestRegion === 'upper body' ? 'Prioritize 2–3 speed exposures each week centered on upper-body ballistic output: chest passes, shot-put variations, and fast pressing intent.' :
+        'Prioritize 2–3 speed exposures each week: jumps, med-ball throws, and overspeed or intent-based swings.',
+      'Use lighter loads moved quickly; do not let strength work dominate the week.',
+      'Keep enough strength work to maintain your base, not chase fatigue.'
+    ];
+  } else if ((asym.high || asym.moderate) && (powerGood || strengthGood)){
+    primary = 'Imbalance correction block';
+    reason = 'Your biggest available win may be side-to-side cleanup rather than more general strength or speed volume.';
+    tags = ['left/right asymmetry', asym.high ? 'high imbalance' : 'moderate imbalance', 'clean up leaks', regionTag].filter(Boolean);
+    plan = [
+      'Bias unilateral work toward the weaker side while keeping total asymmetry work controlled.',
+      weakestRegion ? `Let the asymmetry cleanup lean hardest into your ${weakestRegion.name} profile, since that is where the broadest leak appears.` : '',
+      'Use rotational med-ball throws and unilateral strength work to reduce side-to-side gaps.',
+      'Retest the asymmetries every 2–3 weeks.'
+    ].filter(Boolean);
+  } else if (driverLagging){
+    primary = 'Speed skill / technique / intent';
+    reason = `Your physical scores look decent, so the model suspects you may be leaving speed on the table through mechanics, intent, sequencing, or speed-specific skill.${weakestRegion ? ` If you add physical support work, bias it toward ${weakestRegion.name}.` : ''}`;
+    tags = ['physical base decent', 'speed still lagging', 'skill limit likely', regionTag].filter(Boolean);
+    plan = [
+      'Run a technical speed block: intent, sequencing, launch-monitor feedback, and overspeed protocols.',
+      weakestRegion ? `Use your gym support work to bring up the ${weakestRegion.name} bucket while the main focus stays on speed skill.` : '',
+      'Use med-ball and jump work as support, not the main focus.',
+      'Track driver speed frequently and keep sessions fresh, not fatiguing.'
+    ].filter(Boolean);
+  } else if (powerGood && strengthGood){
+    primary = 'Balanced physical profile';
+    reason = `No major physical limiter stands out in this model. You likely benefit most from targeted speed exposure and golf-skill refinement.${weakestRegion ? ` The lowest bucket is still ${weakestRegion.name}, so that is the best place for maintenance emphasis.` : ''}`;
+    tags = ['good base', 'no major red flag', 'maintain + refine', regionTag].filter(Boolean);
+    plan = [
+      'Maintain strength 1–2x/week and power 1–2x/week.',
+      weakestRegion ? `Use a small amount of extra maintenance volume on ${weakestRegion.name} qualities so that bucket does not drift down.` : '',
+      'Use golf-specific speed training or swing work based on your actual playing goals.',
+      'Retest monthly to watch for drift.'
+    ].filter(Boolean);
+  }
+
+  return { primary, reason, tags, plan };
+}
+
+function renderBreakdown(movement, power, strength){
+  const lines = [
+    ['Movement Gate', movement.score, 'Average of movement screen entries'],
+    ['Power Index', power.score, 'Weighted toward jump and medicine-ball explosive tests'],
+    ['Strength Index', strength.score, 'Weighted average of lunge, cable push/pull, and optional IMTP']
+  ];
+  el('scoreBreakdown').innerHTML = lines.map(([name, score, note]) => `
+    <div class="scoreline">
+      <div><strong>${name}</strong></div>
+      <div>
+        <div class="bar"><span style="width:${score == null ? 0 : clamp(score,0,100)}%"></span></div>
+        <div class="tiny">${note}</div>
+      </div>
+      <div><strong>${score == null ? '—' : round(score,0)}</strong></div>
+    </div>
+  `).join('');
+}
+
+function calcRegionalProfile(input, movement, power, strength){
+  const movementScores = Object.fromEntries(MOVEMENT_TESTS.map(t => [t.id, movementValueToScore(input.movement[t.id])]));
+  const lower = average([
+    movementScores.pelvicRotation,
+    power.sub.vertJump,
+    power.sub.shotPutR,
+    power.sub.shotPutL,
+    strength.sub.lungeR,
+    strength.sub.lungeL
+  ]);
+  const core = average([
+    movementScores.pelvicTilt,
+    movementScores.torsoRotation,
+    movementScores.bridge,
+    movementScores.pelvicRotation
+  ]);
+  const upper = average([
+    movementScores.shoulder9090,
+    power.sub.chestPass,
+    strength.sub.pushR,
+    strength.sub.pushL,
+    strength.sub.pullR,
+    strength.sub.pullL
+  ]);
+
+  return {
+    lower,
+    core,
+    upper
+  };
+}
+
+function renderRegionalProfile(regional){
+  const lines = [
+    ['Lower body', regional.lower, 'Pelvic rotation, jump output, shot put contribution, and unilateral lunge strength'],
+    ['Core / trunk', regional.core, 'Pelvic tilt, torso rotation, bridge stability, and lower-to-upper separation control'],
+    ['Upper body', regional.upper, 'Shoulder 90/90, chest pass power, and cable push/pull strength']
+  ];
+  el('regionalBreakdown').innerHTML = lines.map(([name, score, note]) => `
+    <div class="scoreline">
+      <div><strong>${name}</strong></div>
+      <div>
+        <div class="bar"><span style="width:${score == null ? 0 : clamp(score,0,100)}%"></span></div>
+        <div class="tiny">${note}</div>
+      </div>
+      <div><strong>${score == null ? '—' : round(score,0)}</strong></div>
+    </div>
+  `).join('');
+}
+
+function renderAsymmetry(asym){
+  const rows = [
+    ['Shot put', asym.shotPut],
+    ['Unilateral lunge', asym.lunge],
+    ['Cable push', asym.push],
+    ['Cable pull', asym.pull]
+  ];
+  const pills = [];
+  if (asym.high) pills.push('<span class="pill">High asymmetry flag</span>');
+  else if (asym.moderate) pills.push('<span class="pill">Moderate asymmetry flag</span>');
+  else pills.push('<span class="pill">No meaningful asymmetry flag</span>');
+
+  el('asymmetryBox').innerHTML = `
+    <div style="margin-bottom:10px;">${pills.join(' ')}</div>
+    ${rows.map(([label, val]) => `
+      <div class="scoreline">
+        <div><strong>${label}</strong></div>
+        <div>
+          <div class="bar"><span style="width:${val == null ? 0 : clamp(val*4,0,100)}%"></span></div>
+          <div class="tiny">Model flag: >10% moderate, >15% high</div>
+        </div>
+        <div><strong>${val == null ? '—' : round(val,1) + '%'}</strong></div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function updateTopKPIs(movement, power, strength, rec){
+  el('kpiMovement').textContent = movement.score == null ? '—' : `${round(movement.score,0)}`;
+  el('kpiPower').textContent = power.score == null ? '—' : `${round(power.score,0)}`;
+  el('kpiStrength').textContent = strength.score == null ? '—' : `${round(strength.score,0)}`;
+  el('kpiPrimary').textContent = rec.primary;
+}
+
+function renderResult(rec){
+  el('primaryResult').textContent = rec.primary;
+  el('primaryReason').textContent = rec.reason;
+  el('tagCloud').innerHTML = rec.tags.map(t => `<span class="pill">${t}</span>`).join('');
+  el('prescription').innerHTML = `<ol>${rec.plan.map(x => `<li>${x}</li>`).join('')}</ol>`;
+}
+
+function calculate(){
+  const input = gatherInputs();
+  const movement = calcMovement(input);
+  const power = calcPower(input);
+  const strength = calcStrength(input);
+  const regional = calcRegionalProfile(input, movement, power, strength);
+  const asym = calcAsymmetry(input);
+  const rec = recommend(input, movement, power, strength, regional, asym);
+
+  renderBreakdown(movement, power, strength);
+  renderRegionalProfile(regional);
+  renderAsymmetry(asym);
+  updateTopKPIs(movement, power, strength, rec);
+  renderResult(rec);
+}
+
+function saveLocal(){
+  const payload = {
+    form: gatherRawForm(),
+    benchmarks: modelState.benchmarks
+  };
+  localStorage.setItem('tpiCalcV21', JSON.stringify(payload));
+  alert('Saved locally in this browser.');
+}
+function loadLocal(){
+  const raw = localStorage.getItem('tpiCalcV21');
+  if (!raw){ alert('No saved data found in this browser.'); return; }
+  const data = JSON.parse(raw);
+  if (data.benchmarks) modelState.benchmarks = data.benchmarks;
+  if (data.form){
+    Object.entries(data.form).forEach(([k,v]) => {
+      if (el(k)) el(k).value = v;
+    });
+  }
+  renderBenchmarkEditor();
+  calculate();
+}
+function gatherRawForm(){
+  const ids = ['sex','age','bodymass','driverSpeed',
+    ...MOVEMENT_TESTS.map(t => t.id),
+    ...POWER_TESTS.map(t => t.id),
+    ...STRENGTH_TESTS.map(t => t.id)
+  ];
+  const obj = {};
+  ids.forEach(id => { if (el(id)) obj[id] = el(id).value; });
+  return obj;
+}
+function resetDemo(){
+  el('sex').value = 'male';
+  renderBenchmarkEditor();
+  populateDemoValues();
+  calculate();
+}
+function clearForm(){
+  const ids = ['age','bodymass','driverSpeed',
+    ...MOVEMENT_TESTS.map(t => t.id),
+    ...POWER_TESTS.map(t => t.id),
+    ...STRENGTH_TESTS.map(t => t.id)
+  ];
+  ids.forEach(id => {
+    if (el(id)) el(id).value = '';
+  });
+  calculate();
+}
+function exportJSON(){
+  const payload = {
+    modelVersion: '2.2',
+    savedAt: new Date().toISOString(),
+    inputs: gatherInputs(),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tpi_calculator_v2_2_export.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function init(){
+  renderMovementTests();
+  renderPowerTests();
+  renderStrengthTests();
+  renderBenchmarkEditor();
+  renderTestGuides();
+  renderEvidenceTable();
+  populateDemoValues();
+
+  el('sex').addEventListener('change', () => {
+    renderBenchmarkEditor();
+    calculate();
+  });
+  el('calcBtn').addEventListener('click', calculate);
+  el('saveBtn').addEventListener('click', saveLocal);
+  el('loadBtn').addEventListener('click', loadLocal);
+  el('demoBtn').addEventListener('click', resetDemo);
+  el('resetBtn').addEventListener('click', clearForm);
+  el('exportBtn').addEventListener('click', exportJSON);
+
+  document.addEventListener('input', (e) => {
+    if (e.target && (e.target.matches('input') || e.target.matches('select'))) {
+      if (e.target.id.startsWith('bm_')) return;
+      calculate();
+    }
+  });
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.id.startsWith('bm_')) calculate();
+  });
+
+  calculate();
+}
+init();
+</script>
+</body>
+</html>

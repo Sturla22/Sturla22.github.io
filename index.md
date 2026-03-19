@@ -2,7 +2,7 @@
 layout: home
 ---
 
-{%
+{% 
   include image.html
   dir="/assets/img/"
   file="SturlasBlog.webp"
@@ -11,3 +11,8 @@ layout: home
   no_link=true
   width="70%"
 %}
+
+## Interactive Tools
+
+- [Golf Tracker]({{ '/golf.html' | relative_url }})
+- [TPI-Inspired Speed vs Strength Calculator]({{ '/tpi-speed-strength.html' | relative_url }})
