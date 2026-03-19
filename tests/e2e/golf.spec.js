@@ -317,12 +317,20 @@ test.describe('Golf tracker', () => {
       await expect(page.locator('#gt-rounds-list')).toContainText('8 shots');
 
       await page.getByRole('button', { name: 'Scorecard' }).click();
+      await expect(page.locator('#gt-scorecard-content')).toContainText('Logger Test Club');
+      await expect(page.locator('#gt-scorecard-content')).toContainText('Performance');
       await expect(page.locator('#gt-scorecard-content')).toContainText('Front 9');
       await expect(page.locator('#gt-scorecard-content')).toContainText('Par');
       await expect(page.locator('#gt-scorecard-content')).toContainText('Score');
+      await expect(page.locator('#gt-scorecard-content')).toContainText('SG');
       await expect(page.locator('#gt-scorecard-content')).toContainText('Putts');
       await expect(page.locator('#gt-scorecard-content')).toContainText('FIR');
       await expect(page.locator('#gt-scorecard-content')).toContainText('GIR');
+      await expect(page.locator('#gt-scorecard-content')).not.toContainText('Round SG');
+      await expect(page.locator('#gt-scorecard-content')).toContainText('SG APP');
+      await expect(page.locator('#gt-scorecard-content')).toContainText('Score Breakdown');
+      await expect(page.locator('#gt-scorecard-content')).toContainText('Pars');
+      await expect(page.locator('#gt-scorecard-content')).toContainText('Bogeys');
       await expect(page.locator('#gt-scorecard-content')).toContainText('3');
       await expect(page.locator('#gt-scorecard-content')).toContainText('1');
       await expect(page.locator('#gt-scorecard-content')).toContainText('4');
@@ -445,9 +453,15 @@ test.describe('Golf tracker', () => {
       await expect(page.locator('#gt-history-body')).toContainText('Indoor session opener');
 
       await openTab(page, 'Stats');
+      await expect(page.getByRole('button', { name: 'All shots' })).toBeVisible();
       await expect(page.locator('#gt-stats-content')).toContainText('Total shots');
+      await expect(page.locator('#gt-stats-content')).toContainText('SG logged');
       await expect(page.locator('#gt-stats-content')).toContainText('Strokes Gained vs Scratch');
-      await expect(page.locator('#gt-stats-content')).toContainText('SG vs Target HCP 10');
+      await expect(page.locator('#gt-stats-content')).toContainText('Club summary');
+      await expect(page.locator('#gt-stats-content')).toContainText('Avg distance');
+      await expect(page.locator('#gt-stats-content')).toContainText('On tgt');
+      await expect(page.locator('#gt-stats-content')).toContainText('Distance buckets');
+      await expect(page.locator('#gt-stats-content')).toContainText('Target HCP comparison is only shown for a single mode');
     });
 
     test('shows indoor fixed-putting rounds and supports stats date filtering', async ({ page }) => {
@@ -464,6 +478,7 @@ test.describe('Golf tracker', () => {
       await page.getByRole('button', { name: 'Indoor' }).click();
       await expect(page.locator('#gt-stats-content')).toContainText('Traditional Stats (3 holes from 1 round)');
       await expect(page.locator('#gt-stats-content')).toContainText('SG vs Target HCP 8');
+      await expect(page.locator('#gt-stats-content')).toContainText('Avg vs par');
 
       await page.locator('#gt-stats-from').fill('2026-03-17');
       await page.locator('#gt-stats-to').fill('2026-03-17');

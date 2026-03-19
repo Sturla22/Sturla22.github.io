@@ -143,20 +143,46 @@ run('buildStatsSnapshot keeps practice shots in all-round stats and filters indo
   });
 
   assert.equal(allSnapshot.filteredShots.length, 3);
+  assert.equal(allSnapshot.statsMode, 'mixed');
+  assert.equal(allSnapshot.hasPracticeShots, true);
   assert.equal(indoorSnapshot.filteredShots.length, 1);
   assert.equal(indoorSnapshot.filteredRounds.length, 1);
+  assert.equal(indoorSnapshot.statsMode, 'indoor');
+});
+
+run('buildStatsSnapshot respects shot dates for round-linked date filtering', () => {
+  const rounds = [
+    { id: 'out-1', date: '2026-03-10', type: 'outdoor', courseId: null }
+  ];
+  const shots = [
+    { id: 'a', roundId: 'out-1', date: '2026-03-10', distance: 100, lie: 'Fairway', club: '8I', end_distance: 10, end_lie: 'Green' },
+    { id: 'b', roundId: 'out-1', date: '2026-03-12', distance: 8, lie: 'Green', club: 'Putter', end_distance: 0, end_lie: 'Holed' }
+  ];
+
+  const snapshot = domain.buildStatsSnapshot({
+    rounds,
+    shots,
+    courses: [],
+    statsFilter: 'all',
+    statsDateFrom: '2026-03-12',
+    statsDateTo: '2026-03-12'
+  });
+
+  assert.equal(snapshot.filteredShots.length, 1);
+  assert.equal(snapshot.filteredShots[0].id, 'b');
 });
 
 run('buildTargetHcpModel ranks improvement priorities by SG gap', () => {
   const model = domain.buildTargetHcpModel({
-    'Off the Tee': { sum: -1.8, n: 10 },
-    'Approach': { sum: -0.4, n: 10 },
+    'Off the Tee': { sum: -3.0, n: 10 },
+    'Approach': { sum: -4.5, n: 10 },
     'Around the Green': { sum: 0.1, n: 10 },
     'Putting': { sum: -0.2, n: 10 }
   }, 40, { hcp: 14, targetHcp: 8 });
 
   assert.equal(model.state, 'ready');
-  assert.equal(model.priorityMap['Off the Tee'], 1);
+  assert.equal(model.priorityMap['Approach'], 1);
+  assert.ok(model.priorityMap['Off the Tee'] > 0);
   assert.notEqual(model.gapData.find((entry) => entry.cat === 'Approach').gap, null);
 });
 

@@ -129,8 +129,17 @@
       }
     }
 
+    var sgByCat = {
+      'Off the Tee': 0,
+      'Approach': 0,
+      'Around the Green': 0,
+      'Putting': 0
+    };
     var sg = realShots.reduce(function (sum, shot) {
       var value = shot.sg != null ? shot.sg : core.calcSG(shot);
+      if (value != null) {
+        sgByCat[core.sgCategory(shot)] += value;
+      }
       return sum + (value != null ? value : 0);
     }, 0);
 
@@ -145,6 +154,7 @@
       sandSave: sandSave,
       holed: holed,
       sg: sg,
+      sgByCat: sgByCat,
       fixedPutts: hasSynthetic ? fixedPutts : null
     };
   }
@@ -191,7 +201,21 @@
       udHit: 0,
       ssOpp: 0,
       ssHit: 0,
-      sg: 0
+      sg: 0,
+      sgByCat: {
+        'Off the Tee': 0,
+        'Approach': 0,
+        'Around the Green': 0,
+        'Putting': 0
+      }
+    };
+
+    var scoreBreakdown = {
+      eaglesMinus: 0,
+      birdies: 0,
+      pars: 0,
+      bogeys: 0,
+      doublePlus: 0
     };
 
     holeData.forEach(function (holeStats, index) {
@@ -213,6 +237,16 @@
         if (holeStats.sandSave) totals.ssHit++;
       }
       totals.sg += holeStats.sg;
+      Object.keys(totals.sgByCat).forEach(function (category) {
+        totals.sgByCat[category] += holeStats.sgByCat ? holeStats.sgByCat[category] || 0 : 0;
+      });
+      if (holeStats.diff != null) {
+        if (holeStats.diff <= -2) scoreBreakdown.eaglesMinus++;
+        else if (holeStats.diff === -1) scoreBreakdown.birdies++;
+        else if (holeStats.diff === 0) scoreBreakdown.pars++;
+        else if (holeStats.diff === 1) scoreBreakdown.bogeys++;
+        else scoreBreakdown.doublePlus++;
+      }
     });
 
     return {
@@ -223,7 +257,8 @@
       holeLengths: holeLengths,
       hasLengths: holeLengths.some(function (length) { return length != null; }),
       hasFixedPutts: holeData.some(function (holeStats) { return holeStats && holeStats.fixedPutts != null; }),
-      totals: totals
+      totals: totals,
+      scoreBreakdown: scoreBreakdown
     };
   }
 
@@ -280,6 +315,130 @@
     return trad;
   }
 
+  function buildRoundSummaries(filteredRounds, shots, courses) {
+    return filteredRounds.map(function (round) {
+      var summary = roundScore(round, shots, courses);
+      if (!summary) return null;
+      return {
+        id: round.id,
+        date: round.date || '',
+        type: round.type || 'outdoor',
+        diff: summary.diff,
+        strokes: summary.strokes,
+        par: summary.par,
+        holes: summary.holes
+      };
+    }).filter(Boolean).sort(function (a, b) {
+      return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+    });
+  }
+
+  function buildScoringByPar(filteredRounds, shots, courses) {
+    var stats = {
+      3: { par: 3, totalScore: 0, totalDiff: 0, holes: 0 },
+      4: { par: 4, totalScore: 0, totalDiff: 0, holes: 0 },
+      5: { par: 5, totalScore: 0, totalDiff: 0, holes: 0 }
+    };
+
+    filteredRounds.forEach(function (round) {
+      var course = courses.find(function (item) { return item.id === round.courseId; });
+      var coursePars = course ? course.pars : defaultPars();
+      var roundShots = shots.filter(function (shot) { return shot.roundId === round.id; });
+      for (var hole = 1; hole <= 18; hole++) {
+        var holeShots = roundShots.filter(function (shot) { return shot.hole === hole; });
+        if (!holeShots.length) continue;
+        var shotWithPar = holeShots.find(function (shot) { return shot.par != null && !shot.synthetic; });
+        var par = shotWithPar ? shotWithPar.par : coursePars[hole - 1];
+        var holeStats = computeHoleStats(holeShots, par);
+        if (!holeStats || !holeStats.holed || !stats[par]) continue;
+        stats[par].totalScore += holeStats.score;
+        stats[par].totalDiff += holeStats.diff;
+        stats[par].holes++;
+      }
+    });
+
+    return [3, 4, 5].map(function (par) {
+      var item = stats[par];
+      return {
+        par: par,
+        holes: item.holes,
+        avgScore: item.holes ? item.totalScore / item.holes : null,
+        avgDiff: item.holes ? item.totalDiff / item.holes : null
+      };
+    });
+  }
+
+  function buildDriveStats(shots) {
+    var teeShots = shots.filter(function (shot) {
+      return shot.lie === 'Tee' && shot.distance != null && shot.end_distance != null;
+    }).map(function (shot) {
+      return Math.max(0, shot.distance - shot.end_distance);
+    }).filter(function (gain) {
+      return gain > 0;
+    });
+
+    return {
+      count: teeShots.length,
+      average: teeShots.length ? teeShots.reduce(function (sum, gain) { return sum + gain; }, 0) / teeShots.length : null,
+      longest: teeShots.length ? teeShots.reduce(function (max, gain) { return Math.max(max, gain); }, 0) : null
+    };
+  }
+
+  function buildDistanceBuckets(shots) {
+    var ranges = [
+      { min: 0, max: 25, label: '0-25' },
+      { min: 25, max: 50, label: '25-50' },
+      { min: 50, max: 75, label: '50-75' },
+      { min: 75, max: 100, label: '75-100' },
+      { min: 100, max: 125, label: '100-125' },
+      { min: 125, max: 150, label: '125-150' },
+      { min: 150, max: 175, label: '150-175' },
+      { min: 175, max: 200, label: '175-200' },
+      { min: 200, max: 225, label: '200-225' },
+      { min: 225, max: Infinity, label: '225+' }
+    ];
+
+    var buckets = ranges.map(function (range) {
+      return {
+        label: range.label,
+        min: range.min,
+        max: range.max,
+        shots: 0,
+        solidShots: 0,
+        onTargetShots: 0,
+        sgSum: 0,
+        sgN: 0
+      };
+    });
+
+    shots.forEach(function (shot) {
+      if (shot.distance == null) return;
+      var bucket = buckets.find(function (entry) {
+        return shot.distance >= entry.min && shot.distance < entry.max;
+      });
+      if (!bucket) return;
+      bucket.shots++;
+      if (shot.strike === 'Pure / Solid') bucket.solidShots++;
+      if (shot.result === 'On Target') bucket.onTargetShots++;
+      var sg = shot.sg != null ? shot.sg : core.calcSG(shot);
+      if (sg != null) {
+        bucket.sgSum += sg;
+        bucket.sgN++;
+      }
+    });
+
+    return buckets.filter(function (bucket) { return bucket.shots > 0; }).map(function (bucket) {
+      return {
+        label: bucket.label,
+        shots: bucket.shots,
+        solidRate: Math.round(bucket.solidShots / bucket.shots * 100),
+        onTargetRate: Math.round(bucket.onTargetShots / bucket.shots * 100),
+        sgAvg: bucket.sgN ? bucket.sgSum / bucket.sgN : null,
+        sgTotal: bucket.sgN ? bucket.sgSum : null
+      };
+    });
+  }
+
   function buildStatsSnapshot(options) {
     var rounds = options.rounds || [];
     var shots = options.shots || [];
@@ -287,32 +446,61 @@
     var statsFilter = options.statsFilter || 'all';
     var statsDateFrom = options.statsDateFrom || '';
     var statsDateTo = options.statsDateTo || '';
+    var roundById = {};
+    rounds.forEach(function (round) {
+      roundById[round.id] = round;
+    });
 
-    var filteredRounds = rounds.filter(function (round) {
-      if (statsFilter !== 'all') {
-        var type = round.type || 'outdoor';
-        if (type !== statsFilter) return false;
+    var filteredShots = shots.filter(function (shot) {
+      if (shot.synthetic) return false;
+      if (shot.roundId) {
+        var round = roundById[shot.roundId];
+        if (!round) return false;
+        if (statsFilter !== 'all') {
+          var type = round.type || 'outdoor';
+          if (type !== statsFilter) return false;
+        }
+        var shotDate = shot.date || round.date || '';
+        if (statsDateFrom && shotDate < statsDateFrom) return false;
+        if (statsDateTo && shotDate > statsDateTo) return false;
+        return true;
       }
-      if (statsDateFrom && round.date < statsDateFrom) return false;
-      if (statsDateTo && round.date > statsDateTo) return false;
+      if (statsFilter !== 'all') return false;
+      var date = shot.date || '';
+      if (statsDateFrom && date < statsDateFrom) return false;
+      if (statsDateTo && date > statsDateTo) return false;
       return true;
     });
 
-    var filteredRoundIds = filteredRounds.map(function (round) { return round.id; });
-    var filteredShots;
-    if (statsFilter === 'all' && !statsDateFrom && !statsDateTo) {
-      filteredShots = shots.filter(function (shot) { return !shot.synthetic; });
-    } else {
-      filteredShots = shots.filter(function (shot) {
-        if (shot.synthetic) return false;
-        if (shot.roundId) return filteredRoundIds.indexOf(shot.roundId) !== -1;
-        if (statsFilter !== 'all') return false;
-        var date = shot.date || '';
-        if (statsDateFrom && date < statsDateFrom) return false;
-        if (statsDateTo && date > statsDateTo) return false;
-        return true;
-      });
-    }
+    var filteredRoundIds = {};
+    filteredShots.forEach(function (shot) {
+      if (shot.roundId) filteredRoundIds[shot.roundId] = true;
+    });
+    var filteredRounds = rounds.filter(function (round) {
+      return !!filteredRoundIds[round.id];
+    });
+    var traditionalShots = shots.filter(function (shot) {
+      if (!shot.roundId || !filteredRoundIds[shot.roundId]) return false;
+      var round = roundById[shot.roundId];
+      var shotDate = shot.date || (round ? round.date : '') || '';
+      if (statsDateFrom && shotDate < statsDateFrom) return false;
+      if (statsDateTo && shotDate > statsDateTo) return false;
+      return true;
+    });
+
+    var statsModes = {};
+    filteredShots.forEach(function (shot) {
+      if (!shot.roundId) {
+        statsModes.practice = true;
+        return;
+      }
+      var round = roundById[shot.roundId];
+      var type = round && round.type ? round.type : 'outdoor';
+      statsModes[type] = true;
+    });
+    var statsModeKeys = Object.keys(statsModes);
+    var statsMode = statsModeKeys.length === 1 ? statsModeKeys[0] : (statsModeKeys.length ? 'mixed' : 'none');
+    var hasPracticeShots = !!statsModes.practice;
 
     var withDistance = filteredShots.filter(function (shot) { return shot.distance != null; });
     var avgDistance = withDistance.length
@@ -329,6 +517,26 @@
     var sgTotal = 0;
     var sgN = 0;
     filteredShots.forEach(function (shot) {
+      var club = shot.club || '(no club)';
+      if (!sgByClub[club]) {
+        sgByClub[club] = {
+          totalShots: 0,
+          solidShots: 0,
+          onTargetShots: 0,
+          gainSum: 0,
+          gainN: 0,
+          sum: 0,
+          n: 0
+        };
+      }
+      sgByClub[club].totalShots++;
+      if (shot.strike === 'Pure / Solid') sgByClub[club].solidShots++;
+      if (shot.result === 'On Target') sgByClub[club].onTargetShots++;
+      if (shot.distance != null && shot.end_distance != null) {
+        sgByClub[club].gainSum += (shot.distance - shot.end_distance);
+        sgByClub[club].gainN++;
+      }
+
       var sg = shot.sg != null ? shot.sg : core.calcSG(shot);
       if (sg == null) return;
       sgTotal += sg;
@@ -336,21 +544,30 @@
       var category = core.sgCategory(shot);
       sgByCat[category].sum += sg;
       sgByCat[category].n++;
-      var club = shot.club || '(no club)';
-      if (!sgByClub[club]) sgByClub[club] = { sum: 0, n: 0 };
       sgByClub[club].sum += sg;
       sgByClub[club].n++;
     });
 
+    var roundSummaries = buildRoundSummaries(filteredRounds, filteredShots, courses);
+    var scoringByPar = buildScoringByPar(filteredRounds, filteredShots, courses);
+    var driveStats = buildDriveStats(filteredShots);
+    var distanceBuckets = buildDistanceBuckets(filteredShots);
+
     return {
       filteredRounds: filteredRounds,
       filteredShots: filteredShots,
+      statsMode: statsMode,
+      hasPracticeShots: hasPracticeShots,
+      roundSummaries: roundSummaries,
+      scoringByPar: scoringByPar,
+      driveStats: driveStats,
+      distanceBuckets: distanceBuckets,
       avgDistance: avgDistance,
       pureShots: pureShots,
       pureRate: filteredShots.length ? Math.round(pureShots / filteredShots.length * 100) : 0,
       onTargetShots: onTargetShots,
       onTargetRate: filteredShots.length ? Math.round(onTargetShots / filteredShots.length * 100) : 0,
-      traditional: buildTraditionalStats(filteredRounds, shots, courses),
+      traditional: buildTraditionalStats(filteredRounds, traditionalShots, courses),
       sgByCat: sgByCat,
       sgByClub: sgByClub,
       sgTotal: sgTotal,

@@ -1089,12 +1089,17 @@
       statsDateTo: statsDateTo
     });
     var settings = loadSettings();
-    var statsSettings = { hcp: settings.hcp, targetHcp: settings.targetHcp };
-    if (statsFilter === 'indoor') {
-      statsSettings.hcp = settings.hcpIndoor;
-      statsSettings.targetHcp = settings.targetHcpIndoor;
+    var targetHcpModel;
+    if (snapshot.statsMode === 'mixed' || snapshot.statsMode === 'practice' || snapshot.statsMode === 'none') {
+      targetHcpModel = { state: 'mixed-filter' };
+    } else {
+      var statsSettings = { hcp: settings.hcp, targetHcp: settings.targetHcp };
+      if (snapshot.statsMode === 'indoor') {
+        statsSettings.hcp = settings.hcpIndoor;
+        statsSettings.targetHcp = settings.targetHcpIndoor;
+      }
+      targetHcpModel = domain.buildTargetHcpModel(snapshot.sgByCat, snapshot.sgN, statsSettings);
     }
-    var targetHcpModel = domain.buildTargetHcpModel(snapshot.sgByCat, snapshot.sgN, statsSettings);
     el.innerHTML = render.renderStats(snapshot, targetHcpModel);
   };
 

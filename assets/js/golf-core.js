@@ -39,11 +39,16 @@
   var WEDGES = ['PW','GW','SW','LW'];
   var SWINGS = ['¼','½','¾','Full'];
 
+  // Category allocation for handicap-based amateur SG targets.
+  // This remains a heuristic, but is shaped to match public benchmark
+  // patterns better than the original even-ish split:
+  // Approach is the largest separator, tee shots second, then putting,
+  // with around-the-green slightly smaller overall.
   var SG_HCP_WEIGHTS = {
-    'Off the Tee':      0.22,
-    'Approach':         0.35,
-    'Around the Green': 0.22,
-    'Putting':          0.21
+    'Off the Tee':      0.26,
+    'Approach':         0.40,
+    'Around the Green': 0.15,
+    'Putting':          0.19
   };
 
   var SG_HCP_REF_SHOTS = {
@@ -386,9 +391,14 @@
     return shotsOut;
   }
 
+  function sgTargetPerRound(hcp, category) {
+    if (hcp == null) return null;
+    return -(hcp * SG_HCP_WEIGHTS[category]);
+  }
+
   function sgTargetPerShot(hcp, category) {
     if (hcp == null) return null;
-    return -(hcp * SG_HCP_WEIGHTS[category]) / SG_HCP_REF_SHOTS[category];
+    return sgTargetPerRound(hcp, category) / SG_HCP_REF_SHOTS[category];
   }
 
   return {
@@ -411,6 +421,7 @@
     buildExampleCourses: buildExampleCourses,
     buildExampleRounds: buildExampleRounds,
     buildExampleShots: buildExampleShots,
+    sgTargetPerRound: sgTargetPerRound,
     sgTargetPerShot: sgTargetPerShot
   };
 });

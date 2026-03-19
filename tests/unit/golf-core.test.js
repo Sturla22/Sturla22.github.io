@@ -114,9 +114,17 @@ run('example data builders produce linked courses, rounds, and shots', () => {
 run('sgTargetPerShot gets more demanding as target handicap improves', () => {
   const offTee10 = core.sgTargetPerShot(10, 'Off the Tee');
   const offTee20 = core.sgTargetPerShot(20, 'Off the Tee');
+  const roundApproach10 = core.sgTargetPerRound(10, 'Approach');
+  const roundTee10 = core.sgTargetPerRound(10, 'Off the Tee');
+  const roundPutting10 = core.sgTargetPerRound(10, 'Putting');
+  const roundShortGame10 = core.sgTargetPerRound(10, 'Around the Green');
 
   assert.equal(core.sgTargetPerShot(null, 'Putting'), null);
+  assert.equal(core.sgTargetPerRound(null, 'Putting'), null);
   assert.ok(offTee10 > offTee20);
+  assert.ok(roundApproach10 < roundTee10);
+  assert.ok(roundTee10 < roundPutting10);
+  assert.ok(roundPutting10 < roundShortGame10);
 });
 
 console.log('All unit tests passed.');
