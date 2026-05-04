@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bodyweight Metrics Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e334d;
+      --text: #e8eaf0;
+      --text-muted: #7c82a0;
+      --accent: #6c63ff;
+      --accent-glow: rgba(108,99,255,0.18);
+      --green: #3ecf8e;
+      --green-glow: rgba(62,207,142,0.15);
+      --red: #f87171;
+      --gold: #fbbf24;
+      --gold-glow: rgba(251,191,36,0.18);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 20px 22px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: clamp(1.4rem, 4vw, 1.9rem);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #a78bfa, #6c63ff, #3ecf8e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 6px;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* ── PR cards ── */
+    .pr-section { margin-top: 28px; }
+
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .pr-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 420px) {
+      .pr-cards { grid-template-columns: 1fr; }
+    }
+
+    .pr-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 14px 14px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .pr-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .pr-card.pushups::before  { background: #6c63ff; }
+    .pr-card.squats::before   { background: #3ecf8e; }
+    .pr-card.plank::before    { background: #fbbf24; }
+
+    .pr-card-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .pr-card.pushups .pr-card-label  { color: #a78bfa; }
+    .pr-card.squats  .pr-card-label  { color: #3ecf8e; }
+    .pr-card.plank   .pr-card-label  { color: #fbbf24; }
+
+    .pr-value {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin: 6px 0 2px;
+      letter-spacing: -1px;
+    }
+
+    .pr-unit {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .pr-date {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── streak / session count ── */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stat-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .stat-pill strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── form ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    input, textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 9px 12px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    input[type="number"] { -moz-appearance: textfield; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    textarea { resize: vertical; min-height: 60px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:hover  { opacity: 0.88; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      font-size: 0.95rem;
+    }
+
+    .btn-danger  { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+    .btn-ghost   { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-sm      { padding: 5px 10px; font-size: 0.78rem; }
+
+    .error-msg {
+      color: var(--red);
+      font-size: 0.82rem;
+      margin-top: 8px;
+      min-height: 1.2em;
+    }
+
+    /* ── chart ── */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    canvas {
+      width: 100%;
+      display: block;
+      border-radius: var(--radius-sm);
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── history table ── */
+    .table-wrap { overflow-x: auto; margin-top: 4px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    thead th {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover { background: var(--surface2); }
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody td {
+      padding: 10px 10px;
+      vertical-align: top;
+    }
+
+    .pr-badge {
+      display: inline-block;
+      background: var(--gold-glow);
+      border: 1px solid rgba(251,191,36,0.4);
+      border-radius: 4px;
+      color: var(--gold);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 1px 5px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .notes-cell {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      max-width: 180px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .empty-state {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      padding: 24px 0;
+      text-align: center;
+    }
+
+    /* ── data management ── */
+    .data-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .import-wrap { position: relative; }
+    .import-wrap input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer;
+    }
+
+    /* ── modal ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      padding: 16px;
+      backdrop-filter: blur(2px);
+    }
+
+    .overlay.hidden { display: none; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      max-width: 380px;
+      width: 100%;
+      padding: 24px;
+    }
+
+    .modal h2 { font-size: 1rem; margin-bottom: 10px; }
+    .modal p  { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px; }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── encourage banner ── */
+    .encourage {
+      background: linear-gradient(135deg, var(--surface) 0%, #1a1d35 100%);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 10px;
+      padding: 10px 14px;
+    }
+
+    .encourage.hidden { display: none; }
+
+    /* spacing util */
+    .mt16 { margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Bodyweight Metrics Tracker</h1>
+  <p>Track weekly personal bests for pushups, squats, and plank time. Data stays in this browser.</p>
+</header>
+
+<main class="container">
+
+  <!-- PR Cards -->
+  <section class="pr-section" aria-label="Personal records">
+    <p class="section-title">Personal Records</p>
+    <div class="pr-cards">
+      <div class="pr-card pushups">
+        <div class="pr-card-label">Pushups</div>
+        <div class="pr-value" id="pr-pushups">—</div>
+        <div class="pr-unit">reps</div>
+        <div class="pr-date" id="pr-pushups-date"></div>
+      </div>
+      <div class="pr-card squats">
+        <div class="pr-card-label">Squats</div>
+        <div class="pr-value" id="pr-squats">—</div>
+        <div class="pr-unit">reps</div>
+        <div class="pr-date" id="pr-squats-date"></div>
+      </div>
+      <div class="pr-card plank">
+        <div class="pr-card-label">Plank</div>
+        <div class="pr-value" id="pr-plank">—</div>
+        <div class="pr-unit">time</div>
+        <div class="pr-date" id="pr-plank-date"></div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-pill">Sessions: <strong id="session-count">0</strong></div>
+      <div class="stat-pill" id="streak-pill" style="display:none">
+        Weekly chain: <strong id="streak-count">0</strong> <span id="streak-emoji"></span>
+      </div>
+    </div>
+
+    <div class="encourage hidden" id="encourage-banner"></div>
+  </section>
+
+  <!-- Log Session Form -->
+  <section class="card" aria-label="Log a session">
+    <p class="card-title">Log a Session</p>
+    <form id="session-form" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="f-date">Date</label>
+          <input type="date" id="f-date" name="date" required>
+        </div>
+        <div class="field">
+          <label for="f-pushups">Pushups max</label>
+          <input type="number" id="f-pushups" name="pushups" min="0" placeholder="e.g. 25">
+        </div>
+        <div class="field">
+          <label for="f-squats">Squats max</label>
+          <input type="number" id="f-squats" name="squats" min="0" placeholder="e.g. 40">
+        </div>
+        <div class="field">
+          <label for="f-plank">Plank (seconds)</label>
+          <input type="number" id="f-plank" name="plank" min="0" placeholder="e.g. 90">
+        </div>
+        <div class="field full">
+          <label for="f-notes">Notes (optional)</label>
+          <textarea id="f-notes" name="notes" rows="2" placeholder="How did it feel?"></textarea>
+        </div>
+      </div>
+      <div class="error-msg" id="form-error" role="alert"></div>
+      <button type="submit" class="btn btn-primary">Save Session</button>
+    </form>
+  </section>
+
+  <!-- Progress Chart -->
+  <section class="card" aria-label="Progress chart">
+    <p class="card-title">Progress</p>
+    <div class="chart-wrap">
+      <canvas id="progress-chart" height="200"></canvas>
+    </div>
+    <div class="chart-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#6c63ff"></div>Pushups</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3ecf8e"></div>Squats</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Plank</div>
+    </div>
+  </section>
+
+  <!-- History -->
+  <section class="card" aria-label="Session history">
+    <p class="card-title">History</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Pushups</th>
+            <th>Squats</th>
+            <th>Plank</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr><td colspan="6" class="empty-state">No sessions yet — log your first one above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Data Management -->
+  <section class="card" aria-label="Data management">
+    <p class="card-title">Data</p>
+    <div class="data-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-export">Export JSON</button>
+      <div class="import-wrap">
+        <button class="btn btn-ghost btn-sm" type="button">Import JSON</button>
+        <input type="file" id="import-file" accept=".json,application/json">
+      </div>
+      <button class="btn btn-danger btn-sm" id="btn-clear">Delete all data</button>
+    </div>
+    <div class="error-msg" id="import-error" role="alert"></div>
+  </section>
+
+</main>
+
+<!-- Confirm Delete Modal -->
+<div class="overlay hidden" id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal">
+    <h2 id="confirm-title">Delete all data?</h2>
+    <p>This will permanently erase all your sessions and personal records from this browser. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="confirm-cancel">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="confirm-ok">Yes, delete everything</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const STORAGE_KEY = "bodyweight-metrics-v1";
+
+  /* ── helpers ── */
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed;
+    } catch { return []; }
+  }
+
+  function saveData(entries) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  function formatPlank(s) {
+    if (!s && s !== 0) return "—";
+    s = Math.round(Number(s));
+    if (s < 60) return s + "s";
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return m + ":" + String(r).padStart(2, "0");
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "—";
+    const [y, mo, d] = iso.split("-").map(Number);
+    const dt = new Date(y, mo - 1, d);
+    return dt.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function todayISO() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function isoToWeek(iso) {
+    const [y, mo, d] = iso.split("-").map(Number);
+    const dt = new Date(y, mo - 1, d);
+    dt.setDate(dt.getDate() + 4 - (dt.getDay() || 7));
+    const yearStart = new Date(dt.getFullYear(), 0, 1);
+    return Math.ceil((((dt - yearStart) / 86400000) + 1) / 7);
+  }
+
+  function isoToYear(iso) { return parseInt(iso.split("-")[0]); }
+
+  /* ── compute PRs ── */
+
+  function computePRs(entries) {
+    let pushups = null, squats = null, plank = null;
+    let puDate = "", sqDate = "", plDate = "";
+    entries.forEach(e => {
+      if (e.pushups != null && (pushups === null || e.pushups > pushups)) {
+        pushups = e.pushups; puDate = e.date;
+      }
+      if (e.squats != null && (squats === null || e.squats > squats)) {
+        squats = e.squats; sqDate = e.date;
+      }
+      if (e.plank != null && (plank === null || e.plank > plank)) {
+        plank = e.plank; plDate = e.date;
+      }
+    });
+    return { pushups, puDate, squats, sqDate, plank, plDate };
+  }
+
+  /* ── compute weekly chain (consecutive weeks with at least one session) ── */
+
+  function computeStreak(entries) {
+    if (!entries.length) return 0;
+    const weeks = new Set();
+    entries.forEach(e => {
+      if (e.date) weeks.add(isoToYear(e.date) + "-" + isoToWeek(e.date));
+    });
+    const sorted = Array.from(weeks).sort().reverse();
+    const thisW = isoToYear(todayISO()) + "-" + isoToWeek(todayISO());
+    if (!weeks.has(thisW)) {
+      // allow streak from last week
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      const ly = d.getFullYear();
+      const lm = String(d.getMonth()+1).padStart(2,"0");
+      const ld = String(d.getDate()).padStart(2,"0");
+      const lastW = ly + "-" + isoToWeek(`${ly}-${lm}-${ld}`);
+      if (!weeks.has(lastW)) return 0;
+    }
+    let streak = 1;
+    for (let i = 1; i < sorted.length; i++) {
+      const [wy, wn] = sorted[i-1].split("-").map(Number);
+      const [py, pn] = sorted[i].split("-").map(Number);
+      const consecutive =
+        (wy === py && wn === pn + 1) ||
+        (wy === py + 1 && wn === 1 && pn >= 52);
+      if (consecutive) streak++;
+      else break;
+    }
+    return streak;
+  }
+
+  /* ── render PRs ── */
+
+  function renderPRs(prs, count) {
+    const $ = id => document.getElementById(id);
+
+    $("pr-pushups").textContent      = prs.pushups !== null ? prs.pushups : "—";
+    $("pr-pushups-date").textContent = prs.puDate   ? "Set " + formatDate(prs.puDate) : "";
+    $("pr-squats").textContent       = prs.squats   !== null ? prs.squats : "—";
+    $("pr-squats-date").textContent  = prs.sqDate   ? "Set " + formatDate(prs.sqDate) : "";
+    $("pr-plank").textContent        = prs.plank    !== null ? formatPlank(prs.plank) : "—";
+    $("pr-plank-date").textContent   = prs.plDate   ? "Set " + formatDate(prs.plDate) : "";
+
+    $("session-count").textContent = count;
+
+    const streak = computeStreak(loadData());
+    const streakPill = $("streak-pill");
+    if (streak > 0) {
+      streakPill.style.display = "";
+      $("streak-count").textContent = streak;
+      $("streak-emoji").textContent = streak >= 4 ? "🔥" : streak >= 2 ? "⚡" : "";
+    } else {
+      streakPill.style.display = "none";
+    }
+
+    const banner = $("encourage-banner");
+    if (count === 0) {
+      banner.classList.add("hidden");
+    } else if (streak >= 4) {
+      banner.classList.remove("hidden");
+      banner.textContent = "You're on a " + streak + "-week streak — amazing consistency!";
+    } else if (streak >= 2) {
+      banner.classList.remove("hidden");
+      banner.textContent = streak + " weeks in a row — keep the chain alive!";
+    } else {
+      banner.classList.remove("hidden");
+      banner.textContent = "Log a session each week to build your streak. You've got this.";
+    }
+  }
+
+  /* ── render history table ── */
+
+  function renderTable(entries, prs) {
+    const tbody = document.getElementById("history-body");
+    if (!entries.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No sessions yet — log your first one above.</td></tr>';
+      return;
+    }
+
+    const sorted = entries.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+    tbody.innerHTML = sorted.map(entry => {
+      const isPRpu = prs.pushups !== null && entry.pushups === prs.pushups;
+      const isPRsq = prs.squats  !== null && entry.squats  === prs.squats;
+      const isPRpl = prs.plank   !== null && entry.plank   === prs.plank;
+
+      const pu = entry.pushups != null ? entry.pushups + (isPRpu ? '<span class="pr-badge">PR</span>' : "") : "—";
+      const sq = entry.squats  != null ? entry.squats  + (isPRsq ? '<span class="pr-badge">PR</span>' : "") : "—";
+      const pl = entry.plank   != null ? escapeHtml(formatPlank(entry.plank)) + (isPRpl ? '<span class="pr-badge">PR</span>' : "") : "—";
+      const notes = entry.notes ? '<span class="notes-cell">' + escapeHtml(entry.notes) + '</span>' : "";
+
+      return `<tr>
+        <td style="white-space:nowrap">${escapeHtml(formatDate(entry.date))}</td>
+        <td>${pu}</td>
+        <td>${sq}</td>
+        <td>${pl}</td>
+        <td>${notes}</td>
+        <td><button class="btn btn-danger btn-sm" data-delete="${escapeHtml(entry.id)}" aria-label="Delete session">✕</button></td>
+      </tr>`;
+    }).join("");
+  }
+
+  /* ── render chart ── */
+
+  function renderChart(entries) {
+    const canvas = document.getElementById("progress-chart");
+    const dpr    = window.devicePixelRatio || 1;
+    const W      = canvas.parentElement.offsetWidth || 600;
+    const H      = 200;
+
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + "px";
+    canvas.style.height = H + "px";
+
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, W, H);
+
+    const sorted = entries.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+    // compute maxes
+    const maxPu = Math.max(1, ...sorted.map(e => e.pushups || 0));
+    const maxSq = Math.max(1, ...sorted.map(e => e.squats  || 0));
+    const maxPl = Math.max(1, ...sorted.map(e => e.plank   || 0));
+
+    const PAD = { top: 16, bottom: 28, left: 10, right: 10 };
+    const cW = W - PAD.left - PAD.right;
+    const cH = H - PAD.top  - PAD.bottom;
+
+    // background grid
+    ctx.strokeStyle = "rgba(46,51,77,0.6)";
+    ctx.lineWidth   = 1;
+    [0.25, 0.5, 0.75, 1].forEach(frac => {
+      const y = PAD.top + cH - frac * cH;
+      ctx.beginPath();
+      ctx.moveTo(PAD.left, y);
+      ctx.lineTo(PAD.left + cW, y);
+      ctx.stroke();
+    });
+
+    if (!sorted.length) return;
+
+    function drawLine(data, color) {
+      const pts = data.filter(p => p[1] !== null);
+      if (pts.length < 1) return;
+
+      // dots first (below line)
+      pts.forEach(([x, y]) => {
+        ctx.beginPath();
+        ctx.arc(PAD.left + x * cW, PAD.top + cH - y * cH, 4, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      });
+
+      if (pts.length === 1) return;
+
+      // line
+      ctx.beginPath();
+      ctx.moveTo(PAD.left + pts[0][0] * cW, PAD.top + cH - pts[0][1] * cH);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(PAD.left + pts[i][0] * cW, PAD.top + cH - pts[i][1] * cH);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 2.5;
+      ctx.lineJoin    = "round";
+      ctx.stroke();
+    }
+
+    const n = sorted.length;
+    const xOf = i => n === 1 ? 0.5 : i / (n - 1);
+
+    const puData = sorted.map((e, i) => [xOf(i), e.pushups != null ? e.pushups / maxPu : null]);
+    const sqData = sorted.map((e, i) => [xOf(i), e.squats  != null ? e.squats  / maxSq : null]);
+    const plData = sorted.map((e, i) => [xOf(i), e.plank   != null ? e.plank   / maxPl : null]);
+
+    drawLine(puData, "#6c63ff");
+    drawLine(sqData, "#3ecf8e");
+    drawLine(plData, "#fbbf24");
+
+    // date labels for first and last
+    if (sorted.length >= 2) {
+      ctx.fillStyle  = "rgba(124,130,160,0.8)";
+      ctx.font       = "11px -apple-system, sans-serif";
+      ctx.textAlign  = "left";
+      ctx.fillText(formatDate(sorted[0].date), PAD.left, H - 6);
+      ctx.textAlign  = "right";
+      ctx.fillText(formatDate(sorted[sorted.length - 1].date), W - PAD.right, H - 6);
+    }
+  }
+
+  /* ── full render ── */
+
+  function render() {
+    const entries = loadData();
+    const prs     = computePRs(entries);
+    renderPRs(prs, entries.length);
+    renderTable(entries, prs);
+    renderChart(entries);
+  }
+
+  /* ── form submit ── */
+
+  const form    = document.getElementById("session-form");
+  const errEl   = document.getElementById("form-error");
+  const dateIn  = document.getElementById("f-date");
+
+  // default date to today
+  dateIn.value = todayISO();
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    errEl.textContent = "";
+
+    const dateVal    = dateIn.value.trim();
+    const pushupsVal = document.getElementById("f-pushups").value.trim();
+    const squatsVal  = document.getElementById("f-squats").value.trim();
+    const plankVal   = document.getElementById("f-plank").value.trim();
+    const notesVal   = document.getElementById("f-notes").value.trim();
+
+    if (!dateVal) { errEl.textContent = "Please enter a date."; return; }
+
+    const pushups = pushupsVal !== "" ? parseInt(pushupsVal, 10) : null;
+    const squats  = squatsVal  !== "" ? parseInt(squatsVal,  10) : null;
+    const plank   = plankVal   !== "" ? parseInt(plankVal,   10) : null;
+
+    if (pushups === null && squats === null && plank === null) {
+      errEl.textContent = "Enter at least one metric (pushups, squats, or plank).";
+      return;
+    }
+    if (pushups !== null && (isNaN(pushups) || pushups < 0)) {
+      errEl.textContent = "Pushups must be a non-negative number."; return;
+    }
+    if (squats  !== null && (isNaN(squats)  || squats  < 0)) {
+      errEl.textContent = "Squats must be a non-negative number.";  return;
+    }
+    if (plank   !== null && (isNaN(plank)   || plank   < 0)) {
+      errEl.textContent = "Plank must be a non-negative number.";   return;
+    }
+
+    const entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      date: dateVal,
+      pushups,
+      squats,
+      plank,
+      notes: notesVal || null,
+    };
+
+    const entries = loadData();
+    entries.push(entry);
+    saveData(entries);
+
+    form.reset();
+    dateIn.value = todayISO();
+    render();
+  });
+
+  /* ── delete row ── */
+
+  document.getElementById("history-body").addEventListener("click", function (e) {
+    const btn = e.target.closest("[data-delete]");
+    if (!btn) return;
+    const id      = btn.dataset.delete;
+    const entries = loadData().filter(x => x.id !== id);
+    saveData(entries);
+    render();
+  });
+
+  /* ── export ── */
+
+  document.getElementById("btn-export").addEventListener("click", function () {
+    const data    = loadData();
+    const blob    = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url     = URL.createObjectURL(blob);
+    const a       = document.createElement("a");
+    a.href        = url;
+    a.download    = "bodyweight-metrics.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  /* ── import ── */
+
+  const importErr = document.getElementById("import-error");
+
+  document.getElementById("import-file").addEventListener("change", function (e) {
+    importErr.textContent = "";
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (!Array.isArray(parsed)) { importErr.textContent = "Invalid file: expected a JSON array."; return; }
+
+        const validated = [];
+        for (const item of parsed) {
+          if (typeof item !== "object" || item === null) continue;
+          const id      = typeof item.id   === "string" ? item.id   : Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+          const date    = typeof item.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item.date) ? item.date : null;
+          const pushups = typeof item.pushups === "number" && item.pushups >= 0 ? Math.round(item.pushups) : null;
+          const squats  = typeof item.squats  === "number" && item.squats  >= 0 ? Math.round(item.squats)  : null;
+          const plank   = typeof item.plank   === "number" && item.plank   >= 0 ? Math.round(item.plank)   : null;
+          const notes   = typeof item.notes   === "string" ? item.notes : null;
+          if (!date) continue;
+          if (pushups === null && squats === null && plank === null) continue;
+          validated.push({ id, date, pushups, squats, plank, notes });
+        }
+
+        if (!validated.length) { importErr.textContent = "No valid entries found in the file."; return; }
+
+        // merge: skip IDs that already exist
+        const existing = loadData();
+        const existingIds = new Set(existing.map(x => x.id));
+        const merged = existing.concat(validated.filter(x => !existingIds.has(x.id)));
+        saveData(merged);
+        render();
+        importErr.style.color = "var(--green)";
+        importErr.textContent = "Imported " + validated.length + " entries.";
+        setTimeout(() => { importErr.textContent = ""; importErr.style.color = ""; }, 3000);
+      } catch {
+        importErr.textContent = "Could not parse file — make sure it is valid JSON.";
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+
+  /* ── delete all ── */
+
+  const overlay = document.getElementById("confirm-overlay");
+
+  document.getElementById("btn-clear").addEventListener("click", function () {
+    overlay.classList.remove("hidden");
+  });
+
+  document.getElementById("confirm-cancel").addEventListener("click", function () {
+    overlay.classList.add("hidden");
+  });
+
+  document.getElementById("confirm-ok").addEventListener("click", function () {
+    localStorage.removeItem(STORAGE_KEY);
+    overlay.classList.add("hidden");
+    render();
+  });
+
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) overlay.classList.add("hidden");
+  });
+
+  /* ── redraw chart on resize ── */
+
+  let resizeTimer;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { renderChart(loadData()); }, 120);
+  });
+
+  /* ── initial render ── */
+
+  render();
+
+}());
+</script>
+</body>
+</html>
